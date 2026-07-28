@@ -1,0 +1,13 @@
+DevOps Engineer
+
+We're looking for a DevOps Engineer to help us automate infrastructure and
+CI/CD pipelines on AWS. You'll work with Terraform, AWS S3, VPC, and
+CodeBuild to design, provision, and troubleshoot cloud infrastructure, and
+document your work for the rest of the engineering team.
+
+Required skills:
+- Infrastructure as code with Terraform
+- AWS core services (S3, VPC, IAM, CodeBuild)
+- Networking fundamentals (VPCs, subnets, security groups, routing)
+- Debugging connectivity issues in cloud environments
+- Clear technical documentation

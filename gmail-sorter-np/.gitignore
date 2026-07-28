@@ -1,0 +1,15 @@
+node_modules/
+.env
+.env.local
+.env.*.local
+dist/
+build/
+*.log
+
+# OAuth + token secrets (ISS-002 / ISS-003) — never commit
+credentials.json
+client_secret_*.json
+token.json
+token.pickle
+
+.DS_Store

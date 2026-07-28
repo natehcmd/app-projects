@@ -1,0 +1,34 @@
+start	end	text
+0	2400	I just vibe-coded an entire app in two hours.
+2400	5600	It works. It looks great, but I have no idea if it's actually secure.
+5600	7600	Like, could someone hack this thing?
+7600	10800	Oh, they absolutely could. And they will.
+10800	14800	Unless you use these five prompts to lock it down before it's too late.
+14800	16000	Prom number one.
+16000	19600	Tell your AI to implement rate limiting on all endpoints.
+19600	22800	Five attempts max per 15 minutes on login routes.
+22800	25600	That way hackers can't brute force their way in.
+25600	27040	Oh yeah, that's smart.
+27040	29440	What about the passwords I left in the code?
+29440	30640	You did what?
+30640	32800	That's prompt number two, you buffoon.
+32800	36240	Tell the AI to scan your entire code base for any hard code.
+38640	40080	And prompt three.
+40080	43440	Move all sensitive data to environment variables.
+43440	46800	Make sure nothing is exposed in the front end or committed to get.
+46800	48640	You absolute walnut.
+48640	50640	Okay, okay, I'm writing this down.
+50640	51600	What else?
+51600	52640	Promt four.
+52640	56400	Scented eyes all user inputs and reject anything oversized or malformed.
+56400	59280	Unless you want someone injecting code straight into your database.
+59600	61200	That sounds bad.
+61200	62560	It is bad, Peter.
+62560	64800	And finally, prompt five.
+64800	68640	Run a full security audit and report any remaining vulnerabilities.
+68640	72400	Think of it as a final health check before you unleash your little creation on the world.
+72960	77120	Bang, Struy, you just saved my app and probably my identity.
+77120	78080	You're welcome.
+78080	81120	Now, if you found this useful, follow this page for more tips.
+81120	83040	So you don't get destroyed on the internet.
+83040	83680	Do it now.

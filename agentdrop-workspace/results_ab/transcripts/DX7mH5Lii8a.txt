@@ -1,0 +1,9 @@
+I'm going to take you from cloud beginner to cloud expert first, give it the outcome.
+If it knows the ultimate goal, it'll work backwards to give you the best answer.
+Tell it you need to find 20 new customers a month.
+Then give it the task. Find me 50 leads that our ideal customers are potential buyers from my business.
+After that, give it the context. If you have any documents to explain what your business does,
+give it all to it because the more context the better the answer is going to be.
+And then finally give it the format. How do you want it back?
+You might ask it to put it in a spreadsheet, even say things like put this in 7th grade English
+because I want to make it simple. If you do that, your cloud responses will be 200% better every time.

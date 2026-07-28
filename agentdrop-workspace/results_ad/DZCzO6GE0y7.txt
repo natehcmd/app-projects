@@ -1,0 +1,12 @@
+If you only install one GitHub repo for Cloud Code, this is the one.
+It's called everything Cloud Code, 182,000 stars.
+Built at Anthropics own hackathon in one.
+Inside, you get 28 specialized subagents, 119 skills, 60 slash commands, 34 rules,
+and 20 automated hooks in 14 MCP servers.
+All inside of one repo.
+It basically turns Cloud Code into a full engineering team out of the box.
+You install it once in Cloud is suddenly running with security scanning,
+memory, optimization, continuous learning, and research first development.
+The repo has 1,282 tests in 98% coverage, so it's actually battle tested.
+And it works across Cloud Code, CodeX, cursor, open code, Gemini, and more.
+Comment, stack it all, send you the link.

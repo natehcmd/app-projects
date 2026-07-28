@@ -1,0 +1,19 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+.venv/
+.env
+.env.*
+!.env.example
+*.log
+*.db
+*.sqlite*
+
+# Generated local state
+data/
+models/
+FileGraphApp/.build/
+FileGraphApp/.swiftpm/
+
+# Python build artifacts
+*.egg-info/

@@ -1,0 +1,1453 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent Deck</title>
+<link rel="stylesheet" href="/vendor/@xterm/xterm/css/xterm.css">
+<style>
+  :root {
+    --bg: #0b0d12;
+    --bg2: #11141c;
+    --ink: #e8eaf2;
+    --ink-dim: #9aa0b4;
+    --ink-faint: #7b829b;
+    --mint: #9fe8c9;
+    --lav: #c3b8f5;
+    --peach: #f5c9a8;
+    --rose: #f2a9c4;
+    --sky: #a8d8f5;
+    --glass: rgba(255, 255, 255, 0.045);
+    --glass-brd: rgba(255, 255, 255, 0.09);
+    --r: 18px; /* Border radius */
+    --shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+
+    --bg-deep: var(--bg2);
+    --panel: var(--glass);
+    --panel-solid: var(--bg2);
+    --panel-2: rgba(255, 255, 255, 0.08);
+    --line: var(--glass-brd);
+    --ink-mid: var(--ink-dim);
+    --accent: var(--mint);
+    --accent-ink: #0b2018;
+    --danger: var(--rose);
+    --ok: var(--mint);
+    --warn: var(--peach);
+    --radius: var(--r);
+    --z-panel: 10;
+    --z-toast: 40;
+    --z-modal: 50;
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    font-size: 15px;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: "Avenir Next", -apple-system, "SF Pro Text", Inter, system-ui, sans-serif;
+    background:
+      radial-gradient(1200px 800px at 70% -10%, rgba(195, 184, 245, 0.15), transparent 60%),
+      radial-gradient(900px 700px at 10% 110%, rgba(159, 232, 201, 0.15), transparent 55%),
+      var(--bg);
+    color: var(--ink);
+    overflow: hidden;
+  }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+
+  .app { display: grid; grid-template-rows: 52px 1fr; height: 100vh; }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 14px;
+    background: var(--glass);
+    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    border-bottom: 1px solid var(--glass-brd);
+  }
+  .logo { display: flex; align-items: center; gap: 9px; font-weight: 650; letter-spacing: -0.01em; }
+  .logo-mark {
+    width: 22px; height: 22px; border-radius: 7px;
+    background: conic-gradient(from 210deg, oklch(0.85 0.09 160), oklch(0.83 0.09 230), oklch(0.82 0.09 290), oklch(0.85 0.09 160));
+    box-shadow: 0 0 12px oklch(0.83 0.09 230 / 0.45);
+  }
+  .count { color: var(--ink-dim); font-size: 0.86rem; }
+
+  /* ---------- Fleet summary chips ---------- */
+  .fleet { display: flex; align-items: center; gap: 5px; }
+  .fleet-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--glass);
+    color: var(--ink-mid); font-size: 0.78rem;
+    transition: background 150ms var(--ease), border-color 150ms var(--ease), color 150ms var(--ease);
+  }
+  .fleet-chip:hover { background: var(--panel-2); color: var(--ink); }
+  .fleet-chip.active { background: oklch(0.28 0.03 255 / 0.8); border-color: oklch(0.5 0.03 255); color: var(--ink); }
+  .fleet-chip .status-dot { width: 7px; height: 7px; }
+  .fleet-chip .status-dot.running { animation: none; }
+  @media (max-width: 900px) { .fleet { display: none; } }
+  .topbar .spacer { flex: 1; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: var(--r);
+    border: 1px solid var(--glass-brd);
+    background: var(--glass);
+    color: var(--ink-mid);
+    transition: background 160ms var(--ease), color 160ms var(--ease), border-color 160ms var(--ease);
+  }
+  .btn:hover { background: var(--panel-2); color: var(--ink); }
+  button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--bg-deep), 0 0 0 4px oklch(0.83 0.09 230 / 0.75);
+  }
+  .btn.primary {
+    background: linear-gradient(135deg, var(--mint), #6fd3a8); color: #0b2018;
+    border-color: transparent; font-weight: 600;
+  }
+  .btn.primary:hover { background: linear-gradient(135deg, #6fd3a8, #5bbf96); color: #0b2018; }
+  .btn.danger { color: var(--danger); }
+  .btn.danger:hover { background: oklch(0.72 0.14 20 / 0.14); }
+
+  /* ---------- Main layout ---------- */
+  .main { display: grid; grid-template-columns: 264px 1fr; min-height: 0; }
+  @media (max-width: 760px) { .main { grid-template-columns: 1fr; } .sidebar { display: none; } }
+
+  /* ---------- View mode toggle + Workflow view ---------- */
+  .viewseg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .viewseg button { background: var(--glass); border: 0; color: var(--ink-dim); padding: 6px 12px; font-size: 0.86rem; cursor: pointer; }
+  .viewseg button:hover { color: var(--ink); }
+  .viewseg button.active { background: oklch(0.26 0.022 255 / 0.8); color: var(--ink); }
+  .workflow-view { display: none; overflow: hidden; min-height: 0; background: oklch(0.16 0.02 255); }
+  .app.mode-workflow .graph-wrap { display: none; }
+  .app.mode-workflow .workflow-view { display: block; }
+  .wf-layout { display: grid; grid-template-columns: 1fr 260px; height: 100%; }
+  .wf-main { display: flex; flex-direction: column; min-width: 0; padding: 18px; gap: 12px; }
+  .wf-setup { display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; }
+  .wf-setup select, .wf-handoff select, .wf-handoff input[type=number] {
+    border: 1px solid var(--line); background: oklch(0.22 0.02 255); color: var(--ink);
+    border-radius: 8px; padding: 7px 9px; font: inherit; }
+  .wf-setup textarea { flex: 1; min-width: 220px; border: 1px solid var(--line); background: oklch(0.22 0.02 255);
+    color: var(--ink); border-radius: 8px; padding: 8px 10px; resize: vertical; font: inherit; }
+  .wf-transcript { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 4px 2px; }
+  .wf-empty { color: var(--ink-dim); text-align: center; padding: 40px 0; }
+  .wf-bubble { border: 1px solid var(--line); border-radius: 10px; background: oklch(0.21 0.02 255 / 0.85);
+    padding: 12px 14px; max-width: 82%; }
+  .wf-bubble-head { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.82rem;
+    letter-spacing: 0.02em; margin-bottom: 6px; color: var(--ink-dim); }
+  .wf-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .wf-bubble-body { white-space: pre-wrap; line-height: 1.5; font-size: 0.92rem; }
+  .wf-handoff { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; border-top: 1px solid var(--line);
+    padding-top: 12px; }
+  .wf-handoff.hidden { display: none; }
+  .wf-handoff input[type=number] { width: 52px; }
+  .wf-sep { color: var(--ink-dim); font-size: 0.82rem; }
+  .wf-sidebar { border-left: 1px solid var(--line); padding: 16px 12px; overflow-y: auto; }
+  .wf-sidebar h2 { font-size: 0.72rem; letter-spacing: 0.08em; color: var(--ink-dim); margin-bottom: 10px; }
+  .wf-run-item { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; cursor: pointer; }
+  .wf-run-item:hover { border-color: oklch(0.83 0.09 230 / 0.6); }
+  .wf-run-goal { font-size: 0.84rem; color: var(--ink); }
+  .wf-run-meta { font-size: 0.74rem; color: var(--ink-dim); margin-top: 3px; }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar {
+    border-right: 1px solid var(--glass-brd);
+    background: var(--glass);
+    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    display: flex; flex-direction: column; min-height: 0;
+  }
+  .sidebar h2 {
+    font-size: 0.78rem; font-weight: 600; color: var(--ink-dim);
+    padding: 14px 14px 8px;
+  }
+  .search-wrap { padding: 0 10px 8px; }
+  .search-wrap input {
+    width: 100%; padding: 6px 10px; border-radius: 8px;
+    border: 1px solid var(--line); background: oklch(0.17 0.018 255 / 0.7);
+    color: var(--ink); font-size: 0.86rem;
+  }
+  .search-wrap input::placeholder { color: oklch(0.6 0.015 255); }
+  .agent-row .meta { font-size: 0.68rem; color: var(--ink-dim); }
+  .archived-head {
+    display: flex; align-items: center; gap: 6px; width: 100%;
+    background: none; border: none; text-align: left;
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em;
+    color: var(--ink-dim); padding: 12px 14px 6px;
+  }
+  .archived-head:hover { color: var(--ink-mid); }
+  .agent-row.archived .name, .agent-row.archived .role { color: var(--ink-dim); }
+  .agent-row .restore {
+    border: 1px solid var(--line); background: var(--glass); color: var(--ink-dim);
+    border-radius: 6px; padding: 2px 8px; font-size: 0.72rem;
+  }
+  .agent-row .restore:hover { color: var(--ink); background: var(--panel-2); }
+  .filter-empty { color: var(--ink-dim); font-size: 0.82rem; padding: 6px 16px; }
+  .agent-list { overflow-y: auto; padding: 0 8px 12px; display: flex; flex-direction: column; gap: 2px; }
+  .agent-row {
+    display: grid; grid-template-columns: 12px 1fr auto; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 9px; border: 1px solid transparent;
+    background: none; text-align: left; width: 100%;
+    transition: background 150ms var(--ease);
+  }
+  .agent-row:hover { background: oklch(0.26 0.022 255 / 0.5); }
+  .agent-row.selected { background: oklch(0.28 0.03 255 / 0.6); border-color: var(--line); }
+  .agent-row .chip { width: 12px; height: 12px; border-radius: 4px; }
+  .agent-row .who { min-width: 0; }
+  .agent-row .name { font-weight: 560; font-size: 0.92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .agent-row .role { color: var(--ink-dim); font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .agent-row .status { display: flex; align-items: center; gap: 6px; }
+  .agent-row .status-txt { font-size: 0.72rem; color: var(--ink-mid); }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .status-dot.running { background: var(--ok); animation: pulse 1.6s var(--ease) infinite; }
+  .status-dot.idle { background: var(--ink-dim); }
+  .status-dot.blocked { background: var(--danger); }
+  .status-dot.done { background: var(--accent); }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 oklch(0.82 0.12 155 / 0.55); }
+    60% { box-shadow: 0 0 0 6px oklch(0.82 0.12 155 / 0); }
+  }
+  .sidebar-empty { color: var(--ink-dim); font-size: 0.85rem; padding: 4px 16px 16px; line-height: 1.5; }
+
+  /* ---------- Graph ---------- */
+  .graph-wrap { position: relative; min-height: 0; }
+  svg#graph { width: 100%; height: 100%; display: block; touch-action: none; }
+  .grid-dot { fill: oklch(0.3 0.02 255 / 0.5); }
+  .edge { stroke-width: 2; fill: none; cursor: pointer; transition: stroke 150ms var(--ease); }
+  .edge-hit { stroke: transparent; stroke-width: 14; fill: none; cursor: pointer; }
+  .edge.selected { stroke: var(--accent) !important; stroke-width: 3; }
+  .node { cursor: grab; }
+  .node.dragging { cursor: grabbing; }
+  .node circle.body { transition: filter 150ms var(--ease); }
+  .node:hover circle.body { filter: brightness(1.12); }
+  .node.selected circle.halo { opacity: 1; }
+  .node.dim { opacity: 0.22; }
+  .edge.dim, .edge-hit.dim { opacity: 0.15; }
+  circle.halo { opacity: 0; transition: opacity 150ms var(--ease); }
+  .node text.label {
+    fill: var(--ink); font-size: 12.5px; font-weight: 600; text-anchor: middle;
+    paint-order: stroke; stroke: var(--bg-deep); stroke-width: 3px; stroke-linejoin: round;
+    pointer-events: none;
+  }
+  .node text.sub {
+    fill: var(--ink-mid); font-size: 10.5px; text-anchor: middle;
+    paint-order: stroke; stroke: var(--bg-deep); stroke-width: 3px; stroke-linejoin: round;
+    pointer-events: none;
+  }
+  .node .ndot.running { animation: pulse 1.6s var(--ease) infinite; }
+  .link-preview { stroke: var(--accent); stroke-width: 2; stroke-dasharray: 6 5; fill: none; pointer-events: none; }
+
+  .hint {
+    position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+    background: var(--panel); backdrop-filter: blur(12px);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 6px 16px; font-size: 0.8rem; color: var(--ink-dim);
+    white-space: nowrap; pointer-events: none;
+    transition: opacity 200ms var(--ease);
+  }
+  .hint kbd {
+    font-family: "SF Mono", Menlo, monospace; font-size: 0.72rem;
+    background: var(--panel-2); border: 1px solid var(--line);
+    border-radius: 5px; padding: 1px 5px; color: var(--ink-mid);
+  }
+
+  /* ---------- Empty state ---------- */
+  .empty {
+    position: absolute; inset: 0; display: grid; place-content: center; text-align: center;
+    gap: 10px; pointer-events: none;
+  }
+  .empty[hidden] { display: none; }
+  .empty > * { pointer-events: auto; }
+  .empty h3 { font-size: 1.55rem; font-weight: 650; letter-spacing: -0.015em; text-wrap: balance; }
+  .empty p { color: var(--ink-dim); max-width: 38ch; line-height: 1.55; margin: 0 auto; }
+  .empty .btn { margin: 8px auto 0; }
+
+  /* ---------- Detail panel ---------- */
+  .detail {
+    position: absolute; top: 14px; right: 14px; width: 296px;
+    max-height: calc(100% - 28px); overflow-y: auto;
+    background: var(--glass); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    border: 1px solid var(--glass-brd); border-radius: var(--r);
+    box-shadow: var(--shadow);
+    padding: 16px; z-index: var(--z-panel);
+    display: flex; flex-direction: column; gap: 12px;
+    transform: translateX(0); opacity: 1;
+    transition: transform 220ms var(--ease), opacity 220ms var(--ease);
+  }
+  .detail.hidden { transform: translateX(16px); opacity: 0; pointer-events: none; }
+  .detail label { font-size: 0.76rem; font-weight: 600; color: var(--ink-dim); display: block; margin-bottom: 5px; }
+  .detail input[type="text"], .detail select, .detail textarea {
+    width: 100%; padding: 7px 10px; border-radius: 8px;
+    border: 1px solid var(--line); background: oklch(0.17 0.018 255 / 0.7);
+    color: var(--ink);
+  }
+  .detail input::placeholder, .detail textarea::placeholder { color: oklch(0.62 0.015 255); }
+  .detail textarea { resize: vertical; min-height: 56px; }
+  .swatches { display: flex; gap: 7px; flex-wrap: wrap; }
+  .swatch {
+    width: 26px; height: 26px; border-radius: 8px; border: 2px solid transparent;
+    transition: transform 130ms var(--ease), border-color 130ms var(--ease);
+  }
+  .swatch:hover { transform: scale(1.12); }
+  .swatch.selected { border-color: var(--ink); }
+  .seg { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+  .seg button {
+    padding: 5px 2px; font-size: 0.76rem; border-radius: 7px;
+    border: 1px solid var(--line); background: var(--glass); color: var(--ink-dim);
+    transition: background 140ms var(--ease), color 140ms var(--ease);
+  }
+  .seg button:hover { color: var(--ink); background: var(--panel-2); }
+  .seg button.active { background: var(--panel-2); color: var(--ink); border-color: oklch(0.45 0.02 255); }
+  .links-list { display: flex; flex-direction: column; gap: 4px; }
+  .link-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 8px; border-radius: 7px; background: oklch(0.26 0.022 255 / 0.45);
+    font-size: 0.84rem;
+  }
+  .link-item .chip { width: 9px; height: 9px; border-radius: 3px; flex: none; }
+  .link-item span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .link-item button {
+    border: none; background: none; color: var(--ink-dim); padding: 2px 5px; border-radius: 5px;
+    line-height: 1;
+  }
+  .link-item button:hover { color: var(--danger); background: oklch(0.72 0.14 20 / 0.12); }
+  .detail .row-actions { display: flex; justify-content: space-between; gap: 8px; margin-top: 2px; }
+  .none-note { color: var(--ink-dim); font-size: 0.82rem; }
+
+  /* ---------- Chat panels (terminal under each bubble) ---------- */
+  #overlays {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    transform-origin: 0 0;
+    z-index: 5;
+  }
+  .chat-panel {
+    position: absolute; width: 480px;
+    pointer-events: auto;
+    background: var(--glass);
+    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    border: 1px solid var(--glass-brd);
+    border-radius: var(--r);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    animation: chat-in 180ms var(--ease);
+  }
+  @keyframes chat-in { from { opacity: 0; transform: translateY(-6px); } }
+  .chat-head {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--line);
+    background: oklch(0.21 0.02 255 / 0.85);
+  }
+  .chat-head .chip { width: 10px; height: 10px; border-radius: 3.5px; flex: none; }
+  .chat-head strong { font-size: 0.84rem; font-weight: 620; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chat-live { font-size: 0.72rem; color: var(--ok); flex: none; }
+  .chat-live.dead { color: var(--ink-dim); }
+  .chat-head button {
+    border: none; background: none; color: var(--ink-dim);
+    padding: 3px 7px; border-radius: 6px; font-size: 0.82rem; line-height: 1.2; flex: none;
+    transition: background 140ms var(--ease), color 140ms var(--ease);
+  }
+  .chat-head button:hover { color: var(--ink); background: var(--panel-2); }
+  .chat-head button.kill:hover { color: var(--danger); background: oklch(0.72 0.14 20 / 0.12); }
+  .chat-term { height: 236px; padding: 5px 2px 2px 8px; background: #111721; }
+  .chat-term .xterm { height: 100%; }
+  .chat-relay { display: flex; gap: 6px; padding: 7px 8px; border-top: 1px solid var(--line); }
+  .chat-relay select, .chat-relay input {
+    padding: 4px 8px; border-radius: 7px; font-size: 0.8rem;
+    border: 1px solid var(--line); background: oklch(0.17 0.018 255 / 0.7); color: var(--ink);
+  }
+  .chat-relay select { max-width: 130px; }
+  .chat-relay input { flex: 1; min-width: 60px; }
+  .chat-relay input::placeholder { color: oklch(0.62 0.015 255); }
+  .chat-relay .btn { padding: 4px 10px; font-size: 0.8rem; }
+  .node .term-badge text { font-size: 8.5px; font-weight: 700; fill: var(--ok); text-anchor: middle; pointer-events: none; }
+  .edge.pulse { stroke: var(--ok) !important; stroke-width: 3.5; stroke-opacity: 1 !important; }
+
+  /* ---------- Toast ---------- */
+  .toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translate(-50%, 8px);
+    background: var(--panel-solid); border: 1px solid var(--line);
+    border-radius: 10px; padding: 9px 16px; font-size: 0.87rem;
+    z-index: var(--z-toast); opacity: 0;
+    transition: opacity 200ms var(--ease), transform 200ms var(--ease);
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+    .status-dot.running, .ndot.running { box-shadow: 0 0 0 3px oklch(0.82 0.12 155 / 0.35); }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="logo"><div class="logo-mark"></div>Agent Deck</div>
+    <span class="count" id="count"></span>
+    <div class="fleet" id="fleet" role="group" aria-label="Fleet status summary — click a status to filter"></div>
+    <div class="spacer"></div>
+    <div class="viewseg" id="viewseg" role="tablist" aria-label="View mode">
+      <button data-mode="graph" class="active" title="Graph view">Graph</button>
+      <button data-mode="workflow" title="Chat with an agent, hand off work, refine back and forth">Workflow</button>
+    </div>
+    <button class="btn" id="btn-export" title="Download agents as JSON">Export</button>
+    <button class="btn" id="btn-import" title="Load agents from JSON">Import</button>
+    <input type="file" id="import-file" accept=".json,application/json" hidden>
+    <button class="btn primary" id="btn-add">+ New agent</button>
+  </header>
+
+  <div class="main">
+    <aside class="sidebar">
+      <h2>AGENTS</h2>
+      <div class="search-wrap">
+        <input type="text" id="search" placeholder="Filter by name, role, machine…" autocomplete="off" aria-label="Filter agents">
+      </div>
+      <div class="agent-list" id="agent-list"></div>
+      <p class="sidebar-empty" id="sidebar-empty" hidden>No agents yet. Each one is a terminal you're running — name it, say what it's doing, give it a color.</p>
+    </aside>
+
+    <div class="graph-wrap" id="graph-wrap">
+      <svg id="graph" role="application" aria-label="Agent graph. Drag nodes to arrange, shift-drag between nodes to link.">
+        <defs>
+          <pattern id="dots" width="26" height="26" patternUnits="userSpaceOnUse">
+            <circle class="grid-dot" cx="1.5" cy="1.5" r="1.5"/>
+          </pattern>
+        </defs>
+        <rect id="bgrect" x="-8000" y="-8000" width="16000" height="16000" fill="url(#dots)"/>
+        <g id="viewport">
+          <g id="edges"></g>
+          <g id="nodes"></g>
+          <path id="linkpreview" class="link-preview" hidden></path>
+        </g>
+      </svg>
+
+      <div id="overlays"></div>
+
+      <div class="empty" id="empty" hidden>
+        <h3>Your terminals, mapped</h3>
+        <p>Add an agent for each terminal you're running. Color-code them, mark what they're doing, and shift-drag between nodes to link agents that work together.</p>
+        <button class="btn primary" id="btn-add-empty">+ Add your first agent</button>
+      </div>
+
+      <div class="hint" id="hint">Click bubble = open/close terminal · drag to move · <kbd>Shift</kbd>+drag node to node = link · click edge + <kbd>⌫</kbd> to unlink</div>
+
+      <section class="detail hidden" id="detail" aria-label="Agent details">
+        <div>
+          <label for="f-name">Name</label>
+          <input type="text" id="f-name" placeholder="e.g. Orchestrator" autocomplete="off">
+        </div>
+        <div>
+          <label for="f-role">What it does</label>
+          <input type="text" id="f-role" placeholder="e.g. Reviewing Daisy PRs" autocomplete="off">
+        </div>
+        <div>
+          <label for="f-machine">Terminal / machine</label>
+          <input type="text" id="f-machine" placeholder="e.g. Mac tab 3, Windows SSH" autocomplete="off">
+        </div>
+        <div>
+          <label>Status</label>
+          <div class="seg" id="f-status"></div>
+        </div>
+        <div>
+          <label>Color</label>
+          <div class="swatches" id="f-color"></div>
+        </div>
+        <div>
+          <label for="f-notes">Notes</label>
+          <textarea id="f-notes" placeholder="Anything worth remembering…"></textarea>
+        </div>
+        <div>
+          <label for="f-linkto">Linked agents</label>
+          <div class="links-list" id="f-links"></div>
+          <select id="f-linkto" style="margin-top:6px"></select>
+        </div>
+        <button class="btn primary" id="btn-terminal" style="justify-content:center">Open terminal</button>
+        <div class="row-actions">
+          <button class="btn" id="btn-duplicate" title="Clone this agent (same role, color, notes)">Duplicate</button>
+          <button class="btn" id="btn-archive" title="Hide from the board; restore anytime from the sidebar">Archive</button>
+        </div>
+        <div class="row-actions">
+          <button class="btn danger" id="btn-delete">Delete</button>
+          <button class="btn" id="btn-close">Close</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="workflow-view" id="workflow-view">
+      <div class="wf-layout">
+        <div class="wf-main">
+          <div class="wf-setup">
+            <label>Chat with</label>
+            <select id="wf-agent"></select>
+            <textarea id="wf-goal" placeholder="what do you want done?" rows="2"></textarea>
+            <button class="btn primary" id="wf-send">Send</button>
+          </div>
+          <div class="wf-transcript" id="wf-transcript"></div>
+          <div class="wf-handoff hidden" id="wf-handoff">
+            <label>Hand off to</label>
+            <select id="wf-handoff-agent"></select>
+            <button class="btn" id="wf-handoff-btn">Hand off</button>
+            <span class="wf-sep">or auto</span>
+            <select id="wf-auto-agent"></select>
+            <input type="number" id="wf-rounds" min="1" max="6" value="2" title="rounds">
+            <button class="btn" id="wf-auto-btn">Run rounds</button>
+            <button class="btn" id="wf-new-btn" title="Start a fresh conversation">New</button>
+          </div>
+        </div>
+        <aside class="wf-sidebar">
+          <h2>PAST WORKFLOWS</h2>
+          <div class="wf-runs" id="wf-runs"></div>
+        </aside>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="/vendor/@xterm/xterm/lib/xterm.js"></script>
+<script src="/vendor/@xterm/addon-fit/lib/addon-fit.js"></script>
+<script>
+'use strict';
+
+/* ---------- constants ---------- */
+const PALETTE = [
+  { name: 'Mint',     val: 'oklch(0.85 0.09 160)' },
+  { name: 'Sky',      val: 'oklch(0.83 0.09 230)' },
+  { name: 'Lavender', val: 'oklch(0.82 0.09 290)' },
+  { name: 'Rose',     val: 'oklch(0.83 0.09 350)' },
+  { name: 'Peach',    val: 'oklch(0.85 0.09 45)'  },
+  { name: 'Butter',   val: 'oklch(0.89 0.09 95)'  },
+  { name: 'Teal',     val: 'oklch(0.84 0.08 195)' },
+  { name: 'Coral',    val: 'oklch(0.80 0.10 25)'  },
+];
+const STATUSES = ['running', 'idle', 'blocked', 'done'];
+const STORE_KEY = 'agent-deck-v1';
+const R = 28; // node radius
+
+/* ---------- state ---------- */
+let state = load() || { agents: [], links: [], view: { x: 0, y: 0, k: 1 } };
+let selectedId = null;      // agent id
+let selectedEdge = null;    // link id
+let editOpen = false;       // detail panel visible
+let filterText = '';        // sidebar search box
+let filterStatus = null;    // fleet chip toggle
+let archivedOpen = false;   // archived section expanded
+
+const activeAgents = () => state.agents.filter(a => !a.archived);
+const archivedAgents = () => state.agents.filter(a => a.archived);
+function filterActive() { return !!(filterText.trim() || filterStatus); }
+function matchesFilter(a) {
+  if (filterStatus && a.status !== filterStatus) return false;
+  const q = filterText.trim().toLowerCase();
+  if (!q) return true;
+  return [a.name, a.role, a.machine, a.status].some(v => (v || '').toLowerCase().includes(q));
+}
+
+function load() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY)); } catch { return null; }
+}
+let saveTimer;
+function save() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => localStorage.setItem(STORE_KEY, JSON.stringify(state)), 150);
+}
+const uid = () => Math.random().toString(36).slice(2, 9);
+const agentById = id => state.agents.find(a => a.id === id);
+
+/* ---------- dom refs ---------- */
+const $ = id => document.getElementById(id);
+const svg = $('graph'), viewport = $('viewport'), edgesG = $('edges'), nodesG = $('nodes');
+const linkPreview = $('linkpreview');
+
+/* ---------- view transform ---------- */
+function applyView() {
+  const { x, y, k } = state.view;
+  viewport.setAttribute('transform', `translate(${x},${y}) scale(${k})`);
+  const ov = document.getElementById('overlays');
+  if (ov) ov.style.transform = `translate(${x}px,${y}px) scale(${k})`;
+}
+function toWorld(cx, cy) {
+  const r = svg.getBoundingClientRect();
+  const { x, y, k } = state.view;
+  return { x: (cx - r.left - x) / k, y: (cy - r.top - y) / k };
+}
+
+/* ---------- rendering ---------- */
+function render() {
+  renderNodes();
+  renderEdges();
+  renderSidebar();
+  renderDetail();
+  renderFleet();
+  const n = activeAgents().length;
+  $('count').textContent = n
+    ? `${n} agent${n > 1 ? 's' : ''} · ${state.links.length} link${state.links.length === 1 ? '' : 's'}`
+    : '';
+  $('empty').hidden = n > 0;
+  $('hint').style.opacity = n > 0 ? 1 : 0;
+  syncChats();
+  save();
+}
+
+/* ---------- fleet summary bar ---------- */
+function renderFleet() {
+  const el = $('fleet');
+  el.innerHTML = '';
+  const agents = activeAgents();
+  if (!agents.length) return;
+  const machines = new Set(agents.map(a => (a.machine || '').trim().toLowerCase()).filter(Boolean));
+  for (const s of STATUSES) {
+    const n = agents.filter(a => a.status === s).length;
+    if (!n && filterStatus !== s) continue;
+    const b = document.createElement('button');
+    b.className = 'fleet-chip' + (filterStatus === s ? ' active' : '');
+    b.title = filterStatus === s ? 'Clear status filter' : `Show only ${s} agents`;
+    b.setAttribute('aria-pressed', filterStatus === s);
+    b.innerHTML = `<span class="status-dot ${s}"></span>${n} ${esc(s)}`;
+    b.addEventListener('click', () => { filterStatus = filterStatus === s ? null : s; render(); });
+    el.append(b);
+  }
+  const info = document.createElement('span');
+  info.className = 'count';
+  info.textContent = `· ${liveAgents.size} live · ${machines.size || '—'} machine${machines.size === 1 ? '' : 's'}`;
+  el.append(info);
+}
+
+function renderEdges() {
+  edgesG.innerHTML = '';
+  for (const l of state.links) {
+    const a = agentById(l.from), b = agentById(l.to);
+    if (!a || !b || a.archived || b.archived) continue;
+    const dim = filterActive() && !(matchesFilter(a) && matchesFilter(b));
+    const d = `M ${a.x} ${a.y} L ${b.x} ${b.y}`;
+    const vis = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    vis.setAttribute('d', d);
+    vis.setAttribute('class', 'edge' + (selectedEdge === l.id ? ' selected' : '') + (dim ? ' dim' : ''));
+    vis.setAttribute('stroke', a.color);
+    vis.setAttribute('stroke-opacity', '0.55');
+    vis.dataset.from = l.from; vis.dataset.to = l.to;
+    const hit = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    hit.setAttribute('d', d);
+    hit.setAttribute('class', 'edge-hit');
+    hit.addEventListener('pointerdown', e => {
+      e.stopPropagation();
+      selectedEdge = l.id; selectedId = null;
+      render();
+    });
+    edgesG.append(vis, hit);
+  }
+}
+
+function renderNodes() {
+  nodesG.innerHTML = '';
+  for (const a of activeAgents()) {
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.setAttribute('class', 'node' + (selectedId === a.id ? ' selected' : '')
+      + (filterActive() && !matchesFilter(a) ? ' dim' : ''));
+    g.setAttribute('transform', `translate(${a.x},${a.y})`);
+    g.dataset.id = a.id;
+
+    const halo = circleEl(0, 0, R + 6, 'halo');
+    halo.setAttribute('fill', 'none');
+    halo.setAttribute('stroke', a.color);
+    halo.setAttribute('stroke-width', '2');
+    halo.setAttribute('stroke-opacity', '0.9');
+
+    const body = circleEl(0, 0, R, 'body');
+    body.setAttribute('fill', a.color);
+    body.setAttribute('fill-opacity', '0.16');
+    body.setAttribute('stroke', a.color);
+    body.setAttribute('stroke-width', '2');
+
+    const initials = textEl(0, 5, initialsOf(a.name), 'label');
+    initials.style.fontSize = '14px';
+
+    const label = textEl(0, R + 18, a.name, 'label');
+    const sub = textEl(0, R + 33, truncate(a.role, 28), 'sub');
+
+    const dot = circleEl(R * 0.72, -R * 0.72, 5.5, 'ndot ' + a.status);
+    dot.setAttribute('fill', statusColor(a.status));
+    dot.setAttribute('stroke', 'var(--bg-deep)');
+    dot.setAttribute('stroke-width', '2');
+    const dotTitle = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+    dotTitle.textContent = 'status: ' + a.status;
+    dot.append(dotTitle);
+
+    g.append(halo, body, initials, label, sub, dot);
+
+    if (liveAgents.has(a.id)) {
+      const badge = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      badge.setAttribute('class', 'term-badge');
+      const br = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      br.setAttribute('x', R * 0.45); br.setAttribute('y', R * 0.5);
+      br.setAttribute('width', 22); br.setAttribute('height', 14);
+      br.setAttribute('rx', 4);
+      br.setAttribute('fill', 'var(--bg-deep)');
+      br.setAttribute('stroke', 'var(--ok)');
+      br.setAttribute('stroke-width', '1.5');
+      const bt = textEl(R * 0.45 + 11, R * 0.5 + 10.5, '>_');
+      badge.append(br, bt);
+      g.append(badge);
+    }
+
+    g.addEventListener('pointerdown', e => onNodePointerDown(e, a));
+    nodesG.append(g);
+  }
+}
+
+function circleEl(cx, cy, r, cls) {
+  const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  c.setAttribute('cx', cx); c.setAttribute('cy', cy); c.setAttribute('r', r);
+  if (cls) c.setAttribute('class', cls);
+  return c;
+}
+function textEl(x, y, str, cls) {
+  const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  t.setAttribute('x', x); t.setAttribute('y', y);
+  t.setAttribute('class', cls);
+  t.textContent = str;
+  return t;
+}
+const initialsOf = n => (n || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+const truncate = (s, n) => (s && s.length > n) ? s.slice(0, n - 1) + '…' : (s || '');
+function statusColor(s) {
+  return { running: 'oklch(0.82 0.12 155)', idle: 'oklch(0.6 0.015 255)', blocked: 'oklch(0.72 0.14 20)', done: 'oklch(0.83 0.09 230)' }[s];
+}
+
+/* ---------- sidebar ---------- */
+function renderSidebar() {
+  const list = $('agent-list');
+  list.innerHTML = '';
+  $('sidebar-empty').hidden = state.agents.length > 0;
+  const shown = activeAgents().filter(matchesFilter);
+  for (const a of shown) {
+    const meta = sessionMeta.get(a.id);
+    const up = meta ? `<br><span class="meta">live ${fmtDur(Date.now() - meta.startedAt)} · active ${fmtDur(Date.now() - meta.lastActivity)} ago</span>` : '';
+    const row = document.createElement('button');
+    row.className = 'agent-row' + (selectedId === a.id ? ' selected' : '');
+    row.innerHTML = `
+      <span class="chip" style="background:${a.color}"></span>
+      <span class="who">
+        <span class="name">${esc(a.name)}</span><br>
+        <span class="role">${esc(a.role || a.machine || '—')}</span>${up}
+      </span>
+      <span class="status"><span class="status-dot ${a.status}"></span><span class="status-txt">${a.status}</span></span>`;
+    if (a.machine) row.title = a.machine;
+    row.addEventListener('click', () => { selectAgent(a.id, true); centerOn(a); });
+    list.append(row);
+  }
+  if (!shown.length && activeAgents().length && filterActive()) {
+    list.innerHTML = '<p class="filter-empty">No agents match this filter.</p>';
+  }
+  const arch = archivedAgents();
+  if (arch.length) {
+    const head = document.createElement('button');
+    head.className = 'archived-head';
+    head.setAttribute('aria-expanded', archivedOpen);
+    head.textContent = `${archivedOpen ? '▾' : '▸'} ARCHIVED (${arch.length})`;
+    head.addEventListener('click', () => { archivedOpen = !archivedOpen; renderSidebar(); });
+    list.append(head);
+    if (archivedOpen) for (const a of arch) {
+      const row = document.createElement('div');
+      row.className = 'agent-row archived';
+      row.innerHTML = `
+        <span class="chip" style="background:${a.color};opacity:0.5"></span>
+        <span class="who">
+          <span class="name">${esc(a.name)}</span><br>
+          <span class="role">${esc(a.role || a.machine || '—')}</span>
+        </span>`;
+      const restore = document.createElement('button');
+      restore.className = 'restore';
+      restore.textContent = 'Restore';
+      restore.title = 'Put this agent back on the board';
+      restore.addEventListener('click', () => {
+        a.archived = false;
+        toast(`Restored ${a.name}`);
+        selectAgent(a.id, true);
+      });
+      row.append(restore);
+      list.append(row);
+    }
+  }
+}
+function fmtDur(ms) {
+  const s = Math.max(0, Math.round(ms / 1000));
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m`;
+  return `${Math.floor(m / 60)}h ${m % 60}m`;
+}
+const esc = s => (s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+/* ---------- detail panel ---------- */
+function renderDetail() {
+  const panel = $('detail');
+  const a = editOpen ? agentById(selectedId) : null;
+  if (!a) { panel.classList.add('hidden'); return; }
+  panel.classList.remove('hidden');
+
+  setIfNotFocused('f-name', a.name);
+  setIfNotFocused('f-role', a.role);
+  setIfNotFocused('f-machine', a.machine);
+  setIfNotFocused('f-notes', a.notes);
+
+  const seg = $('f-status');
+  seg.innerHTML = '';
+  for (const s of STATUSES) {
+    const b = document.createElement('button');
+    b.textContent = s;
+    b.className = a.status === s ? 'active' : '';
+    b.addEventListener('click', () => { a.status = s; render(); });
+    seg.append(b);
+  }
+
+  const sw = $('f-color');
+  sw.innerHTML = '';
+  for (const p of PALETTE) {
+    const b = document.createElement('button');
+    b.className = 'swatch' + (a.color === p.val ? ' selected' : '');
+    b.style.background = p.val;
+    b.title = p.name;
+    b.setAttribute('aria-label', 'Color ' + p.name);
+    b.addEventListener('click', () => { a.color = p.val; render(); });
+    sw.append(b);
+  }
+
+  const linksBox = $('f-links');
+  linksBox.innerHTML = '';
+  const myLinks = state.links.filter(l => l.from === a.id || l.to === a.id);
+  if (!myLinks.length) linksBox.innerHTML = '<span class="none-note">Not linked to anything yet.</span>';
+  for (const l of myLinks) {
+    const other = agentById(l.from === a.id ? l.to : l.from);
+    if (!other) continue;
+    const item = document.createElement('div');
+    item.className = 'link-item';
+    item.innerHTML = `<span class="chip" style="background:${other.color}"></span><span>${esc(other.name)}</span>`;
+    const x = document.createElement('button');
+    x.textContent = '✕';
+    x.title = 'Remove link';
+    x.setAttribute('aria-label', 'Unlink ' + other.name);
+    x.addEventListener('click', () => { state.links = state.links.filter(k => k.id !== l.id); render(); });
+    item.append(x);
+    linksBox.append(item);
+  }
+
+  const sel = $('f-linkto');
+  sel.innerHTML = '<option value="">+ Link to another agent…</option>';
+  for (const o of activeAgents()) {
+    if (o.id === a.id) continue;
+    if (state.links.some(l => (l.from === a.id && l.to === o.id) || (l.from === o.id && l.to === a.id))) continue;
+    const op = document.createElement('option');
+    op.value = o.id; op.textContent = o.name;
+    sel.append(op);
+  }
+  sel.disabled = sel.options.length === 1;
+}
+function setIfNotFocused(id, val) {
+  const el = $(id);
+  if (document.activeElement !== el) el.value = val || '';
+}
+
+/* field bindings */
+for (const [fid, key] of [['f-name', 'name'], ['f-role', 'role'], ['f-machine', 'machine'], ['f-notes', 'notes']]) {
+  $(fid).addEventListener('input', e => {
+    const a = agentById(selectedId);
+    if (!a) return;
+    a[key] = e.target.value;
+    renderNodes(); renderSidebar();
+    $('count').textContent = '';
+    save();
+  });
+}
+$('f-linkto').addEventListener('change', e => {
+  const a = agentById(selectedId);
+  if (!a || !e.target.value) return;
+  state.links.push({ id: uid(), from: a.id, to: e.target.value });
+  toast('Linked');
+  render();
+});
+$('btn-close').addEventListener('click', () => { editOpen = false; render(); });
+$('btn-duplicate').addEventListener('click', () => {
+  const a = agentById(selectedId);
+  if (!a) return;
+  const copy = { ...a, id: uid(), name: `${a.name} copy`, x: a.x + 72, y: a.y + 44, chatOpen: false };
+  state.agents.push(copy);
+  toast(`Duplicated ${a.name}`);
+  selectAgent(copy.id, true);
+  const nameEl = $('f-name');
+  nameEl.focus(); nameEl.select();
+});
+$('btn-archive').addEventListener('click', () => {
+  const a = agentById(selectedId);
+  if (!a) return;
+  if (chats.has(a.id)) closeChat(a.id); // panel only — the shell keeps running
+  a.archived = true;
+  selectedId = null; editOpen = false;
+  toast(`Archived ${a.name} — restore it from the sidebar`);
+  archivedOpen = true;
+  render();
+});
+$('search').addEventListener('input', e => { filterText = e.target.value; render(); });
+$('btn-delete').addEventListener('click', () => {
+  const a = agentById(selectedId);
+  if (!a) return;
+  if (!confirm(`Delete "${a.name}"? Its links go too.`)) return;
+  if (chats.has(a.id)) closeChat(a.id);
+  state.agents = state.agents.filter(x => x.id !== a.id);
+  state.links = state.links.filter(l => l.from !== a.id && l.to !== a.id);
+  selectedId = null;
+  render();
+});
+
+/* ---------- selection ---------- */
+function selectAgent(id, edit = false) { selectedId = id; selectedEdge = null; editOpen = edit; render(); }
+function centerOn(a) {
+  const r = svg.getBoundingClientRect();
+  state.view.x = r.width / 2 - a.x * state.view.k;
+  state.view.y = r.height / 2 - a.y * state.view.k;
+  applyView(); save();
+}
+
+/* ---------- add agent ---------- */
+function addAgent() {
+  const r = svg.getBoundingClientRect();
+  const center = toWorld(r.left + r.width / 2, r.top + r.height / 2);
+  const n = state.agents.length;
+  const angle = n * 2.4, dist = n === 0 ? 0 : 90 + 14 * Math.sqrt(n) * 3;
+  const a = {
+    id: uid(),
+    name: `Agent ${n + 1}`,
+    role: '', machine: '', notes: '',
+    status: 'running',
+    color: PALETTE[n % PALETTE.length].val,
+    x: Math.round(center.x + Math.cos(angle) * dist),
+    y: Math.round(center.y + Math.sin(angle) * dist),
+  };
+  state.agents.push(a);
+  selectAgent(a.id, true);
+  const nameEl = $('f-name');
+  nameEl.focus(); nameEl.select();
+}
+$('btn-add').addEventListener('click', addAgent);
+$('btn-add-empty').addEventListener('click', addAgent);
+
+/* ---------- graph interaction ---------- */
+let drag = null; // {type:'node'|'pan'|'link', ...}
+
+function onNodePointerDown(e, a) {
+  e.stopPropagation();
+  svg.setPointerCapture(e.pointerId);
+  if (e.shiftKey) {
+    drag = { type: 'link', from: a, x: a.x, y: a.y };
+    linkPreview.hidden = false;
+  } else {
+    const w = toWorld(e.clientX, e.clientY);
+    drag = { type: 'node', a, dx: a.x - w.x, dy: a.y - w.y, moved: false };
+    e.currentTarget.classList.add('dragging');
+  }
+}
+svg.addEventListener('pointerdown', e => {
+  svg.setPointerCapture(e.pointerId);
+  drag = { type: 'pan', sx: e.clientX, sy: e.clientY, ox: state.view.x, oy: state.view.y, moved: false };
+});
+svg.addEventListener('pointermove', e => {
+  if (!drag) return;
+  if (drag.type === 'node') {
+    const w = toWorld(e.clientX, e.clientY);
+    drag.a.x = Math.round(w.x + drag.dx);
+    drag.a.y = Math.round(w.y + drag.dy);
+    drag.moved = true;
+    renderNodesLight();
+  } else if (drag.type === 'pan') {
+    state.view.x = drag.ox + (e.clientX - drag.sx);
+    state.view.y = drag.oy + (e.clientY - drag.sy);
+    if (Math.abs(e.clientX - drag.sx) + Math.abs(e.clientY - drag.sy) > 3) drag.moved = true;
+    applyView();
+  } else if (drag.type === 'link') {
+    const w = toWorld(e.clientX, e.clientY);
+    linkPreview.setAttribute('d', `M ${drag.from.x} ${drag.from.y} L ${w.x} ${w.y}`);
+  }
+});
+svg.addEventListener('pointerup', e => {
+  if (!drag) return;
+  if (drag.type === 'link') {
+    linkPreview.hidden = true;
+    linkPreview.removeAttribute('d');
+    const w = toWorld(e.clientX, e.clientY);
+    const target = state.agents.find(a => a !== drag.from && Math.hypot(a.x - w.x, a.y - w.y) <= R + 8);
+    if (target) {
+      const dup = state.links.some(l =>
+        (l.from === drag.from.id && l.to === target.id) || (l.from === target.id && l.to === drag.from.id));
+      if (!dup) { state.links.push({ id: uid(), from: drag.from.id, to: target.id }); toast(`Linked ${drag.from.name} ↔ ${target.name}`); }
+      else toast('Already linked');
+    }
+    render();
+  } else if (drag.type === 'node') {
+    if (!drag.moved) { selectAgent(drag.a.id, false); toggleChat(drag.a.id); }
+    else render();
+  } else if (drag.type === 'pan') {
+    if (!drag.moved) { selectedId = null; selectedEdge = null; render(); }
+    else save();
+  }
+  document.querySelectorAll('.node.dragging').forEach(n => n.classList.remove('dragging'));
+  drag = null;
+});
+
+/* light re-render during drag: move node group + its edges only */
+function renderNodesLight() {
+  const a = drag.a;
+  const g = nodesG.querySelector(`[data-id="${a.id}"]`);
+  if (g) g.setAttribute('transform', `translate(${a.x},${a.y})`);
+  positionChat(a.id);
+  renderEdges();
+}
+
+/* zoom */
+svg.addEventListener('wheel', e => {
+  e.preventDefault();
+  const { k } = state.view;
+  const nk = Math.min(2.5, Math.max(0.3, k * (e.deltaY < 0 ? 1.08 : 0.925)));
+  const w = toWorld(e.clientX, e.clientY);
+  const r = svg.getBoundingClientRect();
+  state.view.k = nk;
+  state.view.x = e.clientX - r.left - w.x * nk;
+  state.view.y = e.clientY - r.top - w.y * nk;
+  applyView(); save();
+}, { passive: false });
+
+/* keyboard */
+document.addEventListener('keydown', e => {
+  if (e.target.matches('input, textarea, select')) return;
+  if ((e.key === 'Delete' || e.key === 'Backspace')) {
+    if (selectedEdge) {
+      state.links = state.links.filter(l => l.id !== selectedEdge);
+      selectedEdge = null;
+      render();
+    } else if (selectedId) {
+      $('btn-delete').click();
+    }
+  }
+  if (e.key === 'Escape') { selectedId = null; selectedEdge = null; editOpen = false; render(); }
+  if (e.key === 'n' && !e.metaKey && !e.ctrlKey) addAgent();
+});
+
+/* ---------- export / import ---------- */
+$('btn-export').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'agent-deck.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('Exported agent-deck.json');
+});
+$('btn-import').addEventListener('click', () => $('import-file').click());
+$('import-file').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const data = JSON.parse(await file.text());
+    if (!Array.isArray(data.agents)) throw new Error('bad shape');
+    state = { agents: data.agents, links: data.links || [], view: data.view || { x: 0, y: 0, k: 1 } };
+    selectedId = null; selectedEdge = null;
+    applyView(); render();
+    toast(`Imported ${state.agents.length} agents`);
+  } catch {
+    toast('Import failed — not a valid Agent Deck file');
+  }
+  e.target.value = '';
+});
+
+/* ---------- chat terminals (one panel under each bubble) ---------- */
+const HAS_SERVER = location.protocol.startsWith('http');
+const CHAT_W = 480; // must match .chat-panel width
+let ws = null, wsReady = false;   // control socket: live status + relays
+let liveAgents = new Set();
+const sessionMeta = new Map();    // agentId -> {startedAt, lastActivity} from /api/sessions
+
+async function refreshSessionMeta() {
+  if (!HAS_SERVER) return;
+  try {
+    const r = await fetch('/api/sessions');
+    const list = await r.json();
+    sessionMeta.clear();
+    for (const s of list) sessionMeta.set(s.agent, s);
+    renderSidebar();
+    for (const [cid, c] of chats) updateChatLive(c, cid);
+  } catch {}
+}
+setInterval(refreshSessionMeta, 10000);
+const chats = new Map();          // agentId -> {panel, term, fit, sock, nameEl, chipEl, liveEl, relaySel}
+
+function connectWS() {
+  if (!HAS_SERVER) return;
+  ws = new WebSocket(`ws://${location.host}`);
+  ws.addEventListener('open', () => { wsReady = true; });
+  ws.addEventListener('message', ev => {
+    let m; try { m = JSON.parse(ev.data); } catch { return; }
+    if (m.type === 'live') {
+      liveAgents = new Set(m.agents);
+      renderNodes();
+      renderFleet();
+      for (const [, c] of chats) updateChatLive(c);
+      refreshSessionMeta();
+    } else if (m.type === 'relayed') {
+      pulseEdge(m.from, m.to);
+    }
+  });
+  ws.addEventListener('close', () => {
+    wsReady = false;
+    setTimeout(connectWS, 1500);
+  });
+}
+const wsend = obj => { if (wsReady) ws.send(JSON.stringify(obj)); };
+
+function toggleChat(id) { chats.has(id) ? closeChat(id) : openChat(id); }
+
+function openChat(id) {
+  if (!HAS_SERVER) {
+    toast('Live terminals need the server — run start.command (or: node server.js)');
+    return;
+  }
+  if (chats.has(id)) return;
+  const a = agentById(id);
+  if (!a) return;
+
+  const panel = document.createElement('div');
+  panel.className = 'chat-panel';
+  panel.style.borderColor = a.color;
+
+  const head = document.createElement('div');
+  head.className = 'chat-head';
+  const chipEl = document.createElement('span');
+  chipEl.className = 'chip';
+  const nameEl = document.createElement('strong');
+  const liveEl = document.createElement('span');
+  liveEl.className = 'chat-live';
+  const editBtn = document.createElement('button');
+  editBtn.textContent = '✎';
+  editBtn.title = 'Edit agent';
+  editBtn.addEventListener('click', () => selectAgent(id, true));
+  const killBtn = document.createElement('button');
+  killBtn.textContent = '⏻';
+  killBtn.className = 'kill';
+  killBtn.title = "Kill this agent's shell";
+  killBtn.addEventListener('click', () => {
+    const ag = agentById(id);
+    if (confirm(`Kill ${ag ? ag.name : 'this agent'}'s shell?`)) wsend({ type: 'kill', agent: id });
+  });
+  const hideBtn = document.createElement('button');
+  hideBtn.textContent = '—';
+  hideBtn.title = 'Close panel (shell keeps running)';
+  hideBtn.addEventListener('click', () => closeChat(id));
+  head.append(chipEl, nameEl, liveEl, editBtn, killBtn, hideBtn);
+
+  const mount = document.createElement('div');
+  mount.className = 'chat-term';
+
+  const relayRow = document.createElement('div');
+  relayRow.className = 'chat-relay';
+  const relaySel = document.createElement('select');
+  relaySel.title = 'Linked agent to send to';
+  const relayMsg = document.createElement('input');
+  relayMsg.placeholder = 'Send a command to a linked agent…';
+  relayMsg.autocomplete = 'off';
+  const relayBtn = document.createElement('button');
+  relayBtn.className = 'btn';
+  relayBtn.textContent = 'Send';
+  const doRelay = () => {
+    const to = relaySel.value, msg = relayMsg.value;
+    if (!to || !msg.trim()) return;
+    wsend({ type: 'relay', to, from: id, data: msg + '\r' });
+    relayMsg.value = '';
+    const t = agentById(to);
+    toast(`Sent to ${t ? t.name : 'agent'}`);
+  };
+  relayBtn.addEventListener('click', doRelay);
+  relayMsg.addEventListener('keydown', e => { if (e.key === 'Enter') doRelay(); });
+  relayRow.append(relaySel, relayMsg, relayBtn);
+
+  panel.append(head, mount, relayRow);
+  document.getElementById('overlays').append(panel);
+
+  const term = new Terminal({
+    fontFamily: 'ui-monospace, "SF Mono", Menlo, monospace',
+    fontSize: 12.5,
+    cursorBlink: true,
+    theme: {
+      background: '#111721', foreground: '#e6eaf2',
+      cursor: '#8ec9f5', selectionBackground: '#2c3a52',
+    },
+    scrollback: 4000,
+  });
+  const FitCtor = (typeof FitAddon === 'function') ? FitAddon : FitAddon.FitAddon;
+  const fit = new FitCtor();
+  term.loadAddon(fit);
+  term.open(mount);
+  fit.fit();
+
+  const sock = new WebSocket(`ws://${location.host}`);
+  sock.addEventListener('open', () => {
+    sock.send(JSON.stringify({ type: 'attach', agent: id, cols: term.cols, rows: term.rows }));
+  });
+  sock.addEventListener('message', ev => {
+    let m; try { m = JSON.parse(ev.data); } catch { return; }
+    if (m.type === 'output' || m.type === 'scrollback') term.write(m.data);
+    else if (m.type === 'exit') term.write('\r\n\x1b[2m[shell exited — close & reopen to restart]\x1b[0m\r\n');
+  });
+  term.onData(data => { if (sock.readyState === 1) sock.send(JSON.stringify({ type: 'input', data })); });
+  term.onResize(({ cols, rows }) => { if (sock.readyState === 1) sock.send(JSON.stringify({ type: 'resize', cols, rows })); });
+
+  const chat = { panel, term, fit, sock, nameEl, chipEl, liveEl, relaySel };
+  chats.set(id, chat);
+  updateChatHeader(id, chat);
+  positionChat(id);
+  a.chatOpen = true;
+  save();
+  requestAnimationFrame(() => { fit.fit(); term.focus(); });
+}
+
+function closeChat(id) {
+  const c = chats.get(id);
+  if (!c) return;
+  try { c.sock.close(); } catch {}
+  c.term.dispose();
+  c.panel.remove();
+  chats.delete(id);
+  const a = agentById(id);
+  if (a) { a.chatOpen = false; save(); }
+}
+
+function positionChat(id) {
+  const c = chats.get(id), a = agentById(id);
+  if (!c || !a) return;
+  c.panel.style.left = (a.x - CHAT_W / 2) + 'px';
+  c.panel.style.top = (a.y + R + 44) + 'px';
+}
+
+function updateChatHeader(id, c) {
+  const a = agentById(id);
+  if (!a) return;
+  c.chipEl.style.background = a.color;
+  c.panel.style.borderColor = a.color;
+  c.nameEl.textContent = a.name;
+  updateChatLive(c, id);
+  const linked = state.links
+    .filter(l => l.from === id || l.to === id)
+    .map(l => agentById(l.from === id ? l.to : l.from))
+    .filter(Boolean);
+  const prev = c.relaySel.value;
+  c.relaySel.innerHTML = '';
+  if (!linked.length) {
+    c.relaySel.innerHTML = '<option value="">no links</option>';
+    c.relaySel.disabled = true;
+  } else {
+    c.relaySel.disabled = false;
+    for (const o of linked) {
+      const op = document.createElement('option');
+      op.value = o.id; op.textContent = '→ ' + o.name;
+      c.relaySel.append(op);
+    }
+    if ([...c.relaySel.options].some(o => o.value === prev)) c.relaySel.value = prev;
+  }
+}
+function updateChatLive(c, id) {
+  const cid = id || [...chats.entries()].find(([, v]) => v === c)?.[0];
+  const live = liveAgents.has(cid);
+  const meta = sessionMeta.get(cid);
+  c.liveEl.textContent = live ? ('● live' + (meta ? ' ' + fmtDur(Date.now() - meta.startedAt) : '')) : '○ off';
+  if (meta) c.liveEl.title = `last activity ${fmtDur(Date.now() - meta.lastActivity)} ago`;
+  c.liveEl.classList.toggle('dead', !live);
+}
+
+/* keep panels in sync with state: called from render() */
+function syncChats() {
+  for (const [id, c] of chats) {
+    if (!agentById(id)) { closeChat(id); continue; }
+    updateChatHeader(id, c);
+    positionChat(id);
+  }
+}
+
+function pulseEdge(from, to) {
+  const edge = [...edgesG.querySelectorAll('.edge')].find(p =>
+    (p.dataset.from === from && p.dataset.to === to) || (p.dataset.from === to && p.dataset.to === from));
+  if (!edge) return;
+  edge.classList.add('pulse');
+  setTimeout(() => edge.classList.remove('pulse'), 700);
+}
+
+$('btn-terminal').addEventListener('click', () => { if (selectedId) openChat(selectedId); });
+
+connectWS();
+
+/* ---------- toast ---------- */
+let toastTimer;
+function toast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+/* ---------- workflow mode: chat with an agent, hand off, refine back and forth ---------- */
+let viewMode = 'graph';
+let wf = { id: null, goal: '', transcript: [], busy: false };
+let wfRuns = [];
+
+function wfEsc(s) { return (s || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+function wfAgentOptions(sel, selectedId) {
+  if (!sel) return;
+  sel.innerHTML = activeAgents().map(a =>
+    `<option value="${a.id}" ${a.id === selectedId ? 'selected' : ''}>${wfEsc(a.name)}</option>`).join('');
+}
+
+function setViewMode(mode) {
+  viewMode = mode;
+  document.querySelector('.app').classList.toggle('mode-workflow', mode === 'workflow');
+  document.querySelectorAll('#viewseg button').forEach(b =>
+    b.classList.toggle('active', b.dataset.mode === mode));
+  if (mode === 'workflow') renderWorkflowView();
+}
+document.querySelectorAll('#viewseg button').forEach(b =>
+  b.addEventListener('click', () => setViewMode(b.dataset.mode)));
+
+function renderWorkflowView() {
+  wfAgentOptions($('wf-agent'));
+  wfAgentOptions($('wf-handoff-agent'));
+  wfAgentOptions($('wf-auto-agent'));
+  renderWfTranscript();
+  loadWorkflowRuns();
+}
+
+function renderWfTranscript() {
+  const el = $('wf-transcript');
+  if (!el) return;
+  el.innerHTML = wf.transcript.map(t => {
+    const a = agentById(t.agentId);
+    const color = a ? a.color : '#888';
+    return `<div class="wf-bubble"><div class="wf-bubble-head"><span class="wf-dot" style="background:${color}"></span>${wfEsc(a ? a.name : t.agentId)}</div>
+      <div class="wf-bubble-body">${wfEsc(t.content)}</div></div>`;
+  }).join('') || '<p class="wf-empty">Pick who you\'re talking to, describe the goal, and send — then hand it off to another agent, or auto-run a few rounds of back-and-forth to refine the answer.</p>';
+  el.scrollTop = el.scrollHeight;
+  $('wf-handoff').classList.toggle('hidden', wf.transcript.length === 0);
+}
+
+async function wfTurn(agentId) {
+  const a = agentById(agentId);
+  if (!a) return;
+  const r = await fetch('/api/agent-turn', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      persona: a.notes || '', goal: wf.goal,
+      transcript: wf.transcript.map(t => ({ agentName: (agentById(t.agentId) || {}).name || t.agentId, content: t.content }))
+    })
+  });
+  const d = await r.json();
+  wf.transcript.push({ agentId, content: d.reply || '(no response)' });
+  renderWfTranscript();
+  await saveWorkflowRun();
+}
+
+async function saveWorkflowRun() {
+  if (!wf.id) wf.id = 'wf' + Date.now();
+  await fetch('/api/workflows', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: wf.id, goal: wf.goal, transcript: wf.transcript, updated: new Date().toISOString() })
+  });
+  loadWorkflowRuns();
+}
+
+async function loadWorkflowRuns() {
+  const r = await fetch('/api/workflows');
+  wfRuns = await r.json();
+  const el = $('wf-runs');
+  if (!el) return;
+  el.innerHTML = wfRuns.map(w => `<div class="wf-run-item" onclick="openWorkflowRun('${w.id}')">
+    <div class="wf-run-goal">${wfEsc((w.goal || '(no goal)').slice(0, 70))}</div>
+    <div class="wf-run-meta">${(w.transcript || []).length} turns</div></div>`).join('')
+    || '<p class="wf-empty">No workflows yet.</p>';
+}
+
+window.openWorkflowRun = id => {
+  const w = wfRuns.find(x => x.id === id);
+  if (!w) return;
+  wf = { id: w.id, goal: w.goal || '', transcript: w.transcript || [], busy: false };
+  if ($('wf-goal')) $('wf-goal').value = wf.goal;
+  renderWfTranscript();
+};
+
+$('wf-send').addEventListener('click', async () => {
+  const agentId = $('wf-agent').value;
+  const goal = $('wf-goal').value.trim();
+  if (!goal || wf.busy) return;
+  wf = { id: null, goal, transcript: [], busy: true };
+  const btn = $('wf-send');
+  btn.disabled = true; btn.textContent = 'thinking…';
+  try { await wfTurn(agentId); } finally { wf.busy = false; btn.disabled = false; btn.textContent = 'Send'; }
+});
+
+$('wf-handoff-btn').addEventListener('click', async () => {
+  if (wf.busy || !wf.transcript.length) return;
+  const agentId = $('wf-handoff-agent').value;
+  const btn = $('wf-handoff-btn');
+  wf.busy = true; btn.disabled = true; btn.textContent = 'thinking…';
+  try { await wfTurn(agentId); } finally { wf.busy = false; btn.disabled = false; btn.textContent = 'Hand off'; }
+});
+
+$('wf-auto-btn').addEventListener('click', async () => {
+  if (wf.busy || !wf.transcript.length) return;
+  const agentId = $('wf-auto-agent').value;
+  const rounds = Math.max(1, Math.min(6, parseInt($('wf-rounds').value, 10) || 2));
+  const startAgent = wf.transcript[0].agentId;
+  const btn = $('wf-auto-btn');
+  wf.busy = true; btn.disabled = true;
+  try {
+    for (let i = 0; i < rounds; i++) {
+      btn.textContent = `round ${i + 1}/${rounds}…`;
+      await wfTurn(agentId);
+      await wfTurn(startAgent);
+    }
+  } finally { wf.busy = false; btn.disabled = false; btn.textContent = 'Run rounds'; }
+});
+
+$('wf-new-btn').addEventListener('click', () => {
+  wf = { id: null, goal: '', transcript: [], busy: false };
+  $('wf-goal').value = '';
+  renderWfTranscript();
+});
+
+/* ---------- server-side state durability (survives cleared localStorage / lost files) ---------- */
+async function syncStateFromServer() {
+  try {
+    const r = await fetch('/state');
+    const s = await r.json();
+    if (s && Array.isArray(s.agents) && s.agents.length && !state.agents.length) {
+      state = s;
+      applyView(); render();
+    }
+  } catch {}
+}
+const _origSave = save;
+save = function () {
+  _origSave();
+  clearTimeout(save._srvTimer);
+  save._srvTimer = setTimeout(() => {
+    fetch('/state', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(state) }).catch(() => {});
+  }, 400);
+};
+
+/* ---------- boot ---------- */
+applyView();
+render();
+syncStateFromServer();
+if (HAS_SERVER) {
+  for (const a of [...state.agents]) if (a.chatOpen && !a.archived) openChat(a.id);
+  refreshSessionMeta();
+}
+</script>
+</body>
+</html>

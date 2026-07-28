@@ -1,0 +1,88 @@
+1
+00:00:00,000 --> 00:00:02,900
+If you are new to Cloud Code, do not watch another tutorial
+
+2
+00:00:02,900 --> 00:00:04,800
+until you do this one thing first.
+
+3
+00:00:04,800 --> 00:00:07,320
+And Droppic has released a GitHub repository
+
+4
+00:00:07,320 --> 00:00:09,640
+and they are the company behind Cloud Code.
+
+5
+00:00:09,640 --> 00:00:12,000
+This repository includes skills, cookbooks,
+
+6
+00:00:12,000 --> 00:00:13,880
+prompt engineering guides, full courses,
+
+7
+00:00:13,880 --> 00:00:16,360
+quick start resources, and even the source code
+
+8
+00:00:16,360 --> 00:00:18,160
+for Cloud Code itself.
+
+9
+00:00:18,160 --> 00:00:20,560
+Many people spend time scrolling through content,
+
+10
+00:00:20,560 --> 00:00:23,280
+installing random skills, and becoming overwhelmed.
+
+11
+00:00:23,280 --> 00:00:25,960
+A more effective approach is to use this repository
+
+12
+00:00:25,960 --> 00:00:26,960
+as a foundation.
+
+13
+00:00:26,960 --> 00:00:28,720
+You can bring it into Cloud Code and use it
+
+14
+00:00:28,720 --> 00:00:31,240
+to explore the basics, learn structured workflows,
+
+15
+00:00:31,240 --> 00:00:32,880
+and build a strong starting point.
+
+16
+00:00:32,880 --> 00:00:34,960
+This allows you to work from a reliable source,
+
+17
+00:00:34,960 --> 00:00:37,280
+rather than relying on trial and error.
+
+18
+00:00:37,280 --> 00:00:40,160
+If anyone understands how to use Cloud Code effectively,
+
+19
+00:00:40,160 --> 00:00:41,720
+it is the team that created it.
+
+20
+00:00:41,720 --> 00:00:43,280
+You can find the repository link
+
+21
+00:00:43,280 --> 00:00:45,360
+and a starter workflow in the caption.
+
+22
+00:00:45,360 --> 00:00:47,520
+DM's send, and I'll send you the link.
+

@@ -1,0 +1,15 @@
+Don't be fooled by your BMW coolant gauge. It's lying to you. Let me tell you a story about how I know
+They told me you couldn't pull INPA or ISTA level data from a golden air of BMW's using just an ice on it
+They said you needed an ancient Windows laptop and outdated dealer software or spent $200 or more at a specialty shop
+Just for a diagnosis. That wasn't good enough for me for patents later
+I built my own hardware to prove them wrong and thankfully phase two doesn't require soldering
+Here's what that looks like in actual practice
+The first 20 minutes of driving my coolant tense with spite to 101 before cooling down and then dropped to 84 on the freeway
+The app noticed by E39 there's running 60 degrees hotter than normal while the dash gauge was out to lunch
+Hans the built in AI engineer
+Instantly flag the sticky thermostat before it could be stranded
+So I grabbed the parts and I completed the job myself
+Then I ran a sonic pulse acoustic analysis task
+The app listened to the engine clear the rod bearings and Tissa one-loading spite fanos rattle and a lifter
+Confirming the block it's helped to maintain performance these machines the man preservation
+The analog built by and for enthusiasts built for the analog era

@@ -1,0 +1,48 @@
+1
+00:00:00,000 --> 00:00:04,000
+A developer just killed the Claude code token problem for free.
+
+2
+00:00:04,000 --> 00:00:09,360
+Now, your $20 plan is just as powerful as the $100 plan. Here's how.
+
+3
+00:00:09,360 --> 00:00:12,960
+The problem is this, every time you start a new Claude code session,
+
+4
+00:00:12,960 --> 00:00:17,280
+it re reads your entire code base, every file, every function,
+
+5
+00:00:17,280 --> 00:00:20,640
+thousands of tokens gone before you even ask a question.
+
+6
+00:00:20,640 --> 00:00:23,840
+This is why you're burning through tokens and wasting your money.
+
+7
+00:00:23,840 --> 00:00:28,560
+But this tool, graphify, fixes it. First, run this new tool,
+
+8
+00:00:28,640 --> 00:00:33,200
+then watch as it reads your entire code base. What happens is it builds a full
+
+9
+00:00:33,200 --> 00:00:37,680
+knowledge graph of everything inside every connection, every relationship. Now,
+
+10
+00:00:37,680 --> 00:00:41,280
+during your next session, Claude won't reread all those files.
+
+11
+00:00:41,280 --> 00:00:46,160
+It simply navigates the new graph, saving you a ridiculous amount of tokens.
+
+12
+00:00:46,160 --> 00:00:48,800
+Comment, graphify for my complete setup guide.
+

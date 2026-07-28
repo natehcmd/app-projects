@@ -1,0 +1,17 @@
+{
+  "name": "gmail-sorter",
+  "version": "5.2",
+  "description": "Smart Gmail inbox classifier — works with Claude Code or standalone Node.js",
+  "type": "module",
+  "scripts": {
+    "setup": "node src/setup.js",
+    "sort": "node src/sort-now.mjs",
+    "test-batch": "node src/sort-now.mjs --test-batch",
+    "sort-with-drafts": "node src/sort-now.mjs --draft-replies"
+  },
+  "dependencies": {
+    "@google-cloud/local-auth": "^3.0.1",
+    "google-auth-library": "^9.0.0",
+    "googleapis": "^140.0.0"
+  }
+}

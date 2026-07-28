@@ -1,0 +1,9 @@
+I wish someone would have told me this sooner, you can now run cloud code for free.
+Step 1, go to the skitab repo, install your V and this proxy.
+Then go to build.nv.com and get your API key.
+Nvidia gives you 40 lm calls per minute for free.
+Then go ahead and open two terminals.
+Configure the proxy in one and plot code in the other.
+It will allow and you got cloud code for free.
+I put together a free setup guide, comment in video and I will share it with you.
+Follow for more tips.

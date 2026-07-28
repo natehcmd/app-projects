@@ -1,0 +1,5 @@
+# No dependencies are required to run guard.py, example.py's offline demo,
+# or test_guard.py — they use only the Python standard library.
+#
+# Optional, only needed for the live-Claude portion of example.py:
+anthropic>=0.40.0

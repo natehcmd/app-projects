@@ -1,0 +1,101 @@
+WEBVTT
+
+00:00.000 --> 00:02.400
+I just vibe-coded an entire app in two hours.
+
+00:02.400 --> 00:05.600
+It works. It looks great, but I have no idea if it's actually secure.
+
+00:05.600 --> 00:07.600
+Like, could someone hack this thing?
+
+00:07.600 --> 00:10.800
+Oh, they absolutely could. And they will.
+
+00:10.800 --> 00:14.800
+Unless you use these five prompts to lock it down before it's too late.
+
+00:14.800 --> 00:16.000
+Prom number one.
+
+00:16.000 --> 00:19.600
+Tell your AI to implement rate limiting on all endpoints.
+
+00:19.600 --> 00:22.800
+Five attempts max per 15 minutes on login routes.
+
+00:22.800 --> 00:25.600
+That way hackers can't brute force their way in.
+
+00:25.600 --> 00:27.040
+Oh yeah, that's smart.
+
+00:27.040 --> 00:29.440
+What about the passwords I left in the code?
+
+00:29.440 --> 00:30.640
+You did what?
+
+00:30.640 --> 00:32.800
+That's prompt number two, you buffoon.
+
+00:32.800 --> 00:36.240
+Tell the AI to scan your entire code base for any hard code.
+
+00:38.640 --> 00:40.080
+And prompt three.
+
+00:40.080 --> 00:43.440
+Move all sensitive data to environment variables.
+
+00:43.440 --> 00:46.800
+Make sure nothing is exposed in the front end or committed to get.
+
+00:46.800 --> 00:48.640
+You absolute walnut.
+
+00:48.640 --> 00:50.640
+Okay, okay, I'm writing this down.
+
+00:50.640 --> 00:51.600
+What else?
+
+00:51.600 --> 00:52.640
+Promt four.
+
+00:52.640 --> 00:56.400
+Scented eyes all user inputs and reject anything oversized or malformed.
+
+00:56.400 --> 00:59.280
+Unless you want someone injecting code straight into your database.
+
+00:59.600 --> 01:01.200
+That sounds bad.
+
+01:01.200 --> 01:02.560
+It is bad, Peter.
+
+01:02.560 --> 01:04.800
+And finally, prompt five.
+
+01:04.800 --> 01:08.640
+Run a full security audit and report any remaining vulnerabilities.
+
+01:08.640 --> 01:12.400
+Think of it as a final health check before you unleash your little creation on the world.
+
+01:12.960 --> 01:17.120
+Bang, Struy, you just saved my app and probably my identity.
+
+01:17.120 --> 01:18.080
+You're welcome.
+
+01:18.080 --> 01:21.120
+Now, if you found this useful, follow this page for more tips.
+
+01:21.120 --> 01:23.040
+So you don't get destroyed on the internet.
+
+01:23.040 --> 01:23.680
+Do it now.
+

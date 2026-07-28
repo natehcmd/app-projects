@@ -1,0 +1,14 @@
+# Rust build artifacts
+target/
+**/target/
+# Node
+node_modules/
+# OS
+.DS_Store
+# Python bytecode
+__pycache__/
+*.pyc
+# Attic for quarantined junk (kept on disk, not tracked)
+_attic/
+# Venvs
+.venv/

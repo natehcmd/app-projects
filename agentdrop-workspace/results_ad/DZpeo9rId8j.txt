@@ -1,0 +1,16 @@
+This is the last cloud code skill you'll ever install by hand.
+Right now, there are over 2,000 skills scattered across GitHub,
+and the hard part was never installing them.
+It's finding the one that actually fits your problem,
+so you install just one skill, find skills.
+It runs on Vsels Open Skills CLI
+and plugs straight into cloud code with a single command.
+After that, you stop searching.
+You just ask, is there a skill for this?
+And it scans the whole ecosystem.
+Checks install counts and stars so you get the battle tested one,
+and installs the exact skill for your use case automatically.
+No more blind installs.
+No more reading red means for half an hour just to pick the right one.
+Want the command and the full step by step setup?
+Comment skill, and I'll send it your way.

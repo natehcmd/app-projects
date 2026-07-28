@@ -1,0 +1,89 @@
+WEBVTT
+
+00:00.000 --> 00:02.080
+The longer you run a cloud code session,
+
+00:02.080 --> 00:02.960
+the number it gets,
+
+00:02.960 --> 00:05.760
+and using Compact is not enough to fix it.
+
+00:05.760 --> 00:08.400
+Compacting still drags the old conversation forward,
+
+00:08.400 --> 00:09.920
+meaning it brings the dead ends,
+
+00:09.920 --> 00:11.240
+the messy debugging,
+
+00:11.240 --> 00:13.720
+and all the bad assumptions in the next conversation.
+
+00:13.720 --> 00:15.520
+I call this context rot,
+
+00:15.520 --> 00:16.920
+and it's killing your code.
+
+00:16.920 --> 00:18.960
+So what you want instead is a full handoff.
+
+00:18.960 --> 00:20.960
+So before you end a session,
+
+00:20.960 --> 00:23.800
+tell Cloud to create a handoff.md file,
+
+00:23.800 --> 00:25.800
+and have it include six things.
+
+00:25.800 --> 00:27.320
+The goal, the current state,
+
+00:27.320 --> 00:28.920
+active files that's working on,
+
+00:28.920 --> 00:30.200
+any changes it made,
+
+00:30.200 --> 00:33.200
+a list of failed attempts and specific next steps
+
+00:33.200 --> 00:34.280
+that it was focused on.
+
+00:34.280 --> 00:36.480
+Then run the forward slash clear command
+
+00:36.480 --> 00:37.800
+or open a new session,
+
+00:37.800 --> 00:39.720
+and tell it to read the handoff doc
+
+00:39.720 --> 00:41.640
+and continue from where it left off.
+
+00:41.640 --> 00:42.480
+And you want to use this
+
+00:42.480 --> 00:43.880
+when you're stepping away for hours,
+
+00:43.880 --> 00:46.840
+or when Cloud keeps making the same broken mistake on a loop.
+
+00:46.840 --> 00:49.320
+Now I made a short guide that tells you exactly how to do
+
+00:49.320 --> 00:50.520
+this and how to get started.
+
+00:50.520 --> 00:51.960
+Comment clear below,
+
+00:51.960 --> 00:53.120
+and I'll send it right over.
+

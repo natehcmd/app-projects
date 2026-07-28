@@ -1,0 +1,17 @@
+Peter, are you telling me Cloud Code is now completely free forever?
+Yep, wait, I thought you had to pay for API credits before.
+You did.
+But now you can run it locally using open source models from Alama without making any API calls.
+So you still get the real Cloud Code features?
+Yep, you still get slash commands, MCP service, even sub-agents, and more.
+All right, how do you even run it locally?
+First, install Alama, then download an open source coding model like when?
+Then launch Cloud Code from your terminal.
+And after that, it just works.
+Exactly.
+From that point, it runs entirely on your local machine.
+That's actually wild.
+It's insanely practical for testing ideas, fixing bugs, and experimenting.
+So you're telling me I can use it without paying anything?
+Exactly.
+Comment code, and I'll send you the full setup guide.

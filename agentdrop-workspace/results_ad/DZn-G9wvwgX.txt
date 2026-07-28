@@ -1,0 +1,15 @@
+10 out of 10 GitHub repos that will get your internship 30 days of Python.
+This is a structured 30-day challenge that will take you from Python beginner to building real projects within 30 days.
+Build your own ex.
+With this one, you can learn how to code by working on cool projects with full tutorials.
+You can rebuild get a browser, a database, and more from scratch.
+Developer roadmap.
+This repo is a visual career map of front end, backhand, and DevOps.
+So you always know exactly what you need to learn next.
+Coding interview university.
+This is a self-taught study plan made for absolute beginners.
+And the guy who made it went from zero to landing a job at Amazon.
+System design primer.
+If you want to dive deeper, this repo is everything you need to ace system design interviews.
+And actually understand how large scale systems are built.
+If you want to link all of these repos, follow in comment link.

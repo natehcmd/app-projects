@@ -1,0 +1,21 @@
+Okay, Jarvis, what's up?
+Welcome home, sir.
+Congratulations on the new client for your SaaS app.
+I'm going to show you how to get this on your computer for free, and the whole thing
+is open source so you can read the code, change it, and make it yours.
+Before anything works, you need VS code or cursor and Python.
+Grab the project from GitHub, click code, download zip, extract it, and you'll see all
+the files you need for the project to work.
+It's open source so anyone can fork it and tweak it.
+Open VS code or cursor, click the open folder button, and pick the folder you just extracted.
+Open the terminal and run this install command.
+This both everything you need for the project to run.
+For the Jarvis voice you need to level up, create an API key, pick a voice, and copy the voice
+ID.
+Create a .emv file in the same folder as Jarvis.py.
+Paste your key, your voice ID, and save it.
+Run Python Jarvis.py and you should see it listening for claps.
+Clap twice quick like this.
+If Spotify chrome, the voice, and cursor all fire, you're good.
+And that's how you get Jarvis in your computer.
+Want the full PDF for every link in step, comment Jarvis below, and I'll send it to you.

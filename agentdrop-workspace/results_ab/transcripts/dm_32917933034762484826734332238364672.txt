@@ -1,0 +1,16 @@
+We can tell when a website is built in AI and it's sloppy.
+Frankly, I can tell it within a second when a site is made in cloud because they all look the same.
+But I got the fix for you and it is ridiculously easy, you're at a lot of it.
+Go and check out 21st.dev.
+This free website has a huge repository of amazing looking designs that you can plug right in the cloud.
+You can find incredible UI for navigation bars, testimonial reels,
+euro sections, login pages, dashboards, pretty much any digital interface that you can imagine.
+So just pick a style that you like and copy the code.
+And from there, paste it into your cloud code and add it to your project.
+But what's amazing is that you can give cloud the entire library of 21st.dev designs with one simple step.
+That's right, 21st.dev has an mcp that connects directly to cloud.
+And once you set that up, all you have to do is type slash UI in the cloud code and describe what it is that you want to build.
+Then cloud can pull designs straight from 21st.dev that match your description.
+Plus you can customize the code to match a different color or branding.
+So guys, please quit making the AI slot when you have so many beautiful things that you can make now.
+And come and design if you want to give this a go for yourself.

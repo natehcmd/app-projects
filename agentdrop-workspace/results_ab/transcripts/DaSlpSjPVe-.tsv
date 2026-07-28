@@ -1,0 +1,30 @@
+start	end	text
+0	2080	The longer you run a cloud code session,
+2080	2960	the number it gets,
+2960	5760	and using Compact is not enough to fix it.
+5760	8400	Compacting still drags the old conversation forward,
+8400	9920	meaning it brings the dead ends,
+9920	11240	the messy debugging,
+11240	13720	and all the bad assumptions in the next conversation.
+13720	15520	I call this context rot,
+15520	16920	and it's killing your code.
+16920	18960	So what you want instead is a full handoff.
+18960	20960	So before you end a session,
+20960	23800	tell Cloud to create a handoff.md file,
+23800	25800	and have it include six things.
+25800	27320	The goal, the current state,
+27320	28920	active files that's working on,
+28920	30200	any changes it made,
+30200	33200	a list of failed attempts and specific next steps
+33200	34280	that it was focused on.
+34280	36480	Then run the forward slash clear command
+36480	37800	or open a new session,
+37800	39720	and tell it to read the handoff doc
+39720	41640	and continue from where it left off.
+41640	42480	And you want to use this
+42480	43880	when you're stepping away for hours,
+43880	46840	or when Cloud keeps making the same broken mistake on a loop.
+46840	49320	Now I made a short guide that tells you exactly how to do
+49320	50520	this and how to get started.
+50520	51960	Comment clear below,
+51960	53120	and I'll send it right over.

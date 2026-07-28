@@ -1,0 +1,26 @@
+This thing is ranked number one on GitHub right now.
+It's completely free.
+And almost nobody has set this up yet.
+So here's the deal.
+It's called Rooflo.
+And basically what it does is it spins up 60 plus AI agents
+that all work together to build whatever you want.
+And they actually get better after every single run.
+Pretty freaking cool.
+So you've got queen agents that manage the teams
+and tactical agents that handle all the actual work.
+Researching, coding, testing, reviewing, all of it.
+And they all share a collective memory
+so they improve over time.
+But here's the thing that makes this insane.
+It figures out how complex your task is
+and routes it to the right model automatically.
+Simple task goes to a cheap model, complicated task
+goes to a powerful one.
+So you can cut your token usage by up to 50%
+and extend your cloud code usage by 250%.
+That's nuts.
+It's open source, completely free,
+and ranked number one on GitHub, not bad.
+Drop flow in the comments
+and I'll send you the full setup guide.

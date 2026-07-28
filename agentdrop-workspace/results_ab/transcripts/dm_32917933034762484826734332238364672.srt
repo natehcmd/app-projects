@@ -1,0 +1,64 @@
+1
+00:00:00,000 --> 00:00:03,200
+We can tell when a website is built in AI and it's sloppy.
+
+2
+00:00:03,200 --> 00:00:07,680
+Frankly, I can tell it within a second when a site is made in cloud because they all look the same.
+
+3
+00:00:07,680 --> 00:00:11,120
+But I got the fix for you and it is ridiculously easy, you're at a lot of it.
+
+4
+00:00:11,120 --> 00:00:13,120
+Go and check out 21st.dev.
+
+5
+00:00:13,120 --> 00:00:18,800
+This free website has a huge repository of amazing looking designs that you can plug right in the cloud.
+
+6
+00:00:18,800 --> 00:00:22,880
+You can find incredible UI for navigation bars, testimonial reels,
+
+7
+00:00:22,880 --> 00:00:28,080
+euro sections, login pages, dashboards, pretty much any digital interface that you can imagine.
+
+8
+00:00:28,080 --> 00:00:30,400
+So just pick a style that you like and copy the code.
+
+9
+00:00:30,400 --> 00:00:33,920
+And from there, paste it into your cloud code and add it to your project.
+
+10
+00:00:33,920 --> 00:00:40,080
+But what's amazing is that you can give cloud the entire library of 21st.dev designs with one simple step.
+
+11
+00:00:40,080 --> 00:00:44,320
+That's right, 21st.dev has an mcp that connects directly to cloud.
+
+12
+00:00:44,320 --> 00:00:50,800
+And once you set that up, all you have to do is type slash UI in the cloud code and describe what it is that you want to build.
+
+13
+00:00:50,800 --> 00:00:54,880
+Then cloud can pull designs straight from 21st.dev that match your description.
+
+14
+00:00:54,960 --> 00:00:58,640
+Plus you can customize the code to match a different color or branding.
+
+15
+00:00:58,640 --> 00:01:03,520
+So guys, please quit making the AI slot when you have so many beautiful things that you can make now.
+
+16
+00:01:03,520 --> 00:01:05,920
+And come and design if you want to give this a go for yourself.
+

@@ -1,0 +1,24 @@
+I could have saved so much time money and tokens if I were using these three prompts a year ago when I first started by coding.
+And so I want to share these with you, especially if you're beginning on your AI journey and building apps or products or even an AI Jarvis, like my very own Trillian, hey Trillian, what's happening?
+Just running your empire from a desk in Montana, you know, the usual.
+And so these prompts are ones that I actually use every single day, I still do and in this order, which is made of monumental difference.
+So the first one goes like this and I add this to the end of a prompt when I'm about to go into planning mode on a feature or something large.
+I say, please do not create a plan until you have over 96% confidence, you know what to plan for.
+Ask me any follow-up questions until you reach that level of confidence.
+You're going to be so surprised at how often that your AI will not have confidence and it's going to ask you a ton of questions about edge cases and things that you might not have considered.
+Super, super powerful.
+Okay, the next one.
+Once your AI has actually developed the plan, instead of just smashing the submit button, which, well, that's beyond us, we all do from time to time without reading the plan.
+What you want to do is prompt your AI to do a review of the plan that it just created and identify any of the items that introduce product risk and then have it list out all of those items according to the most risky to the least risky and then a plan to.
+Do you risk those from a product or app perspective?
+Oh my god, you're going to be so surprised at how often the AI is going to give you a plan and then it's going to sound all great and you're just going to smash that button.
+When it introduces a ton of product risk, so just go through this and it's going to really make the plan so much better.
+All right, the third and final one that I always use is once they go through the implementation process of that plan and you just reach the end and you're so tired.
+You're like, yes, just commit it. Like, let's just do this. No, don't do that.
+Instead, what you want to do is say act like a senior engineer and code review everything that you just wrote.
+I want you to look for inconsistent logic in efficiencies and things that can cause bugs.
+Lists everything out from most critical to least critical and then create a plan to fix it.
+Holy crap. Like, you'd be so surprised at how often these things can introduce bugs or major inconsistencies and just going to that step is going to help you eliminate so much.
+Just hair pulling because you're like, why the hell is this not working?
+Literally, use those three prompts consecutively as you're working on these big features on your very own app and then come back and high five new later because I promise you you absolutely will.
+That's what I got for you today. I hope you have a good one. Happy prompting and I'll catch you in the next video later.

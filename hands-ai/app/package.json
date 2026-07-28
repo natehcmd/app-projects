@@ -1,0 +1,20 @@
+{
+  "name": "hands-ai",
+  "version": "1.0.0",
+  "description": "Hands AI - Local AI Model Switcher",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^43.0.0",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "ai.handsai.app",
+    "mac": {
+      "category": "public.app-category.developer-tools"
+    }
+  }
+}

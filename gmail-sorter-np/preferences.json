@@ -1,0 +1,31 @@
+{
+  "version": "5.2",
+  "created": "2026-04-02T00:00:00.000Z",
+  "lastUpdated": "2026-04-02T00:00:00.000Z",
+  "onboardingComplete": true,
+  "categories": {
+    "important": { "label": "AI/Important", "markRead": false, "archive": false },
+    "updates": { "label": "AI/Updates", "markRead": true, "archive": true },
+    "shared-docs": { "label": "AI/Shared-Docs", "markRead": true, "archive": true },
+    "spam": { "label": "AI/Spam", "markRead": true, "archive": true }
+  },
+  "trustedSenders": {
+    "domains": ["jov.ai", "automateix.io"],
+    "emails": ["dmitry@mindstudio.ai", "luis@mindstudio.ai", "howardnate67@gmail.com", "dminix2@gmail.com"],
+    "notes": {
+      "jov.ai": "Work domain",
+      "automateix.io": "Work domain (alt)",
+      "howardnate67@gmail.com": "Primary account"
+    }
+  },
+  "spamPatterns": { "domains": [], "emails": [], "subjectPatterns": [], "bodyPatterns": [] },
+  "draftReplies": { "enabled": false, "label": "AI/Draft-Reply", "bodyPrefix": "[AI Draft] ", "subjectPrefix": "", "draftLog": [] },
+  "scoring": {
+    "trustedDomainWeight": 200, "trustedEmailWeight": 150, "noreplyUpdateWeight": 110,
+    "marketingOverrideWeight": 130, "fwdFromTrustedAlwaysImportant": true,
+    "humanSenderDetection": true, "humanSenderWeight": 80,
+    "defaultCategory": "updates", "minimumScoreThreshold": 30
+  },
+  "corrections": [],
+  "stats": { "totalProcessed": 0, "totalCorrected": 0, "lastRunDate": null, "runsCompleted": 0 }
+}

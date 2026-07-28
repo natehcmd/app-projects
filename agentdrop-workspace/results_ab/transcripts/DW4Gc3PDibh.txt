@@ -1,0 +1,16 @@
+If you're using Claude code and you think it actually knows your business, it's just pretending to.
+Every time you start a new session with Claude, it re reads your files from scratch.
+We're looking at hundreds of tokens that are wasted for Claude to just remember what it already knew.
+What we're looking at is graphify inside of Obsidian.
+Graphify turns your entire code base, your documents, your strategy notes, even your images into this.
+A knowledge graph.
+It maps how everything in your business actually connects with one another.
+And it actually persists.
+So you could see how some of my digital assets actually connect to other parts of my code base.
+Now, when I ask Claude, how does my content pipeline connect to revenue?
+It doesn't grab through 300 files.
+It already has the map.
+And it was a one time build.
+70x fewer tokens per search.
+In the next video, I'm going to show you how to set this up, so make sure you shoot me a follow.
+And comment AI agent for access to all of my free Claude code guides and templates.

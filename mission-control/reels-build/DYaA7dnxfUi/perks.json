@@ -1,0 +1,47 @@
+[
+  {
+    "name": "GitHub Student Developer Pack",
+    "category": "Bundle (100+ tools)",
+    "normal_price": "Varies (bundle of many paid tools)",
+    "student_price": "Free",
+    "requirements": "Valid .edu email or proof of current enrollment (school ID / transcript)",
+    "signup_url": "https://education.github.com/pack",
+    "notes": "Official GitHub Education program. Bundles free/discounted access to many third-party dev tools (not all listed here are guaranteed forever — GitHub periodically updates the pack)."
+  },
+  {
+    "name": "Cursor Pro (Student Plan)",
+    "category": "AI Code Editor",
+    "normal_price": "~$192/year (Pro plan, check current pricing)",
+    "student_price": "Free while enrolled (per Cursor's published student offer)",
+    "requirements": "Verify with a school email via Cursor's own verification flow (e.g. SheerID or similar)",
+    "signup_url": "https://www.cursor.com/students",
+    "notes": "Pricing and eligibility change over time — always confirm current terms on Cursor's site before assuming it's free."
+  },
+  {
+    "name": "Notion Plus/Education Plan",
+    "category": "Notes / Docs / AI",
+    "normal_price": "Paid plan pricing varies",
+    "student_price": "Free education plan for verified students/educators",
+    "requirements": "Sign up with school email through Notion's education verification",
+    "signup_url": "https://www.notion.com/students",
+    "notes": "Historically called 'Notion Pro for students' in casual talk; check Notion's site for the exact current plan name and included AI features."
+  },
+  {
+    "name": "Figma Education",
+    "category": "Design",
+    "normal_price": "Paid professional plan pricing varies",
+    "student_price": "Free professional-tier access for verified students/teachers",
+    "requirements": "Apply through Figma's education program with school affiliation",
+    "signup_url": "https://www.figma.com/education/",
+    "notes": "Figma periodically reviews education eligibility; re-verification may be required."
+  },
+  {
+    "name": "Perplexity Pro (Student Discount)",
+    "category": "AI Research Assistant",
+    "normal_price": "Paid subscription (check current pricing)",
+    "student_price": "Discounted (often bundled via partner promos, e.g. with a paired service)",
+    "requirements": "Varies by current promo; usually requires school email or a partner subscription",
+    "signup_url": "https://www.perplexity.ai/",
+    "notes": "Perplexity's student offers have changed over time (sometimes bundled with other subscriptions). Confirm the live offer on their site rather than assuming a fixed discount."
+  }
+]

@@ -1,0 +1,15 @@
+This button might be the most pointless Instagram feature, unless you use it the way that I do.
+Because instead of all those posts going to the graveyard, never to be looked at again,
+I set it up so everything automatically gets logged inside of notion.
+Which means you can actually do something with all these save posts instead of losing them forever.
+Save this because I'm going to show you how.
+Open up Cloud Code or Codex, whichever one you're using, you can fill it in either one.
+Open this guide and you're going to grab the prompt, paste it in and hit enter.
+Then just follow the instructions, which is a series of prompts that you're going to paste back in.
+And if you want that full step-by-step guide, give me a follow and comment the word guide down below and I'll send it over.
+And once it's all set up, every post that you save on Instagram will now automatically get logged inside of notion.
+I have mine run twice a day at 9 p.m. and 9 a.m.
+And I have it set to only pull from these two folders.
+And yes, it works on reels, carousels and static posts.
+And you can build this system out even more if you want to turn those ideas into your own content ideas,
+or turn those ideas into blog posts or articles, whatever you want, this is just the start.

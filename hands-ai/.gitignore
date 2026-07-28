@@ -1,0 +1,28 @@
+# Python
+agent/.venv/
+agent/__pycache__/
+agent/providers/__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+
+# Node
+app/node_modules/
+cli/node_modules/
+cli/.venv/
+
+# Electron build output
+app/dist/
+app/out/
+
+# User config — never commit API keys
+~/.hands/
+*.env
+.env
+
+# Logs
+*.log
+daemon.log
+
+# macOS
+.DS_Store

@@ -1,0 +1,12 @@
+This AI tool pulls thousands of qualified leads from LinkedIn while you sleep.
+It's called Vane and it scrapes LinkedIn sales navigator entirely from the cloud.
+No Chrome extension and they have the lowest finger print on LinkedIn of any scraper on the market
+so your account stays safe.
+You run a search in sales navigator, Vane pulls the data, and you guys get a clean spreadsheet with
+names, job titles, company info, websites, and even employee counts.
+It'll automatically remove emojis from names, it'll fix capitalizations, and it'll
+strip out any duplicates your list is ready to use the second that it exports.
+Most scraper's cap you at 2500 profiles per search, but Vane will automatically split larger
+queries and pull up to 15,000 profiles a day.
+Some features don't even require a LinkedIn account at all.
+So if you want to try it for yourself, just comment leads and I'll send you the link directly.

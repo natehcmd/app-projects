@@ -1,0 +1,49 @@
+{
+  "audit_date": "2026-05-05",
+  "source_audit": "~/audits/audit-report-2026-05-05.json",
+  "project": "gmail-sorter-np",
+  "project_path": "Projects/AI/gmail-sorter-np",
+  "summary": {
+    "total_issues": 2,
+    "critical": 0,
+    "high": 2,
+    "medium": 0,
+    "low": 0
+  },
+  "issues": [
+    {
+      "id": "ISS-002",
+      "category": "SECURITY",
+      "severity": "HIGH",
+      "file": "credentials.json",
+      "line_start": 1,
+      "line_end": 10,
+      "code_snippet": "{\n  \"installed\": {\n    \"client_id\": \"REDACTED_CLIENT_ID.apps.googleusercontent.com\",\n    \"project_id\": \"gmail-sorter-488418\",\n    \"auth_uri\": \"https://accounts.google.com/o/oauth2/auth\",\n    \"token_uri\": \"https://oauth2.googleapis.com/token\",\n    \"auth_provider_x509_cert_url\": \"https://www.googleapis.com/oauth2/v1/certs\",\n    \"client_secret\": \"REDACTED_CLIENT_SECRET\",\n    \"redirect_uris\": [\"http://localhost\"]\n  }\n}",
+      "problem": "This OAuth client credential bundle contains a live client secret in plaintext.",
+      "failure_scenario": "If the file is backed up, shared, or committed anywhere, the OAuth client can be abused to mint tokens for the associated Google project.",
+      "fix_instruction": "Rotate the OAuth client secret, delete the file from tracked storage, and load the credential from a secret manager or user-specific config path.",
+      "suggested_code": "{\n  \"installed\": {\n    \"client_id\": \"...\",\n    \"project_id\": \"...\",\n    \"auth_uri\": \"https://accounts.google.com/o/oauth2/auth\",\n    \"token_uri\": \"https://oauth2.googleapis.com/token\",\n    \"auth_provider_x509_cert_url\": \"https://www.googleapis.com/oauth2/v1/certs\",\n    \"redirect_uris\": [\"http://localhost\"]\n  }\n}",
+      "auto_fixable": false,
+      "requires_human_review": true,
+      "in_dependency": false,
+      "dependency_name": null
+    },
+    {
+      "id": "ISS-003",
+      "category": "SECURITY",
+      "severity": "HIGH",
+      "file": "REDACTED_CLIENT_ID.apps.googleusercontent.com.json",
+      "line_start": 1,
+      "line_end": 12,
+      "code_snippet": "{\n  \"installed\": {\n    \"client_id\": \"REDACTED_CLIENT_ID.apps.googleusercontent.com\",\n    \"project_id\": \"gmail-sorter-np\",\n    \"auth_uri\": \"https://accounts.google.com/o/oauth2/auth\",\n    \"token_uri\": \"https://oauth2.googleapis.com/token\",\n    \"auth_provider_x509_cert_url\": \"https://www.googleapis.com/oauth2/v1/certs\",\n    \"client_secret\": \"REDACTED_CLIENT_SECRET\",\n    \"redirect_uris\": [\n      \"http://localhost\"\n    ]\n  }\n}",
+      "problem": "This is a second plaintext copy of the same OAuth client secret bundle, which increases the chance of accidental exposure and makes rotation harder.",
+      "failure_scenario": "If either copy leaks through backups or sync, the OAuth client secret can be replayed even after the other copy is deleted.",
+      "fix_instruction": "Rotate the OAuth client secret, consolidate the credential into one secured location, and delete every plaintext duplicate.",
+      "suggested_code": "// Keep only a non-secret client_id stub here and load the secret from a secure runtime store.",
+      "auto_fixable": false,
+      "requires_human_review": true,
+      "in_dependency": false,
+      "dependency_name": null
+    }
+  ]
+}

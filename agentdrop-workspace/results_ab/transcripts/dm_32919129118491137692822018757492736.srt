@@ -1,0 +1,60 @@
+1
+00:00:00,000 --> 00:00:05,440
+Don't be fooled by your BMW coolant gauge. It's lying to you. Let me tell you a story about how I know
+
+2
+00:00:05,440 --> 00:00:12,200
+They told me you couldn't pull INPA or ISTA level data from a golden air of BMW's using just an ice on it
+
+3
+00:00:12,200 --> 00:00:19,240
+They said you needed an ancient Windows laptop and outdated dealer software or spent $200 or more at a specialty shop
+
+4
+00:00:19,240 --> 00:00:23,840
+Just for a diagnosis. That wasn't good enough for me for patents later
+
+5
+00:00:23,840 --> 00:00:28,640
+I built my own hardware to prove them wrong and thankfully phase two doesn't require soldering
+
+6
+00:00:29,200 --> 00:00:31,760
+Here's what that looks like in actual practice
+
+7
+00:00:32,560 --> 00:00:39,560
+The first 20 minutes of driving my coolant tense with spite to 101 before cooling down and then dropped to 84 on the freeway
+
+8
+00:00:39,560 --> 00:00:45,360
+The app noticed by E39 there's running 60 degrees hotter than normal while the dash gauge was out to lunch
+
+9
+00:00:46,080 --> 00:00:48,240
+Hans the built in AI engineer
+
+10
+00:00:48,240 --> 00:00:51,520
+Instantly flag the sticky thermostat before it could be stranded
+
+11
+00:00:52,320 --> 00:00:55,520
+So I grabbed the parts and I completed the job myself
+
+12
+00:00:56,320 --> 00:00:59,320
+Then I ran a sonic pulse acoustic analysis task
+
+13
+00:00:59,320 --> 00:01:05,020
+The app listened to the engine clear the rod bearings and Tissa one-loading spite fanos rattle and a lifter
+
+14
+00:01:05,520 --> 00:01:10,800
+Confirming the block it's helped to maintain performance these machines the man preservation
+
+15
+00:01:11,360 --> 00:01:15,960
+The analog built by and for enthusiasts built for the analog era
+

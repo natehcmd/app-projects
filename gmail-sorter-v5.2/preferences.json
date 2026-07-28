@@ -1,0 +1,55 @@
+{
+  "version": "5.2.0",
+  "created": null,
+  "lastUpdated": "2026-07-16T18:18:39.166Z",
+  "onboardingComplete": false,
+  "categories": {
+    "important": {
+      "label": "AI/Important",
+      "markRead": false,
+      "archive": false
+    },
+    "updates": {
+      "label": "AI/Updates",
+      "markRead": true,
+      "archive": true
+    },
+    "shared-docs": {
+      "label": "AI/Shared-Docs",
+      "markRead": true,
+      "archive": true
+    },
+    "spam": {
+      "label": "AI/Spam",
+      "markRead": true,
+      "archive": true
+    }
+  },
+  "trustedSenders": {
+    "domains": [],
+    "emails": [],
+    "notes": {}
+  },
+  "spamPatterns": {
+    "domains": [],
+    "emails": [],
+    "subjectPatterns": [],
+    "bodyPatterns": []
+  },
+  "scoring": {
+    "trustedDomainWeight": 200,
+    "trustedEmailWeight": 150,
+    "noreplyUpdateWeight": 110,
+    "marketingOverrideWeight": 130,
+    "fwdFromTrustedAlwaysImportant": true,
+    "defaultCategory": "updates",
+    "minimumScoreThreshold": 30
+  },
+  "corrections": [],
+  "stats": {
+    "totalProcessed": 5,
+    "totalCorrected": 0,
+    "lastRunDate": "2026-07-16T18:18:39.166Z",
+    "runsCompleted": 1
+  }
+}

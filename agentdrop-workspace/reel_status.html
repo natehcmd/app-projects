@@ -1,0 +1,332 @@
+<title>Reel Pipeline Status</title>
+<style>
+:root {
+  --bg: #0b0d12;
+  --bg2: #11141c;
+  --panel: #14171f;
+  --ink: #e8eaf2;
+  --ink-dim: #9aa0b4;
+  --ink-faint: #5c6275;
+  --line: rgba(255,255,255,0.08);
+  --mint: #9fe8c9;
+  --lav: #c3b8f5;
+  --peach: #f5c9a8;
+  --rose: #f2a9c4;
+  --sky: #a8d8f5;
+  --glass: rgba(255,255,255,0.045);
+  --glass-brd: rgba(255,255,255,0.09);
+}
+:root[data-theme="light"] {
+  --bg: #f4f5f8;
+  --bg2: #ffffff;
+  --panel: #ffffff;
+  --ink: #1c1f2a;
+  --ink-dim: #565d70;
+  --ink-faint: #8a90a3;
+  --line: rgba(20,22,30,0.09);
+  --mint: #1a8f66;
+  --lav: #6e5bc4;
+  --peach: #b96a2e;
+  --rose: #c14670;
+  --sky: #2478b0;
+  --glass: rgba(20,22,30,0.03);
+  --glass-brd: rgba(20,22,30,0.08);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f4f5f8; --bg2: #ffffff; --panel: #ffffff;
+    --ink: #1c1f2a; --ink-dim: #565d70; --ink-faint: #8a90a3;
+    --line: rgba(20,22,30,0.09);
+    --mint: #1a8f66; --lav: #6e5bc4; --peach: #b96a2e; --rose: #c14670; --sky: #2478b0;
+    --glass: rgba(20,22,30,0.03); --glass-brd: rgba(20,22,30,0.08);
+  }
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, "SF Pro Text", "Inter", system-ui, sans-serif;
+  margin: 0;
+  padding: 32px 28px 60px;
+  -webkit-font-smoothing: antialiased;
+}
+.mono { font-family: "SF Mono", ui-monospace, Menlo, monospace; font-variant-numeric: tabular-nums; }
+
+header {
+  max-width: 1180px;
+  margin: 0 auto 22px;
+}
+h1 {
+  font-size: 26px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  margin: 0 0 4px;
+  text-wrap: balance;
+}
+.sub {
+  color: var(--ink-dim);
+  font-size: 14px;
+  line-height: 1.5;
+  max-width: 720px;
+}
+
+.stats {
+  max-width: 1180px;
+  margin: 22px auto;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+}
+.stat {
+  background: var(--glass);
+  border: 1px solid var(--glass-brd);
+  border-radius: 12px;
+  padding: 14px 14px 12px;
+}
+.stat .n {
+  font-size: 24px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+.stat .l {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-dim);
+  margin-top: 2px;
+}
+.stat.mint .n { color: var(--mint); }
+.stat.sky .n { color: var(--sky); }
+.stat.rose .n { color: var(--rose); }
+.stat.lav .n { color: var(--lav); }
+
+.controls {
+  max-width: 1180px;
+  margin: 0 auto 14px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.controls input {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  width: 240px;
+  outline: none;
+}
+.controls input:focus { border-color: var(--sky); }
+.filter-btn {
+  background: var(--glass);
+  border: 1px solid var(--glass-brd);
+  color: var(--ink-dim);
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.filter-btn:hover { color: var(--ink); }
+.filter-btn.active {
+  background: var(--sky);
+  color: var(--bg);
+  border-color: var(--sky);
+  font-weight: 600;
+}
+.filter-btn:focus-visible, .controls input:focus-visible { outline: 2px solid var(--sky); outline-offset: 1px; }
+
+.table-wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: auto;
+  background: var(--panel);
+  max-height: 72vh;
+}
+table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+thead th {
+  position: sticky;
+  top: 0;
+  background: var(--bg2);
+  text-align: left;
+  padding: 9px 10px;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-dim);
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+}
+thead th:hover { color: var(--ink); }
+thead th .arrow { opacity: 0.5; margin-left: 3px; }
+tbody tr { border-bottom: 1px solid var(--line); }
+tbody tr:hover { background: var(--glass); }
+tbody tr:last-child { border-bottom: none; }
+td { padding: 8px 10px; vertical-align: top; color: var(--ink); }
+td.caption { color: var(--ink-dim); max-width: 260px; }
+td.reel { white-space: nowrap; }
+td.where { color: var(--ink-faint); font-size: 11.5px; max-width: 220px; }
+td.category { max-width: 280px; font-size: 11.5px; color: var(--ink-dim); }
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.pill.y { background: rgba(159,232,201,0.14); color: var(--mint); }
+.pill.n { background: rgba(255,255,255,0.06); color: var(--ink-faint); }
+.pill.partial { background: rgba(245,201,168,0.16); color: var(--peach); }
+
+.empty { text-align: center; padding: 40px; color: var(--ink-faint); }
+footer { max-width: 1180px; margin: 16px auto 0; color: var(--ink-faint); font-size: 11.5px; }
+</style>
+
+<header>
+  <h1>Reel Pipeline Status</h1>
+  <div class="sub">All 104 reels in your curated Library, cross-referenced against what was actually built, installed, and wired into daily use. Click a column to sort, use the filters or search to narrow down.</div>
+</header>
+
+<div class="stats" id="stats"></div>
+
+<div class="controls">
+  <input id="search" type="text" placeholder="Search caption or reel id…" />
+  <button class="filter-btn active" data-filter="all">All 104</button>
+  <button class="filter-btn" data-filter="made">Built</button>
+  <button class="filter-btn" data-filter="installed">Installed</button>
+  <button class="filter-btn" data-filter="workflow">In workflow</button>
+  <button class="filter-btn" data-filter="declined">Declined</button>
+  <button class="filter-btn" data-filter="unsafe">Unsafe / unbuilt</button>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th data-key="reel">Reel <span class="arrow"></span></th>
+        <th data-key="caption">Caption <span class="arrow"></span></th>
+        <th data-key="made">Made? <span class="arrow"></span></th>
+        <th data-key="made_where">Where <span class="arrow"></span></th>
+        <th data-key="installed">Installed? <span class="arrow"></span></th>
+        <th data-key="installed_where">Where <span class="arrow"></span></th>
+        <th data-key="category">Category <span class="arrow"></span></th>
+        <th data-key="new_app">New app? <span class="arrow"></span></th>
+        <th data-key="in_workflow">In workflow? <span class="arrow"></span></th>
+      </tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+</div>
+
+<footer>
+  Generated 2026-07-20 from reels-build/tools_manifest.json + reels-build/INDEX.md + AgentDrop-Workspace/reels captions.
+  "Not built — original run classified as unsafe or declined" rows: the exact unsafe/declined split from the first
+  design-safety pass wasn't preserved in git history, so those are grouped rather than individually re-labeled.
+</footer>
+
+<script id="reel-data" type="application/json">[{"reel": "DW4Gc3PDibh", "caption": "@charlieautomates: Comment \u201cAI Agent\u201d for my FREE Claude Code ToolKit & 40+ other Claude C", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Not built \u2014 original run classified as unsafe or declined; exact split not preserved", "new_app": "N", "in_workflow": "N"}, {"reel": "DWwLhCEAtV_", "caption": "@peterstewiestartup: You just vibe coded an app in 2 hours\u2026 but can it survive the interne", "made": "Y", "made_where": "reels-build/DWwLhCEAtV_/vibecheck.py", "installed": "N", "installed_where": "", "category": "vibecheck", "new_app": "Y \u2014 Mission Control 'Reel Tools' tab", "in_workflow": "Y"}, {"reel": "DX5MzljR0n7", "caption": "@niknaglapur: Comment \u201cRESUME\u201d and I\u2019ll send it over \ud83d\udc47  Here are 5 free certifications eve", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Not built \u2014 original run classified as unsafe or declined; exact split not preserved", "new_app": "N", "in_workflow": "N"}, {"reel": "DX7mH5Lii8a", "caption": "@danmartell: 4 easy steps to master Claude", "made": "N", "made_where": "reels-build/DX7mH5Lii8a/README.md (decline note)", "installed": "N", "installed_where": "", "category": "Declined \u2014 nothing buildable", "new_app": "N", "in_workflow": "N"}, {"reel": "DXAshxEDM5m", "caption": "@tenfoldmarc: Tired of rate limits and dumb Claude? Comment \"graph\" for the skill + guide ", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Not built \u2014 original run classified as unsafe or declined; exact split not preserved", "new_app": "N", "in_workflow": "N"}, {"reel": "DXUJ1zdCJaa", "caption": "@duncanrogoff: Most beginners waste time jumping between tutorials, random skills, and sca", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Not built \u2014 original run classified as unsafe or declined; exact split not preserved", "new_app": "N", "in_workflow": "N"}, {"reel": "DXmWHzIExeq", "caption": "@tpadumke: Claude Code without the $20\u2013$200 a month subscription. The trick is a 12,332-st", "made": "N", "made_where": "", "installed": "N (investigated, declined)", "installed_where": "", "category": "Named free-claude-code (41k stars/6mo, MITM proxy design). Inspected: not malware, declined to install. Safe equivalent already built: proxy.py (DYXFtTFsbLt)", "new_app": "N", "in_workflow": "N"}, {"reel": "DXxQS0AO1Km", "caption": "@duncanrogoff: Most people are running one AI agent\u2026 while others are running entire teams", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Not built \u2014 original run classified as unsafe or declined; exact split not preserved", "new_app": "N", "in_workflow": "N"}, {"reel": "DXyvXCNITAK", "caption": "@huwprosser: We\u2019re building something cool. \ud83d\ude0e #ironman #jarvis #technology #vr", "made": "N", "made_where": "reels-build/DXyvXCNITAK/README.md (decline note)", "installed": "N", "installed_where": "", "category": "Declined \u2014 nothing buildable", "new_app": "N", "in_workflow": "N"}, {"reel": "DY2EEWZCJ3A", "caption": "@volkan.js: Comment \"GIT\" and I'll send you the links.  Most developers know they need to ", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Not built \u2014 original run classified as unsafe or declined; exact split not preserved", "new_app": "N", "in_workflow": "N"}, {"reel": "DY2GRVfN4bZ", "caption": "@100xengineers: Comment \"Md\" to get the GitHub link and the full PDF Guide", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Not built \u2014 original run classified as unsafe or declined; exact split not preserved", "new_app": "N", "in_workflow": "N"}, {"reel": "DY8jSEGR0-d", "caption": "@seanpurvis.ai:", "made": "N", "made_where": "reels-build/DY8jSEGR0-d/README.md (decline note)", "installed": "N", "installed_where": "", "category": "Declined \u2014 nothing buildable", "new_app": "N", "in_workflow": "N"}, {"reel": "DYHs8XUvayY", "caption": "@ai_withroman: Comment WEBSITE and I ll send u the GUIDE #jarvis #claude #ai", "made": "N", "made_where": "reels-build/DYHs8XUvayY/README.md (decline note)", "installed": "N", "installed_where": "", "category": "Declined \u2014 nothing buildable", "new_app": "N", "in_workflow": "N"}, {"reel": "DYKSh1iv8nP", "caption": "@nick_saraev: Comment \"LEADS\" to get this LinkedIn Scrapper for Qualified Lead Generation ", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Not built \u2014 original run classified as unsafe or declined; exact split not preserved", "new_app": "N", "in_workflow": "N"}, {"reel": "DYNm5GcSswI", "caption": "@kevinfremon: Most people building AI agents have never thought about security. That\u2019s a p", "made": "Y", "made_where": "reels-build/DYNm5GcSswI/guard.py", "installed": "N", "installed_where": "", "category": "agent-guard", "new_app": "Y \u2014 Mission Control 'Reel Tools' tab", "in_workflow": "Y"}, {"reel": "DYQu6P0KOeL", "caption": "@kayvon.ai: Follow me then comment \u201cFLOW\u201d and I\u2019ll send you the setup guide.  Someone buil", "made": "Y", "made_where": "reels-build/DYQu6P0KOeL/router.py", "installed": "N", "installed_where": "", "category": "cost-router", "new_app": "Y \u2014 Mission Control 'Reel Tools' tab", "in_workflow": "Y"}, {"reel": "DYSUqcsuGX9", "caption": "@justyn.ai: Drop \u201cGUIDE\u201d and I\u2019ll send you the step by step guide on how to build this you", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Not built \u2014 original run classified as unsafe or declined; exact split not preserved", "new_app": "N", "in_workflow": "N"}, {"reel": "DYXFtTFsbLt", "caption": "@codewithpetergriffin: Most developers still think using Claude Code means paying for API ", "made": "Y", "made_where": "reels-build/DYXFtTFsbLt/proxy.py", "installed": "N", "installed_where": "", "category": "proxy.py", "new_app": "Y \u2014 Mission Control 'Reel Tools' tab", "in_workflow": "Y"}, {"reel": "DY_SoPGKv2A", "caption": "@kayvon.ai: Follow me then comment \u201cFLOW\u201d and I\u2019ll send you the setup guide.  Someone buil", "made": "Y", "made_where": "reels-build/DY_SoPGKv2A/orchestrator.py", "installed": "N", "installed_where": "", "category": "Cost-Routed Multi-Agent Orchestrator", "new_app": "Y \u2014 Mission Control 'Reel Tools' tab", "in_workflow": "Y"}, {"reel": "DYaA7dnxfUi", "caption": "@niknaglapur: Comment \u201cSTUDENT\u201d for the full list + more \ud83d\udc47  GitHub Student Pack: One stude", "made": "Y", "made_where": "reels-build/DYaA7dnxfUi/student_perks.py", "installed": "N", "installed_where": "", "category": "Student Software Perks Directory", "new_app": "Y \u2014 Mission Control 'Reel Tools' tab", "in_workflow": "Y"}, {"reel": "DYkjSXcA45p", "caption": "@jeff.macpherson: Just to name a few\u2026  Vibing an app is not hard. Growing an app ain\u2019t eas", "made": "Y", "made_where": "reels-build/DYkjSXcA45p/app_stage_advisor.py", "installed": "N", "installed_where": "", "category": "App Stage Advisor", "new_app": "Y \u2014 Mission Control 'Reel Tools' tab", "in_workflow": "Y"}, {"reel": "DYm-E6TMSqV", "caption": "@maxjohnscn: Comment \u201cCOURSE\u201d & I\u2019ll send you all the links\ud83d\udd25", "made": "N", "made_where": "reels-build/DYm-E6TMSqV/README.md (decline note)", "installed": "N", "installed_where": "", "category": "Declined \u2014 nothing buildable", "new_app": "N", "in_workflow": "N"}, {"reel": "DYnFlSKK-Qg", "caption": "@the.agi.guide: Chat vs. Cowork vs. Code - Which Should You Use?", "made": "Y", "made_where": "reels-build/DYnFlSKK-Qg/pick_mode.py", "installed": "N", "installed_where": "", "category": "Mode Picker", "new_app": "Y \u2014 Mission Control 'Reel Tools' tab", "in_workflow": "Y"}, {"reel": "DZ0rP21xg1V", "caption": "@johncorbett777: comment \u201cintern\u201d for the full list sent to dms . . . #internship #internd", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Not built \u2014 original run classified as unsafe or declined; exact split not preserved", "new_app": "N", "in_workflow": "N"}, {"reel": "DZ5H6F1Rz1S", "caption": "@lukebuildsai: Comment \u201cJarvis\u201d if you want to get added to the waitlist for the setup gui", "made": "N", "made_where": "reels-build/DZ5H6F1Rz1S/README.md (decline note)", "installed": "N", "installed_where": "", "category": "Declined \u2014 nothing buildable", "new_app": "N", "in_workflow": "N"}, {"reel": "DZ5WrbDNrSZ", "caption": "@joshualarosa.ai: Comment \u201cResume\u201d and I\u2019ll send you all the prompts \ud83d\udc47  What happens when ", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Not built \u2014 original run classified as unsafe or declined; exact split not preserved", "new_app": "N", "in_workflow": "N"}, {"reel": "DZ5xhLYvGpT", "caption": "@darshcoded: 30 days is a rush but it\u2019s enough to be able to understand and code in python", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Not built \u2014 original run classified as unsafe or declined; exact split not preserved", "new_app": "N", "in_workflow": "N"}, {"reel": "DZ7eidBvr4F", "caption": "@datasciencebrain: Comment \"GENAI\" and I'll DM you Python for Generative AI   - Just \u20b9199.", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Not built \u2014 original run classified as unsafe or declined; exact split not preserved", "new_app": "N", "in_workflow": "N"}, {"reel": "DZAn5OBMIcU", "caption": "@callumcarver: The full gameplan\u2026 comment AI for the database", "made": "N", "made_where": "reels-build/DZAn5OBMIcU/README.md (decline note)", "installed": "N", "installed_where": "", "category": "Declined \u2014 nothing buildable", "new_app": "N", "in_workflow": "N"}, {"reel": "DZAtd2JTvT9", "caption": "@thetommyschmidt: Dm me to work w/ me 1:1, only got a few spots left!! \ud83d\ude80", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Not built \u2014 original run classified as unsafe or declined; exact split not preserved", "new_app": "N", "in_workflow": "N"}, {"reel": "DZCzO6GE0y7", "caption": "@aifornontechies: Comment \"STACK\" and I'll send you the link  If you install one Claude Co", "made": "N", "made_where": "reels-build/DZCzO6GE0y7/README.md (decline note)", "installed": "N", "installed_where": "", "category": "Declined \u2014 nothing buildable", "new_app": "N", "in_workflow": "N"}, {"reel": "DZDksUcipwZ", "caption": "@liamjohnston.ai: Comment \u201cSKILLS\u201d and I will send you the guide and the setup.  Most peop", "made": "Y", "made_where": "reels-build/DZDksUcipwZ/skill_audit.py", "installed": "N", "installed_where": "", "category": "skill_audit.py", "new_app": "Y \u2014 Mission Control 'Reel Tools' tab", "in_workflow": "Y"}, {"reel": "DZEX2WRgyMu", "caption": "@_heyclicky: talk to your computer. available today #jarvis", "made": "N", "made_where": "reels-build/DZEX2WRgyMu/README.md (decline note)", "installed": "N", "installed_where": "", "category": "Declined \u2014 nothing buildable", "new_app": "N", "in_workflow": "N"}, {"reel": "DZL7SEANnl_", "caption": "@ethandojo: And no leetcode is not dead I promise", "made": "N", "made_where": "reels-build/DZL7SEANnl_/README.md (decline note)", "installed": "N", "installed_where": "", "category": "Declined \u2014 nothing buildable", "new_app": "N", "in_workflow": "N"}, {"reel": "DZLHHJuOPVs", "caption": "@moonking.mp4: \u201c23 portfolio projects that will actually get you hired \ud83d\udc47 (save this)  Here", "made": "Y", "made_where": "reels-build/DZLHHJuOPVs/hybrid_rag.py", "installed": "N", "installed_where": "", "category": "hybrid_rag.py", "new_app": "Y \u2014 Mission Control 'Reel Tools' tab", "in_workflow": "Y"}, {"reel": "DZLivf_h_Vm", "caption": "@maninalabs: Now all that's left is a cave and a box of scraps #marvel #ironman #engineeri", "made": "N", "made_where": "reels-build/DZLivf_h_Vm/README.md (decline note)", "installed": "N", "installed_where": "", "category": "Declined \u2014 nothing buildable", "new_app": "N", "in_workflow": "N"}, {"reel": "DZQH-qwurUy", "caption": "@jonathonmj: It appears Z.E.R.O has gotten some attention. Should we open source his repo?", "made": "N", "made_where": "reels-build/DZQH-qwurUy/README.md (decline note)", "installed": "N", "installed_where": "", "category": "Declined \u2014 nothing buildable", "new_app": "N", "in_workflow": "N"}, {"reel": "DZUKKIBPnnV", "caption": "@jeremyjcabral: 50K+ Claude Skills and most people use none. Follow and comment \u201cSkills\u201d f", "made": "N", "made_where": "reels-build/DZUKKIBPnnV/README.md (decline note)", "installed": "N", "installed_where": "", "category": "Declined \u2014 nothing buildable", "new_app": "N", "in_workflow": "N"}, {"reel": "DZVEN4gMRXV", "caption": "@downey.ai: Yeah @higgsfield.ai is unfair", "made": "N", "made_where": "reels-build/DZVEN4gMRXV/README.md (decline note)", "installed": "N", "installed_where": "", "category": "Declined \u2014 nothing buildable", "new_app": "N", "in_workflow": "N"}, {"reel": "DZWLmJQuw-7", "caption": "@chase.h.ai: Comment \u201cagent\u201d to get my Claude code guides", "made": "N", "made_where": "reels-build/DZWLmJQuw-7/README.md (decline note)", "installed": "N", "installed_where": "", "category": "Declined \u2014 nothing buildable", "new_app": "N", "in_workflow": "N"}, {"reel": "DZY4CWVPiXl", "caption": "@hex.gar: Been messing with this little Python thing where a double clap kicks off my morn", "made": "Y", "made_where": "reels-build/DZY4CWVPiXl/clap_trigger.py", "installed": "N", "installed_where": "", "category": "Clap Trigger", "new_app": "Y \u2014 Mission Control 'Reel Tools' tab", "in_workflow": "Y"}, {"reel": "DZc0F3Nx2rb", "caption": "@lukebuildsai: Comment \u201cJarvis\u201d to get added to the waitlist for the setup guide  #ai #jar", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Not built \u2014 original run classified as unsafe or declined; exact split not preserved", "new_app": "N", "in_workflow": "N"}, {"reel": "DZcSLefuxRU", "caption": "@jonathonmj: The difference betwee\ufffcn an LLM and Z.E.R.O  #fyp #claudecode #aiagents #jarvi", "made": "N", "made_where": "reels-build/DZcSLefuxRU/README.md (decline note)", "installed": "N", "installed_where": "", "category": "Declined \u2014 nothing buildable", "new_app": "N", "in_workflow": "N"}, {"reel": "DZcwJrJzLLh", "caption": "@opusjake: Comment \u201cSkills\u201d and I\u2019ll send you the full list of the best Claude Skills for ", "made": "N", "made_where": "reels-build/DZcwJrJzLLh/README.md (decline note)", "installed": "N", "installed_where": "", "category": "Declined \u2014 nothing buildable", "new_app": "N", "in_workflow": "N"}, {"reel": "DZdkrPthOoM", "caption": "@jp_mather: A $22K cloud bill because nobody knew how to secure production.  AI can help y", "made": "Y", "made_where": "reels-build/DZdkrPthOoM/scan.py", "installed": "N", "installed_where": "", "category": "scan.py", "new_app": "Y \u2014 Mission Control 'Reel Tools' tab", "in_workflow": "Y"}, {"reel": "DZe-GLFy9DW", "caption": "@olivermerrick___: Your second brain failed. It\u2019s not your fault. You were sold the wrong ", "made": "Y", "made_where": "reels-build/DZe-GLFy9DW/brain.py", "installed": "N", "installed_where": "", "category": "Second Brain", "new_app": "Y \u2014 Mission Control 'Reel Tools' tab", "in_workflow": "Y"}, {"reel": "DZmuKk7hzoY", "caption": "@setupsai: Powerful websites you should know (part 1056) find almost any animated componen", "made": "N", "made_where": "reels-build/DZmuKk7hzoY/README.md (decline note)", "installed": "N", "installed_where": "", "category": "Declined \u2014 nothing buildable", "new_app": "N", "in_workflow": "N"}, {"reel": "DZn-G9wvwgX", "caption": "@markpyvovarov: comment \"link\" for the repo links!  #cs #coding #student", "made": "N", "made_where": "reels-build/DZn-G9wvwgX/README.md (decline note)", "installed": "N", "installed_where": "", "category": "Declined \u2014 nothing buildable", "new_app": "N", "in_workflow": "N"}, {"reel": "DZoJOLQoQY2", "caption": "@downey.ai: Wanna know how to do this with @higgsfield.ai ? Comment \u201cHiggs\u201d and I\u2019ll send ", "made": "N", "made_where": "reels-build/DZoJOLQoQY2/README.md (decline note)", "installed": "N", "installed_where": "", "category": "Declined \u2014 nothing buildable", "new_app": "N", "in_workflow": "N"}, {"reel": "DZow139P5Wd", "caption": "@leon.commits.code: Fix your slop bro \ud83d\ude2d  Comment \u201cSlop\u201d for the link.  #coding #faang #cod", "made": "Y", "made_where": "reels-build/DZow139P5Wd/slop_check.py", "installed": "N", "installed_where": "", "category": "slop_check.py", "new_app": "Y \u2014 Mission Control 'Reel Tools' tab", "in_workflow": "Y"}, {"reel": "DZpeo9rId8j", "caption": "@abhishek.devini: Comment SKILL and I\u2019ll send you the exact command + full step-by-step se", "made": "Y", "made_where": "reels-build/DZpeo9rId8j/find_skills.py", "installed": "Y", "installed_where": "global: `npm install -g skills` (real Vercel Labs CLI)", "category": "find_skills.py (built) + real `skills` CLI (installed)", "new_app": "Y \u2014 Mission Control 'Reel Tools' tab", "in_workflow": "Y"}, {"reel": "DZpgTfBioe6", "caption": "@charliehills: Comment DESIGN and I'll send you the full guide with all six tools.", "made": "N", "made_where": "reels-build/DZpgTfBioe6/README.md (decline note)", "installed": "N", "installed_where": "", "category": "Declined \u2014 nothing buildable", "new_app": "N", "in_workflow": "N"}, {"reel": "DZpySOnOCxI", "caption": "@benkimball.ai: Here is the link: https://github.com/affaan-m/ECC This Claude Code GitHub ", "made": "N", "made_where": "reels-build/DZpySOnOCxI/README.md (decline note)", "installed": "N (investigated, declined)", "installed_where": "", "category": "Named affaan-m/ECC (231k stars/6mo \u2014 fake-star red flag). Inspected: not malware, but declined to install (huge blast radius). Safe equivalents already built: skillkit, skill_audit.py, agent-guard, Second Brain, vibecheck.py", "new_app": "N", "in_workflow": "N"}, {"reel": "DZqg7QoMKI4", "caption": "@hottestmogul: My most kept secret", "made": "N", "made_where": "reels-build/DZqg7QoMKI4/README.md (decline note)", "installed": "N", "installed_where": "", "category": "Declined \u2014 nothing buildable", "new_app": "N", "in_workflow": "N"}, {"reel": "DZsAeTIsx49", "caption": "@jaymehtaai: Comment \u201cAI\u201d and I\u2019ll send you a free resource sheet with direct links to eve", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Not built \u2014 original run classified as unsafe or declined; exact split not preserved", "new_app": "N", "in_workflow": "N"}, {"reel": "DZsq1Ervqk7", "caption": "@kevinfremon: 3 prompts I wish someone had handed me when I started vibe coding.  I use al", "made": "N", "made_where": "reels-build/DZsq1Ervqk7/README.md (decline note)", "installed": "N", "installed_where": "", "category": "Declined \u2014 nothing buildable", "new_app": "N", "in_workflow": "N"}, {"reel": "DZsup8Lx6yQ", "caption": "@kayvon.ai: Follow me then comment \u201cAI\u201d and I\u2019ll send you JCode \ud83e\udd80  A solo developer just d", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Not built \u2014 original run classified as unsafe or declined; exact split not preserved", "new_app": "N", "in_workflow": "N"}, {"reel": "DZtXWtYsMdS", "caption": "@bitterbuilds: Hahahah this is crazy. Company is kickbacks.ai and I\u2019m not sponsored at all", "made": "N", "made_where": "reels-build/DZtXWtYsMdS/README.md (decline note)", "installed": "N", "installed_where": "", "category": "Declined \u2014 nothing buildable", "new_app": "N", "in_workflow": "N"}, {"reel": "DZxUGClNzi_", "caption": "@maxjohnscn: Comment \u201cAgency\u201d if you want the GUIDE that shows you exactly how to BUILD an", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Not built \u2014 original run classified as unsafe or declined; exact split not preserved", "new_app": "N", "in_workflow": "N"}, {"reel": "DaBNLmpMB5H", "caption": "@downey.ai: Comment \u201cbabies\u00bb if you want the full step-by-step guide on how to do this.  @", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Not built \u2014 original run classified as unsafe or declined; exact split not preserved", "new_app": "N", "in_workflow": "N"}, {"reel": "DaC9aW6Miyi", "caption": "@vaibhavdecoded: comment \u201cJARVIS\u201d and I\u2019ll send you the full list of every tool in this vi", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Not built \u2014 original run classified as unsafe or declined; exact split not preserved", "new_app": "N", "in_workflow": "N"}, {"reel": "DaHR5JWPLvo", "caption": "@rrishijain: Comment \u201cnvidia\u201d to get the link :)", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Not built \u2014 original run classified as unsafe or declined; exact split not preserved", "new_app": "N", "in_workflow": "N"}, {"reel": "DaI3LY3tLYn", "caption": "@maxjohnscn: Claude Corps is a huge opportunity for people just starting out in their care", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Not built \u2014 original run classified as unsafe or declined; exact split not preserved", "new_app": "N", "in_workflow": "N"}, {"reel": "DaIolfvt2_4", "caption": "@pockettalks_ig: Comment \u201cGIT\u201d and I\u2019ll send it over - supercharge your Ai project with th", "made": "N", "made_where": "reels-build/DaIolfvt2_4/README.md (decline note)", "installed": "N", "installed_where": "", "category": "Declined \u2014 nothing buildable", "new_app": "N", "in_workflow": "N"}, {"reel": "DaMauuPAzao", "caption": "@johncorbett777: follow + comment \u201cproject\u201d for a full list of 30+ projects. . . . #intern", "made": "N", "made_where": "reels-build/DaMauuPAzao/README.md (decline note)", "installed": "N", "installed_where": "", "category": "Declined \u2014 nothing buildable", "new_app": "N", "in_workflow": "N"}, {"reel": "DaNjtbcFSLE", "caption": "@aifornontechies: Comment \"KARPATHY\" and I'll send you the repo  There's a single file on ", "made": "Y", "made_where": "reels-build/DaNjtbcFSLE/install.py", "installed": "N", "installed_where": "", "category": "Behavioral Skills CLAUDE.md", "new_app": "Y \u2014 Mission Control 'Reel Tools' tab", "in_workflow": "Y"}, {"reel": "DaQ1XDsycZP", "caption": "@alexxubuilds: day 1 of becoming cracked at machine learning\u2026 follow to keep up to date!  ", "made": "N", "made_where": "reels-build/DaQ1XDsycZP/README.md (decline note)", "installed": "N", "installed_where": "", "category": "Declined \u2014 nothing buildable", "new_app": "N", "in_workflow": "N"}, {"reel": "DaRbl6qJxRM", "caption": "@joshualarosa.ai: Follow & Comment \u201cRESUME\u201d for the links + 20 more  Most students have no", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Not built \u2014 original run classified as unsafe or declined; exact split not preserved", "new_app": "N", "in_workflow": "N"}, {"reel": "DaSlpSjPVe-", "caption": "@joestoltelive: Claude Code Tips \ud83d\udcbb  Comment \u201cCLEAR\u201d and I\u2019ll send you the full guide \ud83c\udf81  Le", "made": "Y", "made_where": "reels-build/DaSlpSjPVe-/handoff.py", "installed": "N", "installed_where": "", "category": "Session Handoff", "new_app": "Y \u2014 Mission Control 'Reel Tools' tab", "in_workflow": "Y"}, {"reel": "DaSwegFCZO7", "caption": "@algorithmswithpeter: I kept wondering why some people were getting insane results from Cl", "made": "Y", "made_where": "reels-build/DaSwegFCZO7/skillkit.py", "installed": "N", "installed_where": "", "category": "skillkit", "new_app": "Y \u2014 Mission Control 'Reel Tools' tab", "in_workflow": "Y"}, {"reel": "DaTUI9xChIR", "caption": "@fatihmakes: Watch this speed... Posting videos on Instagram by using Jarvis.   I build pe", "made": "Y", "made_where": "reels-build/DaTUI9xChIR/jarvis.py", "installed": "N", "installed_where": "", "category": "Jarvis Command Assistant", "new_app": "Y \u2014 Mission Control 'Reel Tools' tab", "in_workflow": "Y"}, {"reel": "DaWVAIrh_EB", "caption": "@quantbryan: 10 Finance Projects to Build This Weekend  \ud83d\udc88Beginner   1. Personal Net Worth ", "made": "Y", "made_where": "reels-build/DaWVAIrh_EB/bond_calculator.py", "installed": "N", "installed_where": "", "category": "Bond Yield Calculator", "new_app": "Y \u2014 Mission Control 'Reel Tools' tab", "in_workflow": "Y"}, {"reel": "DaWV_2pvXCw", "caption": "@jakeuiai: We design and build custom websites for companies that are looking to maximize ", "made": "N", "made_where": "reels-build/DaWV_2pvXCw/README.md (decline note)", "installed": "N", "installed_where": "", "category": "Declined \u2014 nothing buildable", "new_app": "N", "in_workflow": "N"}, {"reel": "DaWjATqpBjL", "caption": "@chase.h.ai: Comment \u201cagent\u201d to get my claude code guides@", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Not built \u2014 original run classified as unsafe or declined; exact split not preserved", "new_app": "N", "in_workflow": "N"}, {"reel": "DaY2MDUjgKC", "caption": "@buildwithwilly: this is crazyyy \ud83e\udee2 #business #ai #businessowner #sidehustle #ctopartner", "made": "N", "made_where": "reels-build/DaY2MDUjgKC/README.md (decline note)", "installed": "N", "installed_where": "", "category": "Declined \u2014 nothing buildable", "new_app": "N", "in_workflow": "N"}, {"reel": "DaYi--upDRH", "caption": "@matebreton: follow + comment \u201cresume\u201d for a full list of free certifications   #student #", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Not built \u2014 original run classified as unsafe or declined; exact split not preserved", "new_app": "N", "in_workflow": "N"}, {"reel": "Daa8fy8PKC1", "caption": "@jackk_flick: Here\u2019s some resources that I wish I knew in college when I started programmi", "made": "Y", "made_where": "reels-build/Daa8fy8PKC1/resources_cli.py", "installed": "N", "installed_where": "", "category": "CS Resources CLI", "new_app": "Y \u2014 Mission Control 'Reel Tools' tab", "in_workflow": "Y"}, {"reel": "DaagbUMP8Tg", "caption": "@nick_saraev: Comment \"PLUGIN\" to get this Claude Code Setup plugin to optimize your setup", "made": "Y", "made_where": "reels-build/DaagbUMP8Tg/scan_setup.py", "installed": "N", "installed_where": "", "category": "Claude Code Setup Advisor", "new_app": "Y \u2014 Mission Control 'Reel Tools' tab", "in_workflow": "Y"}, {"reel": "DabxbsRMH5c", "caption": "@d.bronnikov07: How to start coding in 2026?  Comment \u00abGuide\u00bb to get all resources to star", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Not built \u2014 original run classified as unsafe or declined; exact split not preserved", "new_app": "N", "in_workflow": "N"}, {"reel": "DactwNnswpk", "caption": "@itsmariahbrunner: comment \u201csecure\u201d and I\u2019ll send you the exact prompts I use :)  AI Safet", "made": "Y", "made_where": "reels-build/DactwNnswpk/skill_scanner.py", "installed": "N", "installed_where": "", "category": "Skill Scanner", "new_app": "Y \u2014 Mission Control 'Reel Tools' tab", "in_workflow": "Y"}, {"reel": "DadvdvitVke", "caption": "@charlieautomates: Comment \u201cClaude\u201d for the Understand-Anything repo link/playbook  You bu", "made": "Y", "made_where": "reels-build/DadvdvitVke/codemap.py", "installed": "N", "installed_where": "", "category": "Codemap", "new_app": "Y \u2014 Mission Control 'Reel Tools' tab", "in_workflow": "Y"}, {"reel": "Dae5fOUOphe", "caption": "@duncanrogoff: Comment REPO and I\u2019ll send you the GitHub link \ud83d\udc47  Most Claude Code users wa", "made": "Y", "made_where": "reels-build/Dae5fOUOphe/graphify.py", "installed": "N", "installed_where": "", "category": "Graphify", "new_app": "Y \u2014 Mission Control 'Reel Tools' tab", "in_workflow": "Y"}, {"reel": "DaebyH0xIDQ", "caption": "@chandlerintelligence: Comment JARVIS for the full guide  Original: @lukebuildsai   #claud", "made": "N", "made_where": "reels-build/DaebyH0xIDQ/README.md (decline note)", "installed": "N", "installed_where": "", "category": "Declined \u2014 nothing buildable", "new_app": "N", "in_workflow": "N"}, {"reel": "DafiQ5iPlC7", "caption": "@nick_saraev: Comment \"DESIGN\" to get these 4 Claude Code Skills for better designs.   Cla", "made": "Y", "made_where": "reels-build/DafiQ5iPlC7/design_extract.py", "installed": "N", "installed_where": "", "category": "Design System Extractor", "new_app": "Y \u2014 Mission Control 'Reel Tools' tab", "in_workflow": "Y"}, {"reel": "DafvMV_Fh-Z", "caption": "@zoeyos.ai: Jarvis is officially here except there\u2019s a twist\u2026  This isn\u2019t Jarvis, this is ", "made": "N", "made_where": "reels-build/DafvMV_Fh-Z/README.md (decline note)", "installed": "N", "installed_where": "", "category": "Declined \u2014 nothing buildable", "new_app": "N", "in_workflow": "N"}, {"reel": "Dag7fodBTWf", "caption": "@nocodealex: COMMENT \u201cCREW\u201d for the full setup  READ BELOW \ud83d\udc47  This is the part I couldn\u2019t ", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Not built \u2014 original run classified as unsafe or declined; exact split not preserved", "new_app": "N", "in_workflow": "N"}, {"reel": "Dai5Uq0COe1", "caption": "@liamjohnston.ai: Comment \u201cDESIGN\u201d and I\u2019ll send you the repo plus my starter file.  Claud", "made": "Y", "made_where": "reels-build/Dai5Uq0COe1/init_design_system.py", "installed": "N", "installed_where": "", "category": "DESIGN.md Scaffolder", "new_app": "Y \u2014 Mission Control 'Reel Tools' tab", "in_workflow": "Y"}, {"reel": "Dalkk16Sy81", "caption": "@nocodealex: Comment \u201cFACTORY\u201d and I\u2019ll DM you the assembly-line guide, the exact prompt f", "made": "Y", "made_where": "reels-build/Dalkk16Sy81/assembly_line.py", "installed": "N", "installed_where": "", "category": "AI Assembly Line", "new_app": "Y \u2014 Mission Control 'Reel Tools' tab", "in_workflow": "Y"}, {"reel": "DanS4w5lcoZ", "caption": "@dubibubiii: Comment: \u2018skill\u2019 and I\u2019ll send you the link!  Five free repos that should be ", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Not built \u2014 original run classified as unsafe or declined; exact split not preserved", "new_app": "N", "in_workflow": "N"}, {"reel": "Dap0wAQli_U", "caption": "@nikihasmotion: Comment \"Link\" and I'll send you the app!  #motion #video #claude #ai #vib", "made": "N", "made_where": "reels-build/Dap0wAQli_U/README.md (decline note)", "installed": "N", "installed_where": "", "category": "Declined \u2014 nothing buildable", "new_app": "N", "in_workflow": "N"}, {"reel": "DappXCcvuE3", "caption": "@setupsai: Powerful websites you should know (part 1082) find almost any animated UI compo", "made": "Y", "made_where": "reels-build/DappXCcvuE3/finder.py", "installed": "N", "installed_where": "", "category": "Animated UI Component Finder", "new_app": "Y \u2014 Mission Control 'Reel Tools' tab", "in_workflow": "Y"}, {"reel": "DaqdIkRCp73", "caption": "@liamjohnston.ai: Comment \u201cClaude\u201d and I\u2019ll send you the install link.  Developers are get", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Not built \u2014 original run classified as unsafe or declined; exact split not preserved", "new_app": "N", "in_workflow": "N"}, {"reel": "DarPBb4sxlg", "caption": "@nocodealex: Comment \u201cEVOLVE\u201d and I\u2019ll DM you The Forge Loop Guide, the exact self-review ", "made": "Y", "made_where": "reels-build/DarPBb4sxlg/forge_loop.py", "installed": "N", "installed_where": "", "category": "Forge Loop", "new_app": "Y \u2014 Mission Control 'Reel Tools' tab", "in_workflow": "Y"}, {"reel": "dm_32917907497864438839677623153459200", "caption": "", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Declined (DM) or unsafe \u2014 exact split not preserved from original run", "new_app": "N", "in_workflow": "N"}, {"reel": "dm_32917933034762484826734332238364672", "caption": "", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Declined (DM) or unsafe \u2014 exact split not preserved from original run", "new_app": "N", "in_workflow": "N"}, {"reel": "dm_32917943269963244995258185722888192", "caption": "", "made": "Y", "made_where": "reels-build/dm_32917943269963244995258185722888192/council.py", "installed": "N", "installed_where": "", "category": "Idea Council", "new_app": "Y \u2014 Mission Control 'Reel Tools' tab", "in_workflow": "Y"}, {"reel": "dm_32917944601702137096864179318423552", "caption": "", "made": "Y", "made_where": "reels-build/dm_32917944601702137096864179318423552/target_job_project_builder.py", "installed": "N", "installed_where": "", "category": "Target Job Project Builder", "new_app": "Y \u2014 Mission Control 'Reel Tools' tab", "in_workflow": "Y"}, {"reel": "dm_32917959074832036870973153980973056", "caption": "", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Declined (DM) or unsafe \u2014 exact split not preserved from original run", "new_app": "N", "in_workflow": "N"}, {"reel": "dm_32918307784315281385262601780330496", "caption": "Sarah Brown My ex was going on my profile every day", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Declined (DM) or unsafe \u2014 exact split not preserved from original run", "new_app": "N", "in_workflow": "N"}, {"reel": "dm_32918348730142366594809106939248640", "caption": "", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Declined (DM) or unsafe \u2014 exact split not preserved from original run", "new_app": "N", "in_workflow": "N"}, {"reel": "dm_32918487323722414055000287953813504", "caption": "", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Declined (DM) or unsafe \u2014 exact split not preserved from original run", "new_app": "N", "in_workflow": "N"}, {"reel": "dm_32918520329325066523799774124048384", "caption": "", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Declined (DM) or unsafe \u2014 exact split not preserved from original run", "new_app": "N", "in_workflow": "N"}, {"reel": "dm_32918520542156645223744792168497152", "caption": "", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Declined (DM) or unsafe \u2014 exact split not preserved from original run", "new_app": "N", "in_workflow": "N"}, {"reel": "dm_32919129118491137692822018757492736", "caption": "", "made": "N", "made_where": "", "installed": "N", "installed_where": "", "category": "Declined (DM) or unsafe \u2014 exact split not preserved from original run", "new_app": "N", "in_workflow": "N"}]
+</script>
+<script>
+const DATA = JSON.parse(document.getElementById('reel-data').textContent);
+let sortKey = 'reel', sortDir = 1, activeFilter = 'all', searchTerm = '';
+
+function pill(val) {
+  const v = (val || '').trim();
+  if (v === 'Y') return '<span class="pill y">Y</span>';
+  if (v.startsWith('N (')) return '<span class="pill partial">' + v.replace('N (','').replace(')','') + '</span>';
+  return '<span class="pill n">N</span>';
+}
+
+function matchesFilter(r) {
+  if (activeFilter === 'made') return r.made === 'Y';
+  if (activeFilter === 'installed') return r.installed.startsWith('Y');
+  if (activeFilter === 'workflow') return r.in_workflow === 'Y';
+  if (activeFilter === 'declined') return r.category.startsWith('Declined');
+  if (activeFilter === 'unsafe') return r.category.startsWith('Not built');
+  return true;
+}
+
+function matchesSearch(r) {
+  if (!searchTerm) return true;
+  const hay = (r.reel + ' ' + r.caption + ' ' + r.category).toLowerCase();
+  return hay.includes(searchTerm);
+}
+
+function render() {
+  const filtered = DATA.filter(r => matchesFilter(r) && matchesSearch(r));
+  filtered.sort((a, b) => {
+    const av = (a[sortKey] || '').toString().toLowerCase();
+    const bv = (b[sortKey] || '').toString().toLowerCase();
+    if (av < bv) return -1 * sortDir;
+    if (av > bv) return 1 * sortDir;
+    return 0;
+  });
+
+  const stats = document.getElementById('stats');
+  const made = DATA.filter(r => r.made === 'Y').length;
+  const installed = DATA.filter(r => r.installed.startsWith('Y')).length;
+  const workflow = DATA.filter(r => r.in_workflow === 'Y').length;
+  const declined = DATA.filter(r => r.category.startsWith('Declined')).length;
+  const unbuilt = DATA.filter(r => r.category.startsWith('Not built')).length;
+  stats.innerHTML = `
+    <div class="stat"><div class="n mono">${DATA.length}</div><div class="l">Total reels</div></div>
+    <div class="stat mint"><div class="n mono">${made}</div><div class="l">Built</div></div>
+    <div class="stat sky"><div class="n mono">${installed}</div><div class="l">Installed</div></div>
+    <div class="stat lav"><div class="n mono">${workflow}</div><div class="l">In workflow</div></div>
+    <div class="stat"><div class="n mono">${declined}</div><div class="l">Declined</div></div>
+    <div class="stat rose"><div class="n mono">${unbuilt}</div><div class="l">Unsafe / unbuilt</div></div>`;
+
+  const tbody = document.getElementById('rows');
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="9" class="empty">No reels match.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = filtered.map(r => `
+    <tr>
+      <td class="reel mono">${r.reel}</td>
+      <td class="caption">${r.caption || ''}</td>
+      <td>${pill(r.made)}</td>
+      <td class="where">${r.made_where || '—'}</td>
+      <td>${pill(r.installed)}</td>
+      <td class="where">${r.installed_where || '—'}</td>
+      <td class="category">${r.category}</td>
+      <td>${pill(r.new_app.startsWith('Y') ? 'Y' : 'N')} ${r.new_app.startsWith('Y') ? '<span class="where">' + r.new_app.replace('Y — ','') + '</span>' : ''}</td>
+      <td>${pill(r.in_workflow)}</td>
+    </tr>`).join('');
+}
+
+document.querySelectorAll('thead th').forEach(th => {
+  th.addEventListener('click', () => {
+    const key = th.dataset.key;
+    if (sortKey === key) sortDir *= -1; else { sortKey = key; sortDir = 1; }
+    document.querySelectorAll('thead .arrow').forEach(a => a.textContent = '');
+    th.querySelector('.arrow').textContent = sortDir === 1 ? '↑' : '↓';
+    render();
+  });
+});
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = btn.dataset.filter;
+    render();
+  });
+});
+document.getElementById('search').addEventListener('input', e => {
+  searchTerm = e.target.value.toLowerCase();
+  render();
+});
+
+render();
+</script>

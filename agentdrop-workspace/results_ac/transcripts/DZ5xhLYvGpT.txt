@@ -1,0 +1,13 @@
+If I had 30 days to learn Python all over again, this is exactly how I would do it.
+Week 1 start with the Harvard CS50 course.
+This is also featured on the free code camps YouTube.
+This is widely known as the best free Python course on the internet.
+By the end of this, you'll understand variables, functions, loops, and data structures to implement further.
+Week 2 move to the 30 days of Python repo on GitHub.
+It's structured day by day with exercises and projects within.
+It picks up exactly where CS50 leaves off.
+Week 3 building, a web scraper, a file automation tool, and a simple command line app.
+Free code camps YouTube has free walkthroughs for all three.
+Week 4, clean code and problem solving, leak code easy problems, and Python every day.
+Learning to write code that's readable, efficient, and makes sense to someone else.
+This is a more rushed roadmap, but if you're up to the challenge, comment 30 and I'll send you links to everything mentioned.

@@ -1,0 +1,299 @@
+# AI Context Mind Map
+
+> Compact navigation context for AI assistants. Use FileGraph for exact search and file context.
+> Generated locally; no file contents were uploaded or copied.
+
+## Root Map
+
+- Google Drive / My Drive
+  - Personal, Work, Media, AI, Inventory, Archives, Backups
+  - Indexed as cloud metadata; do not download unless explicitly requested
+- Local workspace
+  - Projects: active code and app repositories
+  - AgentDrop-Workspace/reels: saved short-video archive
+  - Documents and media: personal working files
+- Semantic layer
+  - FileGraph SQLite index: ~/.filegraph/filegraph.db
+  - Local embeddings: semantic search without rereading full files
+
+## Google Drive Map
+
+- `Mac_Backup_2026` — 74,988 files (archive=28, audio=4, code=1569, data=396, doc=1153, image=428, other=70670, video=740)
+- `Archive` — 34 files (archive=3, audio=1, code=1, data=9, doc=4, image=12, other=4)
+- `Inventory` — 10 files (doc=10)
+- `Mac-Personal` — 10 files (doc=8, other=2)
+- `Media` — 10 files (archive=1, audio=1, other=1, video=7)
+- `job-search-2026` — 7 files (doc=7)
+- `Personal` — 3 files (archive=1, doc=1, other=1)
+- `Untitled folder` — 2 files (other=2)
+- `20230121132029_001.gdoc` — 1 files (other=1)
+- `20230121132029_001.pdf` — 1 files (doc=1)
+- `20230125202816_001.gdoc` — 1 files (other=1)
+- `20230125202816_001.pdf` — 1 files (doc=1)
+- `20230223091222_001.pdf` — 1 files (doc=1)
+- `AI` — 1 files (other=1)
+- `Copy of Hobbit Essay        Nate Howard - May 23, 8:13 PM.gdoc` — 1 files (other=1)
+- `Copy of Home School Scheduling Sheet Spring Updated.gdoc` — 1 files (other=1)
+- `Dyke 1:1 - Future Convo Prep (6-23-26) 2.pdf` — 1 files (doc=1)
+- `Dyke 1:1 - Future Convo Prep (6-23-26).pdf` — 1 files (doc=1)
+- `English COVID Memoir.gdoc` — 1 files (other=1)
+- `Gov and Econ Reader.pdf` — 1 files (doc=1)
+- `Hobbit Essay        Nate Howard.gdoc` — 1 files (other=1)
+- `How to Make a P.C..gdoc` — 1 files (other=1)
+- `Human` — 1 files (other=1)
+- `IMG_0548-1.PNG` — 1 files (image=1)
+- `IMG_3447 2.JPG` — 1 files (image=1)
+- `Johnny Tremain was written by Esther Forbes.gdoc` — 1 files (other=1)
+- `Jov_AI_Files_Cleanup.zip` — 1 files (archive=1)
+- `Jov_Drive_Projects_Backup.zip` — 1 files (archive=1)
+- `JOV_Sales_Pitch.gslides` — 1 files (other=1)
+- `Nate 09_12.gdoc` — 1 files (other=1)
+- `Nate 09_12.pdf` — 1 files (doc=1)
+- `OLF MODG Amer. Plans to send (1).docx` — 1 files (doc=1)
+- `OLF MODG Amer. Plans to send (2).docx` — 1 files (doc=1)
+- `OLF MODG Amer. Plans to send.docx` — 1 files (doc=1)
+- `Phones in School.gdoc` — 1 files (other=1)
+- `Religion Presentation - St. Vincent de Paul Society.gdoc` — 1 files (other=1)
+- `Screenshot 2023-03-07 102440.gdoc` — 1 files (other=1)
+- `Screenshot 2023-03-07 102440.png` — 1 files (image=1)
+- `uap-vwfq-abk - Sep 4, 2024 (1).pdf` — 1 files (doc=1)
+- `uap-vwfq-abk - Sep 4, 2024.pdf` — 1 files (doc=1)
+- `Untitled document (1).gdoc` — 1 files (other=1)
+- `Untitled document (10).gdoc` — 1 files (other=1)
+- `Untitled document (11).gdoc` — 1 files (other=1)
+- `Untitled document (12).gdoc` — 1 files (other=1)
+- `Untitled document (13).gdoc` — 1 files (other=1)
+- `Untitled document (14).gdoc` — 1 files (other=1)
+- `Untitled document (15).gdoc` — 1 files (other=1)
+- `Untitled document (16).gdoc` — 1 files (other=1)
+- `Untitled document (2).gdoc` — 1 files (other=1)
+- `Untitled document (3).gdoc` — 1 files (other=1)
+- `Untitled document (4).gdoc` — 1 files (other=1)
+- `Untitled document (5).gdoc` — 1 files (other=1)
+- `Untitled document (6).gdoc` — 1 files (other=1)
+- `Untitled document (7).gdoc` — 1 files (other=1)
+- `Untitled document (8).gdoc` — 1 files (other=1)
+- `Untitled document (9).gdoc` — 1 files (other=1)
+- `Untitled document.gdoc` — 1 files (other=1)
+- `Untitled presentation.gslides` — 1 files (other=1)
+- `Woman.gsheet` — 1 files (other=1)
+
+## Project / Code Mind Map
+
+- `/Users/natehoward/Projects/agent-tracker` — 11 indexed records (data=4, code=2, doc=2, other=2); markers: README.md, package.json
+- `/Users/natehoward/Projects/AgentDrop` — 28 indexed records (code=10, doc=4, image=4, data=3, other=1); markers: README.md
+- `/Users/natehoward/Projects/AI` — 92 indexed records (code=46, image=13, data=7, doc=5, other=4)
+- `/Users/natehoward/Projects/apps-and-skills` — 882 indexed records (code=391, other=136, doc=114, image=61, data=50); markers: README.md
+- `/Users/natehoward/Projects/Daisy` — 86 indexed records (code=58, doc=7, data=3, other=3); markers: README.md
+- `/Users/natehoward/Projects/file-graph` — 38 indexed records (code=22, doc=7, other=2, data=1); markers: README.md, pyproject.toml
+- `/Users/natehoward/Projects/gmail-sorter-v5.2` — 15 indexed records (doc=5, other=5, data=2, code=1); markers: README.md, package.json
+- `/Users/natehoward/Projects/hands-ai` — 32 indexed records (code=18, image=3, data=2, doc=2, other=1); markers: README.md
+- `/Users/natehoward/Projects/hands-ai-mac` — 60 indexed records (code=30, image=10, data=5, doc=3, other=3); markers: README.md
+- `/Users/natehoward/Projects/japan-trip` — 4 indexed records (code=2, doc=1, other=1); markers: README.md
+- `/Users/natehoward/Projects/mission-control` — 34 indexed records (code=8, other=6, doc=4, data=3); markers: README.md
+- `/Users/natehoward/Projects/my-apps` — 8 indexed records (code=4, doc=1, other=1); markers: README.md, Package.swift
+- `/Users/natehoward/Projects/net-worth` — 32 indexed records (image=10, code=7, data=5, other=3)
+- `/Users/natehoward/Projects/unified-os` — 9 indexed records (code=3, other=3, data=1)
+
+## Reel Archive Mind Map
+
+- Saved reels: 130 videos + 93 caption sidecars
+- Each reel has a semantic embedding in FileGraph.
+- **AI / agents** (65)
+-   - `DW4Gc3PDibh` — @charlieautomates: Comment “AI Agent” for my FREE Claude Code ToolKit & 40+ other Claude Code Guides & Templates! Claude doesn’t “know” your business. It rereads everything. Every 
+-   - `DWwLhCEAtV_` — @peterstewiestartup: You just vibe coded an app in 2 hours… but can it survive the internet? 👀 Speed is easy with AI. Security is what most people forget. Here are the 5 prompts yo
+-   - `DX5MzljR0n7` — @niknaglapur: Comment “RESUME” and I’ll send it over 👇 Here are 5 free certifications every student needs to land their next opportunity: 🤖 Google AI Essentials → master the #1 ski
+-   - `DX7mH5Lii8a` — @danmartell: 4 easy steps to master Claude
+-   - `DXAshxEDM5m` — @tenfoldmarc: Tired of rate limits and dumb Claude? Comment "graph" for the skill + guide to get infinite memory + 71.5x reduced token usage #ai #claude #artificalintelligence
+-   - `DXUJ1zdCJaa` — @duncanrogoff: Most beginners waste time jumping between tutorials, random skills, and scattered advice… and end up confused. If you’re starting with Claude Code, stop doing that. 
+-   - `DXmWHzIExeq` — @tpadumke: Claude Code without the $20–$200 a month subscription. The trick is a 12,332-star GitHub repo by Alishahryar1 called free-claude-code. It’s a tiny Python proxy that sits
+-   - `DXxQS0AO1Km` — @duncanrogoff: Most people are running one AI agent… while others are running entire teams. RuFlow turns Claude Code into a 60+ agent system that researches, codes, tests, and impr
+-   - `DY8jSEGR0-d` — @seanpurvis.ai:
+-   - `DYHs8XUvayY` — @ai_withroman: Comment WEBSITE and I ll send u the GUIDE #jarvis #claude #ai
+-   - `DYKSh1iv8nP` — @nick_saraev: Comment "LEADS" to get this LinkedIn Scrapper for Qualified Lead Generation called Vayne AI. This AI tool pulls thousands of qualified leads from LinkedIn. You sleep.
+-   - `DYNm5GcSswI` — @kevinfremon: Most people building AI agents have never thought about security. That’s a problem. Local AI agents can be vulnerable to prompt injection and other malicious attacks 
+-   - `DYQu6P0KOeL` — @kayvon.ai: Follow me then comment “FLOW” and I’ll send you the setup guide. Someone built a Claude workflow with 60 agents working together at the same time. One agent plans. One 
+-   - `DYSUqcsuGX9` — @justyn.ai: Drop “GUIDE” and I’ll send you the step by step guide on how to build this yourself in Claude Code or Codex The Instagram saves feature is basically a graveyard 🪦 You s
+-   - `DYXFtTFsbLt` — @codewithpetergriffin: Most developers still think using Claude Code means paying for API credits. Not anymore. You can now run it locally with Ollama + open-source models like Qwe
+-   - `DY_SoPGKv2A` — @kayvon.ai: Follow me then comment “FLOW” and I’ll send you the setup guide. Someone built a Claude workflow with 60 agents working together at the same time. One agent plans. One 
+-   - `DYkjSXcA45p` — @jeff.macpherson: Just to name a few… Vibing an app is not hard. Growing an app ain’t easy. Scaling one though, good luck. Stop thinking you can do this on your own, because you ca
+-   - `DZ5H6F1Rz1S` — @lukebuildsai: Comment “Jarvis” if you want to get added to the waitlist for the setup guide #ai #jarvis
+-   - `DZ5WrbDNrSZ` — @joshualarosa.ai: Comment “Resume” and I’ll send you all the prompts 👇 What happens when you ask Claude to rewrite your resume so it’s basically un-rejectable? I tried this and got
+-   - `DZ7eidBvr4F` — @datasciencebrain: Comment "GENAI" and I'll DM you Python for Generative AI - Just ₹199. Cheaper than a movie ticket 🎫. Instant download. Yours forever. Most people learning AI are
+-   - `DZAn5OBMIcU` — @callumcarver: The full gameplan… comment AI for the database
+-   - `DZCzO6GE0y7` — @aifornontechies: Comment "STACK" and I'll send you the link If you install one Claude Code repo, make it this one. Everything Claude Code, 182K stars, built at Anthropic's hackath
+-   - `DZDksUcipwZ` — @liamjohnston.ai: Comment “SKILLS” and I will send you the guide and the setup. Most people using Claude are still doing everything manually. They ask it a question, get an okay an
+-   - `DZLHHJuOPVs` — @moonking.mp4: “23 portfolio projects that will actually get you hired 👇 (save this) Here’s a few to get you started: 1. RAG pipeline with hybrid search (dense + sparse retrieval),
+-   - `DZQH-qwurUy` — @jonathonmj: It appears Z.E.R.O has gotten some attention. Should we open source his repo? #fyp #claudecode #aiagents #jarvis @kycoai
+-   - `DZUKKIBPnnV` — @jeremyjcabral: 50K+ Claude Skills and most people use none. Follow and comment “Skills” for a list of some of the best.
+-   - `DZVEN4gMRXV` — @downey.ai: Yeah @higgsfield.ai is unfair
+-   - `DZWLmJQuw-7` — @chase.h.ai: Comment “agent” to get my Claude code guides
+-   - `DZc0F3Nx2rb` — @lukebuildsai: Comment “Jarvis” to get added to the waitlist for the setup guide #ai #jarvis
+-   - `DZcSLefuxRU` — @jonathonmj: The difference betwee￼n an LLM and Z.E.R.O #fyp #claudecode #aiagents #jarvis @kycoai @agentcoreai
+-   - `DZcwJrJzLLh` — @opusjake: Comment “Skills” and I’ll send you the full list of the best Claude Skills for everyday tasks #claude #claudecode #claudeskills #aitips #ai
+-   - `DZdkrPthOoM` — @jp_mather: A $22K cloud bill because nobody knew how to secure production. AI can help you build faster. It cannot replace good DevOps. #ai #cybersecurity #cloudcomputing #devops 
+-   - `DZe-GLFy9DW` — @olivermerrick___: Your second brain failed. It’s not your fault. You were sold the wrong tool. The vault crowd told you the answer was markdown files and backlinks. So you built t
+-   - `DZoJOLQoQY2` — @downey.ai: Wanna know how to do this with @higgsfield.ai ? Comment “Higgs” and I’ll send you the step-by-step guide!
+-   - `DZpeo9rId8j` — @abhishek.devini: Comment SKILL and I’ll send you the exact command + full step-by-step setup 👇 This is the last Claude Code skill you’ll ever install by hand. Right now there are 
+-   - `DZpySOnOCxI` — @benkimball.ai: Here is the link: https://github.com/affaan-m/ECC This Claude Code GitHub repo has EVERYTHING… free AI tools, agents, and automations most people are missing—wait u
+-   - `DZsAeTIsx49` — @jaymehtaai: Comment “AI” and I’ll send you a free resource sheet with direct links to everything mentioned. (Make sure you’ve followed us to receive a DM) #business #finance #fina
+-   - `DZsq1Ervqk7` — @kevinfremon: 3 prompts I wish someone had handed me when I started vibe coding. I use all three of these every single day building with AI. They’ve become part of how I think abou
+-   - `DZsup8Lx6yQ` — @kayvon.ai: Follow me then comment “AI” and I’ll send you JCode 🦀 A solo developer just dropped an open source coding agent that makes Claude Code and Codex look ancient. It’s call
+-   - `DZtXWtYsMdS` — @bitterbuilds: Hahahah this is crazy. Company is kickbacks.ai and I’m not sponsored at all lol
+-   - `DaBNLmpMB5H` — @downey.ai: Comment “babies» if you want the full step-by-step guide on how to do this. @higgsfield.ai 🤯
+-   - `DaC9aW6Miyi` — @vaibhavdecoded: comment “JARVIS” and I’ll send you the full list of every tool in this video that I specially created to build Jarvis dashboard from scratch. original video was gr
+-   - `DaI3LY3tLYn` — @maxjohnscn: Claude Corps is a huge opportunity for people just starting out in their career👨‍💻 Comment “Fellowship” & I’ll send you the link to apply🔗
+-   - `DaIolfvt2_4` — @pockettalks_ig: Comment “GIT” and I’ll send it over - supercharge your Ai project with this open source project for better search and discovery. #github #claudecode #claude #ai
+-   - `DaNjtbcFSLE` — @aifornontechies: Comment "KARPATHY" and I'll send you the repo There's a single file on GitHub with 170,000 stars that makes Claude noticeably smarter the second you install it. I
+-   - `DaRbl6qJxRM` — @joshualarosa.ai: Follow & Comment “RESUME” for the links + 20 more Most students have no idea these exist: • Google AI Essentials → the 1 skill employers screen for, under 2 hours
+-   - `DaSlpSjPVe-` — @joestoltelive: Claude Code Tips 💻 Comment “CLEAR” and I’ll send you the full guide 🎁 Learn one of the most overlooked Claude Code tips and tricks to avoid context rot. If you’re l
+-   - `DaSwegFCZO7` — @algorithmswithpeter: I kept wondering why some people were getting insane results from Claude, while mine was doing the bare minimum. Turns out, the difference isn’t just the prom
+-   - `DaTUI9xChIR` — @fatihmakes: Watch this speed... Posting videos on Instagram by using Jarvis. I build personal projects centered around a custom AI assistant named Jarvis. Jarvis is engineered to 
+-   - `DaWjATqpBjL` — @chase.h.ai: Comment “agent” to get my claude code guides@
+-   - `DaY2MDUjgKC` — @buildwithwilly: this is crazyyy 🫢 #business #ai #businessowner #sidehustle #ctopartner
+-   - `DaagbUMP8Tg` — @nick_saraev: Comment "PLUGIN" to get this Claude Code Setup plugin to optimize your setup. Most people are using Claude Code completely wrong. They install random plugins and skil
+-   - `DactwNnswpk` — @itsmariahbrunner: comment “secure” and I’ll send you the exact prompts I use :) AI Safety Series part 1!! A downloaded skill can run code on your computer, so before I install any
+-   - `DadvdvitVke` — @charlieautomates: Comment “Claude” for the Understand-Anything repo link/playbook You built the app. You still can’t explain how it works. One free repo fixes that. It turns your 
+-   - `Dae5fOUOphe` — @duncanrogoff: Comment REPO and I’ll send you the GitHub link 👇 Most Claude Code users waste thousands of tokens every session. Graphify fixes that. It maps your codebase once, so 
+-   - `DaebyH0xIDQ` — @chandlerintelligence: Comment JARVIS for the full guide Original: @lukebuildsai #claude #mcp #claudecode #aiagents
+-   - `DafiQ5iPlC7` — @nick_saraev: Comment "DESIGN" to get these 4 Claude Code Skills for better designs. Claude Code is great at coding but terrible at front end design. So here are the four skills th
+-   - `DafvMV_Fh-Z` — @zoeyos.ai: Jarvis is officially here except there’s a twist… This isn’t Jarvis, this is ZOEY. Zoey is a multi agent platform assistant based ai that utilizes voice recognition. Ha
+-   - `Dag7fodBTWf` — @nocodealex: COMMENT “CREW” for the full setup READ BELOW 👇 This is the part I couldn’t really get into in the video. You set Fable up ONE time as 6 different AI employees, and the
+-   - `Dai5Uq0COe1` — @liamjohnston.ai: Comment “DESIGN” and I’ll send you the repo plus my starter file. Claude Code is great at coding, but it keeps butchering the design. Google dropped a repo called
+-   - `Dalkk16Sy81` — @nocodealex: Comment “FACTORY” and I’ll DM you the assembly-line guide, the exact prompt for every station, free. (Save this video and follow so the DM lands 📩) 👇 READ BELOW, this 
+-   - `DanS4w5lcoZ` — @dubibubiii: Comment: ‘skill’ and I’ll send you the link! Five free repos that should be illegal. Camofox Browser. A headless browser that makes your AI agents invisible to bot det
+-   - `Dap0wAQli_U` — @nikihasmotion: Comment "Link" and I'll send you the app! #motion #video #claude #ai #vibecoding
+-   - `DaqdIkRCp73` — @liamjohnston.ai: Comment “Claude” and I’ll send you the install link. Developers are getting paid every time Claude Code loads while you stare at the same spinner for free. It’s c
+-   - `DarPBb4sxlg` — @nocodealex: Comment “EVOLVE” and I’ll DM you The Forge Loop Guide, the exact self-review setup, free. (Follow so the DM lands 📩) 👇 READ BELOW, this is everything that wouldn’t fit
+- **Business / money** (10)
+-   - `DW4Gc3PDibh` — @charlieautomates: Comment “AI Agent” for my FREE Claude Code ToolKit & 40+ other Claude Code Guides & Templates! Claude doesn’t “know” your business. It rereads everything. Every 
+-   - `DX5MzljR0n7` — @niknaglapur: Comment “RESUME” and I’ll send it over 👇 Here are 5 free certifications every student needs to land their next opportunity: 🤖 Google AI Essentials → master the #1 ski
+-   - `DYKSh1iv8nP` — @nick_saraev: Comment "LEADS" to get this LinkedIn Scrapper for Qualified Lead Generation called Vayne AI. This AI tool pulls thousands of qualified leads from LinkedIn. You sleep.
+-   - `DYXFtTFsbLt` — @codewithpetergriffin: Most developers still think using Claude Code means paying for API credits. Not anymore. You can now run it locally with Ollama + open-source models like Qwe
+-   - `DZLHHJuOPVs` — @moonking.mp4: “23 portfolio projects that will actually get you hired 👇 (save this) Here’s a few to get you started: 1. RAG pipeline with hybrid search (dense + sparse retrieval),
+-   - `DZsAeTIsx49` — @jaymehtaai: Comment “AI” and I’ll send you a free resource sheet with direct links to everything mentioned. (Make sure you’ve followed us to receive a DM) #business #finance #fina
+-   - `DaRbl6qJxRM` — @joshualarosa.ai: Follow & Comment “RESUME” for the links + 20 more Most students have no idea these exist: • Google AI Essentials → the 1 skill employers screen for, under 2 hours
+-   - `DaWVAIrh_EB` — @quantbryan: 10 Finance Projects to Build This Weekend 💈Beginner 1. Personal Net Worth Tracker Track assets, liabilities, monthly cash flow, and net worth growth with interactive c
+-   - `DaY2MDUjgKC` — @buildwithwilly: this is crazyyy 🫢 #business #ai #businessowner #sidehustle #ctopartner
+-   - `Dag7fodBTWf` — @nocodealex: COMMENT “CREW” for the full setup READ BELOW 👇 This is the part I couldn’t really get into in the video. You set Fable up ONE time as 6 different AI employees, and the
+- **Design / creativity** (18)
+-   - `DXAshxEDM5m` — @tenfoldmarc: Tired of rate limits and dumb Claude? Comment "graph" for the skill + guide to get infinite memory + 71.5x reduced token usage #ai #claude #artificalintelligence
+-   - `DYNm5GcSswI` — @kevinfremon: Most people building AI agents have never thought about security. That’s a problem. Local AI agents can be vulnerable to prompt injection and other malicious attacks 
+-   - `DYaA7dnxfUi` — @niknaglapur: Comment “STUDENT” for the full list + more 👇 GitHub Student Pack: One student email unlocks 100+ tools completely free 👨‍🎓 Cursor Pro: Normally $192/year. FREE for st
+-   - `DZ7eidBvr4F` — @datasciencebrain: Comment "GENAI" and I'll DM you Python for Generative AI - Just ₹199. Cheaper than a movie ticket 🎫. Instant download. Yours forever. Most people learning AI are
+-   - `DZLHHJuOPVs` — @moonking.mp4: “23 portfolio projects that will actually get you hired 👇 (save this) Here’s a few to get you started: 1. RAG pipeline with hybrid search (dense + sparse retrieval),
+-   - `DZpgTfBioe6` — @charliehills: Comment DESIGN and I'll send you the full guide with all six tools.
+-   - `DZsq1Ervqk7` — @kevinfremon: 3 prompts I wish someone had handed me when I started vibe coding. I use all three of these every single day building with AI. They’ve become part of how I think abou
+-   - `DaC9aW6Miyi` — @vaibhavdecoded: comment “JARVIS” and I’ll send you the full list of every tool in this video that I specially created to build Jarvis dashboard from scratch. original video was gr
+-   - `DaSwegFCZO7` — @algorithmswithpeter: I kept wondering why some people were getting insane results from Claude, while mine was doing the bare minimum. Turns out, the difference isn’t just the prom
+-   - `DaTUI9xChIR` — @fatihmakes: Watch this speed... Posting videos on Instagram by using Jarvis. I build personal projects centered around a custom AI assistant named Jarvis. Jarvis is engineered to 
+-   - `DaWV_2pvXCw` — @jakeuiai: We design and build custom websites for companies that are looking to maximize their funding rounds. Comment “WORK” and book a call in bio to work with us 📥 #webdev #web
+-   - `DafiQ5iPlC7` — @nick_saraev: Comment "DESIGN" to get these 4 Claude Code Skills for better designs. Claude Code is great at coding but terrible at front end design. So here are the four skills th
+-   - `Dag7fodBTWf` — @nocodealex: COMMENT “CREW” for the full setup READ BELOW 👇 This is the part I couldn’t really get into in the video. You set Fable up ONE time as 6 different AI employees, and the
+-   - `Dai5Uq0COe1` — @liamjohnston.ai: Comment “DESIGN” and I’ll send you the repo plus my starter file. Claude Code is great at coding, but it keeps butchering the design. Google dropped a repo called
+-   - `Dalkk16Sy81` — @nocodealex: Comment “FACTORY” and I’ll DM you the assembly-line guide, the exact prompt for every station, free. (Save this video and follow so the DM lands 📩) 👇 READ BELOW, this 
+-   - `DanS4w5lcoZ` — @dubibubiii: Comment: ‘skill’ and I’ll send you the link! Five free repos that should be illegal. Camofox Browser. A headless browser that makes your AI agents invisible to bot det
+-   - `Dap0wAQli_U` — @nikihasmotion: Comment "Link" and I'll send you the app! #motion #video #claude #ai #vibecoding
+-   - `DarPBb4sxlg` — @nocodealex: Comment “EVOLVE” and I’ll DM you The Forge Loop Guide, the exact self-review setup, free. (Follow so the DM lands 📩) 👇 READ BELOW, this is everything that wouldn’t fit
+- **Health / lifestyle** (4)
+-   - `DYKSh1iv8nP` — @nick_saraev: Comment "LEADS" to get this LinkedIn Scrapper for Qualified Lead Generation called Vayne AI. This AI tool pulls thousands of qualified leads from LinkedIn. You sleep.
+-   - `DZ5WrbDNrSZ` — @joshualarosa.ai: Comment “Resume” and I’ll send you all the prompts 👇 What happens when you ask Claude to rewrite your resume so it’s basically un-rejectable? I tried this and got
+-   - `Dag7fodBTWf` — @nocodealex: COMMENT “CREW” for the full setup READ BELOW 👇 This is the part I couldn’t really get into in the video. You set Fable up ONE time as 6 different AI employees, and the
+-   - `DanS4w5lcoZ` — @dubibubiii: Comment: ‘skill’ and I’ll send you the link! Five free repos that should be illegal. Camofox Browser. A headless browser that makes your AI agents invisible to bot det
+- **Security / privacy** (12)
+-   - `DW4Gc3PDibh` — @charlieautomates: Comment “AI Agent” for my FREE Claude Code ToolKit & 40+ other Claude Code Guides & Templates! Claude doesn’t “know” your business. It rereads everything. Every 
+-   - `DWwLhCEAtV_` — @peterstewiestartup: You just vibe coded an app in 2 hours… but can it survive the internet? 👀 Speed is easy with AI. Security is what most people forget. Here are the 5 prompts yo
+-   - `DXAshxEDM5m` — @tenfoldmarc: Tired of rate limits and dumb Claude? Comment "graph" for the skill + guide to get infinite memory + 71.5x reduced token usage #ai #claude #artificalintelligence
+-   - `DXmWHzIExeq` — @tpadumke: Claude Code without the $20–$200 a month subscription. The trick is a 12,332-star GitHub repo by Alishahryar1 called free-claude-code. It’s a tiny Python proxy that sits
+-   - `DYNm5GcSswI` — @kevinfremon: Most people building AI agents have never thought about security. That’s a problem. Local AI agents can be vulnerable to prompt injection and other malicious attacks 
+-   - `DYQu6P0KOeL` — @kayvon.ai: Follow me then comment “FLOW” and I’ll send you the setup guide. Someone built a Claude workflow with 60 agents working together at the same time. One agent plans. One 
+-   - `DY_SoPGKv2A` — @kayvon.ai: Follow me then comment “FLOW” and I’ll send you the setup guide. Someone built a Claude workflow with 60 agents working together at the same time. One agent plans. One 
+-   - `DZdkrPthOoM` — @jp_mather: A $22K cloud bill because nobody knew how to secure production. AI can help you build faster. It cannot replace good DevOps. #ai #cybersecurity #cloudcomputing #devops 
+-   - `DaagbUMP8Tg` — @nick_saraev: Comment "PLUGIN" to get this Claude Code Setup plugin to optimize your setup. Most people are using Claude Code completely wrong. They install random plugins and skil
+-   - `Dae5fOUOphe` — @duncanrogoff: Comment REPO and I’ll send you the GitHub link 👇 Most Claude Code users waste thousands of tokens every session. Graphify fixes that. It maps your codebase once, so 
+-   - `Dalkk16Sy81` — @nocodealex: Comment “FACTORY” and I’ll DM you the assembly-line guide, the exact prompt for every station, free. (Save this video and follow so the DM lands 📩) 👇 READ BELOW, this 
+-   - `DanS4w5lcoZ` — @dubibubiii: Comment: ‘skill’ and I’ll send you the link! Five free repos that should be illegal. Camofox Browser. A headless browser that makes your AI agents invisible to bot det
+- **Software / web development** (54)
+-   - `DW4Gc3PDibh` — @charlieautomates: Comment “AI Agent” for my FREE Claude Code ToolKit & 40+ other Claude Code Guides & Templates! Claude doesn’t “know” your business. It rereads everything. Every 
+-   - `DWwLhCEAtV_` — @peterstewiestartup: You just vibe coded an app in 2 hours… but can it survive the internet? 👀 Speed is easy with AI. Security is what most people forget. Here are the 5 prompts yo
+-   - `DXUJ1zdCJaa` — @duncanrogoff: Most beginners waste time jumping between tutorials, random skills, and scattered advice… and end up confused. If you’re starting with Claude Code, stop doing that. 
+-   - `DXmWHzIExeq` — @tpadumke: Claude Code without the $20–$200 a month subscription. The trick is a 12,332-star GitHub repo by Alishahryar1 called free-claude-code. It’s a tiny Python proxy that sits
+-   - `DXxQS0AO1Km` — @duncanrogoff: Most people are running one AI agent… while others are running entire teams. RuFlow turns Claude Code into a 60+ agent system that researches, codes, tests, and impr
+-   - `DY2EEWZCJ3A` — @volkan.js: Comment "GIT" and I'll send you the links. Most developers know they need to learn Git and GitHub — but most tutorials just throw commands at you without explaining the
+-   - `DYHs8XUvayY` — @ai_withroman: Comment WEBSITE and I ll send u the GUIDE #jarvis #claude #ai
+-   - `DYKSh1iv8nP` — @nick_saraev: Comment "LEADS" to get this LinkedIn Scrapper for Qualified Lead Generation called Vayne AI. This AI tool pulls thousands of qualified leads from LinkedIn. You sleep.
+-   - `DYNm5GcSswI` — @kevinfremon: Most people building AI agents have never thought about security. That’s a problem. Local AI agents can be vulnerable to prompt injection and other malicious attacks 
+-   - `DYQu6P0KOeL` — @kayvon.ai: Follow me then comment “FLOW” and I’ll send you the setup guide. Someone built a Claude workflow with 60 agents working together at the same time. One agent plans. One 
+-   - `DYSUqcsuGX9` — @justyn.ai: Drop “GUIDE” and I’ll send you the step by step guide on how to build this yourself in Claude Code or Codex The Instagram saves feature is basically a graveyard 🪦 You s
+-   - `DYXFtTFsbLt` — @codewithpetergriffin: Most developers still think using Claude Code means paying for API credits. Not anymore. You can now run it locally with Ollama + open-source models like Qwe
+-   - `DY_SoPGKv2A` — @kayvon.ai: Follow me then comment “FLOW” and I’ll send you the setup guide. Someone built a Claude workflow with 60 agents working together at the same time. One agent plans. One 
+-   - `DYaA7dnxfUi` — @niknaglapur: Comment “STUDENT” for the full list + more 👇 GitHub Student Pack: One student email unlocks 100+ tools completely free 👨‍🎓 Cursor Pro: Normally $192/year. FREE for st
+-   - `DYkjSXcA45p` — @jeff.macpherson: Just to name a few… Vibing an app is not hard. Growing an app ain’t easy. Scaling one though, good luck. Stop thinking you can do this on your own, because you ca
+-   - `DYnFlSKK-Qg` — @the.agi.guide: Chat vs. Cowork vs. Code - Which Should You Use?
+-   - `DZ5WrbDNrSZ` — @joshualarosa.ai: Comment “Resume” and I’ll send you all the prompts 👇 What happens when you ask Claude to rewrite your resume so it’s basically un-rejectable? I tried this and got
+-   - `DZ5xhLYvGpT` — @darshcoded: 30 days is a rush but it’s enough to be able to understand and code in python. Comment “30” and I’ll send you the resources + links to everything mentioned. #datascien
+-   - `DZ7eidBvr4F` — @datasciencebrain: Comment "GENAI" and I'll DM you Python for Generative AI - Just ₹199. Cheaper than a movie ticket 🎫. Instant download. Yours forever. Most people learning AI are
+-   - `DZCzO6GE0y7` — @aifornontechies: Comment "STACK" and I'll send you the link If you install one Claude Code repo, make it this one. Everything Claude Code, 182K stars, built at Anthropic's hackath
+-   - `DZDksUcipwZ` — @liamjohnston.ai: Comment “SKILLS” and I will send you the guide and the setup. Most people using Claude are still doing everything manually. They ask it a question, get an okay an
+-   - `DZLHHJuOPVs` — @moonking.mp4: “23 portfolio projects that will actually get you hired 👇 (save this) Here’s a few to get you started: 1. RAG pipeline with hybrid search (dense + sparse retrieval),
+-   - `DZQH-qwurUy` — @jonathonmj: It appears Z.E.R.O has gotten some attention. Should we open source his repo? #fyp #claudecode #aiagents #jarvis @kycoai
+-   - `DZWLmJQuw-7` — @chase.h.ai: Comment “agent” to get my Claude code guides
+-   - `DZY4CWVPiXl` — @hex.gar: Been messing with this little Python thing where a double clap kicks off my morning workflow. Honestly feels ridiculous in the best way. It’s free, it’s open source, stea
+-   - `DZmuKk7hzoY` — @setupsai: Powerful websites you should know (part 1056) find almost any animated components #components #animation #development
+-   - `DZn-G9wvwgX` — @markpyvovarov: comment "link" for the repo links! #cs #coding #student
+-   - `DZow139P5Wd` — @leon.commits.code: Fix your slop bro 😭 Comment “Slop” for the link. #coding #faang #coderabbit #viral
+-   - `DZpeo9rId8j` — @abhishek.devini: Comment SKILL and I’ll send you the exact command + full step-by-step setup 👇 This is the last Claude Code skill you’ll ever install by hand. Right now there are 
+-   - `DZpySOnOCxI` — @benkimball.ai: Here is the link: https://github.com/affaan-m/ECC This Claude Code GitHub repo has EVERYTHING… free AI tools, agents, and automations most people are missing—wait u
+-   - `DZsq1Ervqk7` — @kevinfremon: 3 prompts I wish someone had handed me when I started vibe coding. I use all three of these every single day building with AI. They’ve become part of how I think abou
+-   - `DZsup8Lx6yQ` — @kayvon.ai: Follow me then comment “AI” and I’ll send you JCode 🦀 A solo developer just dropped an open source coding agent that makes Claude Code and Codex look ancient. It’s call
+-   - `DaI3LY3tLYn` — @maxjohnscn: Claude Corps is a huge opportunity for people just starting out in their career👨‍💻 Comment “Fellowship” & I’ll send you the link to apply🔗
+-   - `DaNjtbcFSLE` — @aifornontechies: Comment "KARPATHY" and I'll send you the repo There's a single file on GitHub with 170,000 stars that makes Claude noticeably smarter the second you install it. I
+-   - `DaRbl6qJxRM` — @joshualarosa.ai: Follow & Comment “RESUME” for the links + 20 more Most students have no idea these exist: • Google AI Essentials → the 1 skill employers screen for, under 2 hours
+-   - `DaSlpSjPVe-` — @joestoltelive: Claude Code Tips 💻 Comment “CLEAR” and I’ll send you the full guide 🎁 Learn one of the most overlooked Claude Code tips and tricks to avoid context rot. If you’re l
+-   - `DaSwegFCZO7` — @algorithmswithpeter: I kept wondering why some people were getting insane results from Claude, while mine was doing the bare minimum. Turns out, the difference isn’t just the prom
+-   - `DaTUI9xChIR` — @fatihmakes: Watch this speed... Posting videos on Instagram by using Jarvis. I build personal projects centered around a custom AI assistant named Jarvis. Jarvis is engineered to 
+-   - `DaWVAIrh_EB` — @quantbryan: 10 Finance Projects to Build This Weekend 💈Beginner 1. Personal Net Worth Tracker Track assets, liabilities, monthly cash flow, and net worth growth with interactive c
+-   - `DaWV_2pvXCw` — @jakeuiai: We design and build custom websites for companies that are looking to maximize their funding rounds. Comment “WORK” and book a call in bio to work with us 📥 #webdev #web
+-   - `DaWjATqpBjL` — @chase.h.ai: Comment “agent” to get my claude code guides@
+-   - `Daa8fy8PKC1` — @jackk_flick: Here’s some resources that I wish I knew in college when I started programming. If you want the links to these hit a follow and comment “resource” and I’ll send them 
+-   - `DaagbUMP8Tg` — @nick_saraev: Comment "PLUGIN" to get this Claude Code Setup plugin to optimize your setup. Most people are using Claude Code completely wrong. They install random plugins and skil
+-   - `DabxbsRMH5c` — @d.bronnikov07: How to start coding in 2026? Comment «Guide» to get all resources to start building projects tomorrow!
+-   - `DactwNnswpk` — @itsmariahbrunner: comment “secure” and I’ll send you the exact prompts I use :) AI Safety Series part 1!! A downloaded skill can run code on your computer, so before I install any
+-   - `DadvdvitVke` — @charlieautomates: Comment “Claude” for the Understand-Anything repo link/playbook You built the app. You still can’t explain how it works. One free repo fixes that. It turns your 
+-   - `Dae5fOUOphe` — @duncanrogoff: Comment REPO and I’ll send you the GitHub link 👇 Most Claude Code users waste thousands of tokens every session. Graphify fixes that. It maps your codebase once, so 
+-   - `DafiQ5iPlC7` — @nick_saraev: Comment "DESIGN" to get these 4 Claude Code Skills for better designs. Claude Code is great at coding but terrible at front end design. So here are the four skills th
+-   - `Dag7fodBTWf` — @nocodealex: COMMENT “CREW” for the full setup READ BELOW 👇 This is the part I couldn’t really get into in the video. You set Fable up ONE time as 6 different AI employees, and the
+-   - `Dai5Uq0COe1` — @liamjohnston.ai: Comment “DESIGN” and I’ll send you the repo plus my starter file. Claude Code is great at coding, but it keeps butchering the design. Google dropped a repo called
+-   - `DanS4w5lcoZ` — @dubibubiii: Comment: ‘skill’ and I’ll send you the link! Five free repos that should be illegal. Camofox Browser. A headless browser that makes your AI agents invisible to bot det
+-   - `Dap0wAQli_U` — @nikihasmotion: Comment "Link" and I'll send you the app! #motion #video #claude #ai #vibecoding
+-   - `DappXCcvuE3` — @setupsai: Powerful websites you should know (part 1082) find almost any animated UI component #animation #component #development
+-   - `DaqdIkRCp73` — @liamjohnston.ai: Comment “Claude” and I’ll send you the install link. Developers are getting paid every time Claude Code loads while you stare at the same spinner for free. It’s c
+- **Unclassified / review** (14)
+-   - `DXyvXCNITAK` — @huwprosser: We’re building something cool. 😎 #ironman #jarvis #technology #vr
+-   - `DY2GRVfN4bZ` — @100xengineers: Comment "Md" to get the GitHub link and the full PDF Guide
+-   - `DYm-E6TMSqV` — @maxjohnscn: Comment “COURSE” & I’ll send you all the links🔥
+-   - `DZ0rP21xg1V` — @johncorbett777: comment “intern” for the full list sent to dms . . . #internship #interndock #collegestudent #jobsearch #hiring
+-   - `DZAtd2JTvT9` — @thetommyschmidt: Dm me to work w/ me 1:1, only got a few spots left!! 🚀
+-   - `DZEX2WRgyMu` — @_heyclicky: talk to your computer. available today #jarvis
+-   - `DZL7SEANnl_` — @ethandojo: And no leetcode is not dead I promise
+-   - `DZLivf_h_Vm` — @maninalabs: Now all that's left is a cave and a box of scraps #marvel #ironman #engineering #jarvis #programming
+-   - `DZqg7QoMKI4` — @hottestmogul: My most kept secret
+-   - `DZxUGClNzi_` — @maxjohnscn: Comment “Agency” if you want the GUIDE that shows you exactly how to BUILD and SELL each of these automations👨‍💻🔗
+-   - `DaHR5JWPLvo` — @rrishijain: Comment “nvidia” to get the link :)
+-   - `DaMauuPAzao` — @johncorbett777: follow + comment “project” for a full list of 30+ projects. . . . #internship #interndock #summerproject #usa #collegestudent
+-   - `DaQ1XDsycZP` — @alexxubuilds: day 1 of becoming cracked at machine learning… follow to keep up to date! #tech #machinelearning #studywithme
+-   - `DaYi--upDRH` — @matebreton: follow + comment “resume” for a full list of free certifications #student #explore #resume #jobsearch #hiring
+
+## AI Retrieval Rules
+
+- Start with this map to choose a domain, then query FileGraph for exact files.
+- Prefer semantic search over opening whole folders or rereading all Reel transcripts.
+- Google Drive entries are metadata-first; fetch file contents only for the selected result.
+- Do not expose credentials, tokens, private keys, or authentication files in summaries.
+- For reels, use the reel ID to locate the local video, caption, transcript, and embedding.
+
+## FileGraph Access
+
+- Web UI: http://127.0.0.1:8437
+- Database: `~/.filegraph/filegraph.db`
+- Search tools: `search_files`, `get_file_context`, `list_folder`, `graph_overview`

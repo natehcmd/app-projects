@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hands AI</title>
+  <style>
+    /* ── Reset & base ─────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      /* nate-default house tokens: dark-first, pastel accents */
+      --bg: #0b0d12;
+      --bg-elevated: #10131a;
+      --bg-panel: #151924;
+      --border: rgba(255,255,255,0.08);
+      --accent: #a8d8f5;             /* sky */
+      --accent-dim: rgba(168,216,245,0.14);
+      --accent-glow: rgba(168,216,245,0.08);
+      --text: #e9ecf2;
+      --text-dim: #9aa3b2;           /* >=4.5:1 on --bg */
+      --text-muted: #7d8698;         /* labels/placeholders, ~5:1 on --bg */
+      --green: #9fe8c9;              /* mint */
+      --red: #f2a9c4;                /* rose */
+      --yellow: #f5c9a8;             /* peach */
+      --radius: 10px;
+      --focus-ring: 0 0 0 2px rgba(168,216,245,0.45);
+      --mono: "SF Mono", "Fira Code", "Cascadia Code", ui-monospace, monospace;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    /* Soft focus rings instead of default outlines */
+    button:focus-visible, input:focus-visible, textarea:focus-visible {
+      outline: none;
+      box-shadow: var(--focus-ring);
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 13px;
+      line-height: 1.5;
+      overflow: hidden;
+      -webkit-app-region: drag; /* allow dragging the window by the body */
+      user-select: none;
+    }
+
+    /* ── Layout ───────────────────────────────────────────────────────────── */
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      -webkit-app-region: no-drag;
+    }
+
+    /* ── Header ───────────────────────────────────────────────────────────── */
+    #header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-elevated);
+      -webkit-app-region: drag;
+      flex-shrink: 0;
+    }
+
+    #logo {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--accent);
+      text-transform: uppercase;
+      -webkit-app-region: no-drag;
+    }
+
+    #status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      flex-shrink: 0;
+      transition: background 0.3s;
+    }
+    /* Status is shape + color, never color alone:
+       online = solid + glow, connecting = hollow ring, offline = hollow + gap */
+    #status-dot.online { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    #status-dot.offline {
+      background: transparent;
+      border: 1.5px solid var(--red);
+      width: 8px; height: 8px;
+    }
+    #status-dot.connecting {
+      background: transparent;
+      border: 1.5px solid var(--yellow);
+      width: 8px; height: 8px;
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.45; }
+    }
+
+    #model-badge {
+      font-size: 11px;
+      color: var(--accent);
+      background: var(--accent-dim);
+      border: 1px solid rgba(168,216,245,0.22);
+      padding: 2px 8px;
+      border-radius: 20px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 160px;
+      cursor: pointer;
+      -webkit-app-region: no-drag;
+    }
+    #model-badge:hover { background: rgba(168,216,245,0.24); }
+
+    .spacer { flex: 1; }
+
+    #header-actions {
+      display: flex;
+      gap: 6px;
+      -webkit-app-region: no-drag;
+    }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: color 0.2s, background 0.2s;
+    }
+    .icon-btn:hover { color: var(--text); background: rgba(255,255,255,0.07); }
+
+    /* ── Model switcher ───────────────────────────────────────────────────── */
+    #model-panel {
+      display: none;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-panel);
+      padding: 10px 14px;
+      flex-shrink: 0;
+      max-height: 240px;
+      overflow-y: auto;
+    }
+    #model-panel.open { display: block; }
+
+    .model-group-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin: 6px 0 4px;
+    }
+
+    .model-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .model-item:hover { background: rgba(255,255,255,0.05); }
+    .model-item.active { background: var(--accent-dim); color: var(--accent); }
+
+    .model-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .model-dot.avail { background: var(--green); }
+    .model-dot.unavail { background: var(--text-muted); }
+
+    .model-name { flex: 1; font-size: 12px; font-family: var(--mono); }
+    .model-provider { font-size: 10px; color: var(--text-muted); }
+
+    /* ── Chat area ────────────────────────────────────────────────────────── */
+    #chat-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      scroll-behavior: smooth;
+    }
+
+    #chat-area::-webkit-scrollbar { width: 4px; }
+    #chat-area::-webkit-scrollbar-track { background: transparent; }
+    #chat-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .history-divider {
+      text-align: center;
+      font-size: 10px;
+      color: var(--text-muted);
+      opacity: 0.4;
+      margin: 8px 0;
+      letter-spacing: 0.05em;
+    }
+
+    .message {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-width: 100%;
+    }
+
+    .message-role {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+    }
+
+    .message.user .message-role { color: var(--accent); }
+
+    .message-content {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 13px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .message.user .message-content {
+      background: var(--accent-glow);
+      border-color: rgba(168,216,245,0.16);
+    }
+
+    .message.assistant .message-content code {
+      font-family: var(--mono);
+      background: rgba(255,255,255,0.07);
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 12px;
+    }
+
+    .message.assistant .message-content pre {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 10px;
+      overflow-x: auto;
+      margin: 6px 0;
+    }
+
+    .message.assistant .message-content pre code {
+      background: none;
+      padding: 0;
+    }
+
+    #connecting-msg {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 12px;
+      padding: 20px;
+    }
+
+    .typing-indicator {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      padding: 6px 2px;
+    }
+    .typing-indicator span {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: bounce 1s infinite;
+    }
+    .typing-indicator span:nth-child(2) { animation-delay: 0.15s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0.7); opacity: 0.4; }
+      40% { transform: scale(1); opacity: 1; }
+    }
+
+    /* ── Input bar ────────────────────────────────────────────────────────── */
+    #input-bar {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      padding: 10px 12px;
+      border-top: 1px solid var(--border);
+      background: var(--bg-elevated);
+      flex-shrink: 0;
+    }
+
+    #chat-input {
+      flex: 1;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13px;
+      padding: 8px 10px;
+      resize: none;
+      outline: none;
+      min-height: 36px;
+      max-height: 120px;
+      overflow-y: auto;
+      transition: border-color 0.2s;
+    }
+    #chat-input:focus { border-color: var(--accent); }
+    #chat-input::placeholder { color: var(--text-muted); }
+
+    #send-btn {
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      color: #0b0d12;
+      cursor: pointer;
+      font-size: 16px;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    #send-btn:hover { opacity: 0.85; }
+    #send-btn:active { transform: scale(0.95); }
+    #send-btn:disabled { opacity: 0.3; cursor: default; }
+
+    /* ── Settings panel ───────────────────────────────────────────────────── */
+    #settings-panel {
+      position: absolute;
+      top: 0;
+      right: -100%;
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      border-left: 1px solid var(--border);
+      transition: right 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+    }
+    #settings-panel.open { right: 0; }
+
+    #settings-header {
+      display: flex;
+      align-items: center;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      gap: 8px;
+    }
+    #settings-header h2 { flex: 1; font-size: 14px; font-weight: 600; }
+
+    #settings-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .setting-group label {
+      display: block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .setting-group input {
+      width: 100%;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 7px 10px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .setting-group input:focus { border-color: var(--accent); }
+
+    #save-settings-btn {
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      color: #0b0d12;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 9px 16px;
+      transition: opacity 0.2s;
+      width: 100%;
+    }
+    #save-settings-btn:hover { opacity: 0.85; }
+
+    .save-status {
+      font-size: 11px;
+      text-align: center;
+      height: 16px;
+    }
+    .save-status.ok { color: var(--green); }
+    .save-status.err { color: var(--red); }
+
+    /* ── Scrollbar ────────────────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+  </style>
+</head>
+<body>
+  <div id="app">
+
+    <!-- Header -->
+    <div id="header">
+      <span id="logo">Hands AI</span>
+      <div id="status-dot" class="connecting" title="Daemon status"></div>
+      <div id="model-badge" title="Click to switch model">— / —</div>
+      <div class="spacer"></div>
+      <div id="header-actions">
+        <button class="icon-btn" id="clear-btn" title="Clear chat">⊘</button>
+        <button class="icon-btn" id="settings-btn" title="Settings">⚙</button>
+      </div>
+    </div>
+
+    <!-- Model switcher panel -->
+    <div id="model-panel">
+      <div id="model-list-container">
+        <div style="color: var(--text-muted); font-size: 12px; padding: 4px;">Loading models...</div>
+      </div>
+    </div>
+
+    <!-- Chat area -->
+    <div id="chat-area">
+      <div id="connecting-msg">Connecting to Hands AI daemon...</div>
+    </div>
+
+    <!-- Input bar -->
+    <div id="input-bar">
+      <textarea
+        id="chat-input"
+        placeholder="Ask anything... (Enter to send, Shift+Enter for newline)"
+        rows="1"
+        spellcheck="true"
+      ></textarea>
+      <button id="send-btn" disabled title="Send">↑</button>
+    </div>
+
+    <!-- Settings panel (slides in) -->
+    <div id="settings-panel">
+      <div id="settings-header">
+        <h2>Settings</h2>
+        <button class="icon-btn" id="close-settings-btn">✕</button>
+      </div>
+      <div id="settings-body">
+        <div class="setting-group">
+          <label>Anthropic API Key</label>
+          <input type="password" id="s-anthropic-key" placeholder="sk-ant-..." autocomplete="off" />
+        </div>
+        <div class="setting-group">
+          <label>OpenAI API Key</label>
+          <input type="password" id="s-openai-key" placeholder="sk-..." autocomplete="off" />
+        </div>
+        <div class="setting-group">
+          <label>Ollama Host</label>
+          <input type="text" id="s-ollama-host" placeholder="http://localhost:11434" />
+        </div>
+        <button id="save-settings-btn">Save Settings</button>
+        <div class="save-status" id="save-status"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

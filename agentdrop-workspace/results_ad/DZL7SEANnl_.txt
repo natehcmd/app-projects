@@ -1,0 +1,24 @@
+If I wanted to get really good at League Code in 2026, this is exactly what I would do.
+My name is Ethan, and in the last year I've been able to successfully pass all of my
+technical rounds at companies at Google, Meta, and Microsoft.
+Step one, in my opinion, the most important one here is making sure that you're coding in Python.
+Especially nowadays, where companies are asking you to solve two medium-to-hard
+League Code problems in 45 minutes, your limiting factor should never be how fast your hands
+type, or thinking about syntax, and no language helps better with that than Python.
+Next thing I want you to do is watch Python for coding interviews by League Code.
+If you're not taking advantage of all the tricks and shortcuts that Python has to offer,
+you're setting yourself up for failure.
+He does such a great job of breaking out all the Python syntax you need to know for
+data structures and algorithms, even if you don't have that much experience.
+I still find myself referring back to this video here and there, and I cannot overstate how
+useful it was for me.
+Number three is going through the Nico 150, but I don't just mean solving all the problems.
+They like 75% of League Code patterns come from sections like arrays and hashing,
+string, two pointer, and sliding wind.
+You should be spending an extensive time on those sections, even if you feel like you've
+mastered it already.
+You should be able to not only solve, but fully understand multiple different solutions
+and repeat the same problem across different days to make sure you're actually retaining the
+information rather than just memorizing.
+League Code is not dying yet, and if you're interested in hearing more and how to get really good
+at technical interviews, follow for more.

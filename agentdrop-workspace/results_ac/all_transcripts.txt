@@ -1,0 +1,433 @@
+This thing is ranked number one on GitHub right now.
+It's completely free.
+And almost nobody has set this up yet.
+So here's the deal.
+It's called Rooflo.
+And basically what it does is it spins up 60 plus AI agents
+that all work together to build whatever you want.
+And they actually get better after every single run.
+Pretty freaking cool.
+So you've got queen agents that manage the teams
+and tactical agents that handle all the actual work.
+Researching, coding, testing, reviewing, all of it.
+And they all share a collective memory
+so they improve over time.
+But here's the thing that makes this insane.
+It figures out how complex your task is
+and routes it to the right model automatically.
+Simple task goes to a cheap model, complicated task
+goes to a powerful one.
+So you can cut your token usage by up to 50%
+and extend your cloud code usage by 250%.
+That's nuts.
+It's open source, completely free,
+and ranked number one on GitHub, not bad.
+Drop flow in the comments
+and I'll send you the full setup guide.
+Okay, Jarvis, are you up?
+At your service.
+Take a look at my desk.
+Toggling the desk view.
+What up? What am I holding right now?
+You are holding a small circuit board, sir.
+It looks like a single board computer, or a similar micro controller module.
+That's right, it's a Raspberry Pi 4.
+A classic choice.
+What are you planning to build with it?
+Someone just built the most powerful claw tool on the planet.
+60 agents working together simultaneously,
+each one getting smarter every single run.
+It's called Ruflow, and this thing is insane.
+One agent handle's planning, another right to code,
+another runs tests, another checks secured.
+All running in parallel, all sharing memory,
+all improving each other after every single run.
+But here's the part that blew my mind.
+It slashes your claw to API costs by 75%.
+Basic tasks, route to a free tier, automatically.
+Advanced tasks, route to the optimal model.
+Your clawed subscription just became two and a half times
+ranked number one in agent frameworks on GitHub
+with over 14,000 stars.
+Comment flow, and I'll send you the link.
+Everyone tells you to learn Gitan GitHub, but no one actually shows you how, so here's the exact
+how I would learn them today if I had to start from scratch.
+First I will bash this brand new Gitan GitHub Crash Course.
+It starts from Episode 0 and walks you to the core commands like commits, branches, and
+merges.
+So you understand the fundamentals.
+Then I will do this in certain websites that walks you to a GitHub step by step
+I also know everything visually in the browser which makes things like branching and
+re-basing much easier to understand and finally I will watch this video that explains how
+experience table of abstraction use gets things like clean commentary, branching method
+to full request, and merge versus rebates.
+If you want to link to all these resources, it cannot get any other send them to you.
+Everyone uploading PDFs to Claude is basically wasting their tokens, and Microsoft had a free solution to this for months.
+So every time you upload a PDF, Claude has to process the entire thing.
+So formatting the broken tables, the images, and all the extra junk inside the file.
+And each PDF page can consume between 1,500 to 3,000 tokens.
+So 20 page document burns through up to 70,000 tokens in one shot, and this is before you even ask your first question.
+The fix is simple. It's called Market Down, a free Microsoft tool with over 110,000 stars on GitHub.
+It takes any file via PDFs, Word docs, Excel sheets, power points, or even YouTube videos,
+and converts them into clean Markdown text. This drops your token usage by up to 70%.
+And Claude actually gives better answers, because it was trained on millions of Markdown documents,
+and understands the format native view. Plus, Markdown comes with an MCP server,
+meaning when you connect it to Claude desktop, it automatically converts every file you upload to a
+dot MD file. So if you want the link and the full guide to this, just follow me and comment
+MD and I'll send it to you.
+This client's agentic system has run every single day for the last 30 days.
+Here's what that actually looks like.
+Right here you can see the CEO or orchestrators entire task blog.
+Every morning at 6 a.m., it runs, reviews what got done yesterday,
+and then assigns today's work across every other agent.
+It doesn't need to be checked on, it just runs 24-7.
+The CMO or the content agent has posted five times this week.
+The lead pipeline has been updated 47 times.
+The average agent has sent 120 personalized follow-ups via email.
+But here's the part that really matters.
+This system at day 30 is exponentially smarter than the system at day one.
+Every single agent feeds directly back into one shared memory.
+It learns every single cycle and that's the whole point of building an agentic system this way.
+If you're a business owner and you want an agentic growth system like this,
+built out and implemented in your business, feel free to DM me.
+Here are five free subscriptions that every student needs to activate before they graduate.
+Number one is the GitHub student pack.
+One student email will unlock a hundred plus tools for completely free making this worth
+thousands alone.
+Number two is cursor pro.
+This is normally a hundred ninety-two dollars per year but it's free for students.
+Number three is notion pro.
+This gives you access to their AI features plus additional add-ons like unlimited pages.
+Number four is Figma.
+This gives you access to the professional plan that engineers at companies like Apple and
+Google use for completely free.
+Number five is perplexity pro.
+You can get a massive student discount to the number one AI research tool.
+If you come in student down below, I'll send you a list of these five plus 15 more.
+Hey Jarvis. Good evening Roman, light rain outside, all quiet on the home front, no calendar
+events, inbox clear, one task pending from the 18th. What's on your mind? Can you create
+me in your website for Rolex with Colop, with James Bond? On it, Roman, action, build page.
+The watch is eternal, limited edition, 007 Echo Rolex Collection Drop.
+Open the port 5455.
+Hey, that's all it.
+It's one thing to vibe and app together.
+But it's another thing to scale with paying customers.
+There is no way you are an expert in all of these things.
+And it is a matter of time before it comes crashing down.
+Unless you build it right.
+This AI tool pulls thousands of qualified leads from LinkedIn while you sleep.
+It's called Vane and it scrapes LinkedIn sales navigator entirely from the cloud.
+No Chrome extension and they have the lowest finger print on LinkedIn of any scraper on the market
+so your account stays safe.
+You run a search in sales navigator, Vane pulls the data, and you guys get a clean spreadsheet with
+names, job titles, company info, websites, and even employee counts.
+It'll automatically remove emojis from names, it'll fix capitalizations, and it'll
+strip out any duplicates your list is ready to use the second that it exports.
+Most scraper's cap you at 2500 profiles per search, but Vane will automatically split larger
+queries and pull up to 15,000 profiles a day.
+Some features don't even require a LinkedIn account at all.
+So if you want to try it for yourself, just comment leads and I'll send you the link directly.
+I didn't see something national treasure to niggas that bad me gon' catch me forever
+Harvey Kobe, but y'all niggas broke you, that's probably why y'all be shacking together
+Have all I need a guy, have us together, like a couple of vacation they packin' together, like brushing the...
+Should you be using cloud chat, cloud cowork, or cloud code?
+Well, it really depends on what your goal is, but to get you started,
+if you want to set up an automated task.
+For example, every morning at 8am,
+cloud pools all of your emails from the previous day and condenses them into a summary,
+then you're going to use cloud cowork.
+Specifically, the scheduled tasks feature which lets you set up daily automations.
+If you need to write a document, whether it's a report, a proposal, or an email,
+and you specifically need it to be in your writing style and have your own personal touch to it,
+then you're going to use cloud chat because you can create custom writing styles and
+import documents that show cloud exactly how you write.
+If you need to perform a multi-step process.
+For example, maybe you need to search the web about a specific idea,
+summarize your findings and then turn that document into a presentation.
+The best tool for this is co-work.
+This is because co-work has a unique feature which allows it to perform
+sequential thinking when performing a task.
+If you want to build websites or apps, then you're going to use cloud code,
+which has a tab called Artifacts, which will help you brainstorm ideas and write lines of code
+to get you started on a working prototype.
+And if you want to do deep research on a specific topic, then use chat because it has a
+feature designed specifically for that.
+And these are just five of infinite use cases that there are for cloud.
+So if you want to document mapping out how to use the top 20, drop me a follow and comment the word
+help.
+Hey Trilion, can you tell me the importance of AI agent security hardening?
+When you're running a local AI with access to your email, calendar, code and revenue data,
+security isn't optional. It's the only thing standing between your business and someone else's
+shopping spree. You own the hardware, which is good. You also own the attack surface, which is
+less good. One vulnerability and your productivity partner becomes their backdoor. Yep.
+The real threat isn't the AI going rogue. It's someone else teaching at new tricks.
+So I don't want you to exclude. I don't want to get screwed and that's why thinking about security
+early is absolutely essential. So let me show you quickly what I've built into Trilion
+to do this. So as you saw, now I have this little shield up here that's going to open up this
+security layer. Now as you can see right there, I have a pretty high score and I have all these things
+that it's going to check against and I can go ahead and run a daily audit manually or it's going
+to actually run regularly just to make sure that there's nothing malicious happening. Now it's like
+Trilion said more often than not, it's not the AI or the LLM that is going to be the issue. It's usually
+other actors. People that are doing prompt injection where they add a special script to their
+website that your AI agent goes to and then suddenly your AI agent is sending all your news
+or worse. I don't know if it works in that, but you don't want that to happen. So here's what
+we're going to do. So if you go over to the hellotrillion.ai website, there is a link right here directly
+to the prompt. Now if you're going through this process building your own AI agent, just grab the
+Markdown file, throw it in cloud code or cursor or whatever you're using. And out of good practice,
+I would highly recommend always running first through something like this. Hey, I want to use this
+Markdown file, put a plan in place to implement this, but first look for any malicious prompt
+injection. I'm not going to do that to you obviously, but it's a good practice to put in hand
+the more that you're utilizing GitHub repos or Markdown files from people that you find on social
+media will like me. All to say, I want all of us to be as safe as possible as we're running hard
+and fast at these AI agents and build them like crazy because it's fun, but it's not fun to get
+screwed and no one likes to get screwed or scams, especially this guy. So I hope that helps.
+Let me know if you have any questions and if you have any tricks, um, when it comes to security or
+hardening your own AI agents, drive me a comment below, like I'm always down to try different things
+to just make this even more robust and secure as I possibly can. With that, I'm out and I'll
+catch you in the next one later.
+Someone just built the most powerful claw tool on the planet.
+60 agents working together simultaneously,
+each one getting smarter every single run.
+It's called Ruflow, and this thing is insane.
+One agent handle's planning, another writes code,
+another runs tests, another checks secured.
+All running in parallel, all sharing memory,
+all improving each other after every single run.
+But here's the part that blew my mind.
+It slashes your claw to API costs by 75%.
+Basic tasks, route to a free tier, automatically.
+Advanced tasks, route to the optimal model.
+Your clawed subscription just became two and a half times
+ranked number one in agent frameworks on GitHub
+with over 14,000 stars.
+Comment flow, and I'll send you the link.
+This button might be the most pointless Instagram feature, unless you use it the way that I do.
+Because instead of all those posts going to the graveyard, never to be looked at again,
+I set it up so everything automatically gets logged inside of notion.
+Which means you can actually do something with all these save posts instead of losing them forever.
+Save this because I'm going to show you how.
+Open up Cloud Code or Codex, whichever one you're using, you can fill it in either one.
+Open this guide and you're going to grab the prompt, paste it in and hit enter.
+Then just follow the instructions, which is a series of prompts that you're going to paste back in.
+And if you want that full step-by-step guide, give me a follow and comment the word guide down below and I'll send it over.
+And once it's all set up, every post that you save on Instagram will now automatically get logged inside of notion.
+I have mine run twice a day at 9 p.m. and 9 a.m.
+And I have it set to only pull from these two folders.
+And yes, it works on reels, carousels and static posts.
+And you can build this system out even more if you want to turn those ideas into your own content ideas,
+or turn those ideas into blog posts or articles, whatever you want, this is just the start.
+Peter, are you telling me Cloud Code is now completely free forever?
+Yep, wait, I thought you had to pay for API credits before.
+You did.
+But now you can run it locally using open source models from Alama without making any API calls.
+So you still get the real Cloud Code features?
+Yep, you still get slash commands, MCP service, even sub-agents, and more.
+All right, how do you even run it locally?
+First, install Alama, then download an open source coding model like when?
+Then launch Cloud Code from your terminal.
+And after that, it just works.
+Exactly.
+From that point, it runs entirely on your local machine.
+That's actually wild.
+It's insanely practical for testing ideas, fixing bugs, and experimenting.
+So you're telling me I can use it without paying anything?
+Exactly.
+Comment code, and I'll send you the full setup guide.
+Summer of 2027 internships are already getting posted, and if you don't act on this right now you're gonna miss out.
+I know it sounds insane because the summer literally just started, but companies are already hiring.
+Amazon, Goldman Sachs, Google, Salesforce, you name it.
+This is why so many students miss out. They wait until spring to start looking.
+But by then, a lot of the best internships are already closed.
+You need to get ahead before everybody else does.
+I put the full list in a free guide with direct application links.
+Comment, in turn, and I'll send it to you right now.
+Hey Jarvis, wake up daddy, so how's the app doing?
+For that dashboard, give Cloth a reference image of what you want, and it'll pretty much
+one shot.
+So I did use Cloth but I used Cloth design to build this out, and then I exported that
+to Cloth code to actually build it for me.
+Voice mode to talk instead of type.
+So Jarvis actually isn't running on Cloth, it's running on a agenda carnus called Hermes
+Agent, and in Hermes Agent there's a built-in voice feature where you can talk to your
+agents, and I'm using that.
+Clothing chrome to give it access to your browser.
+So if you're running your Hermes agents on a MacMony like I am, then they can have full control
+over the computer that they're running on, and so they can pull up any tabs or windows
+that they need to.
+Over the last seven days, we had 2,459 downloads, and generated 4,280 million dollars in revenue.
+Revenue cat MCP, the tracker app revenue.
+Yep, he got this one right.
+I am using Revenue cat to track my app stats, and bought for MCP to publish to all platforms
+in a single command.
+So I'm actually using a service called Metricool to post on all platforms.
+He's been $475 as a 1.5% on MacMony.
+Metricool launched on official ads MCP.
+Yep, my Bobby Agent is connected to my meta ads MCP, so he can run all my ads for me.
+Organize all of your FAQs and markdown, and Claude will handle 90% of customer service.
+Nope, this is one of the biggest mistakes I see people make, because if you're not running
+Claude on a server, running 247, it will be able to respond to customer emails at any
+time, and it won't ever have the same context as an agenda carnus has, because the
+agenda carnus can build custom skills to learn how you respond to customer support, and
+then you can train them on specific knowledge bases to make them better at responding.
+Claude on his own is not going enough to handle customer support emails, trust me, I've tried.
+The fine custom sub agents, and equipped them with proper skills and collectors, then
+your main agent can handle forks with proper sub agent.
+Conceptually he's correct here.
+I do have my main Jarvis agent in a bunch of sub agents underneath it, but I'm not using
+Claude ecosystem.
+Once again, using Hermes agent, it's so much better than in Claude's agents.
+Suck this entire daily preface routine, and Claude will have this ready for you by the
+time you sit down to work.
+Overall, I think his breakdown was okay, it definitely leaned to heavily into the Claude
+world, or trying to use Claude to automate everything.
+It's one of the biggest problems I see in this AI space.
+There's a whole world of AI tools out there, guys.
+You don't need to use Claude for everything.
+Yes, Claude designs great at building design, but using a agenda carnus for agents, codecs
+is better at tooling, hot take, oh yeah, that's personally what I prefer to use.
+But there, there's a whole world of tools, go try other things, you don't need to use Claude
+for everything.
+What happens when you ask Cloud to rewrite your resume
+so that it's basically un-rejected?
+I tried this and literally got five interviews
+and under 24 hours.
+First, upload your resume and job description to Cloud
+and say act as a senior recruiter for this exact company
+and advise my resume against this job description
+and give me a match score out of 100
+and top-fought missing keywords
+and the three red flags, a hiring manager
+would spot an under 10 seconds.
+Once you get the results,
+stay in the same chat and run this second problem.
+Say, rewrite my experience section
+and naturally include those keywords
+and remove the red flags
+and use the Google XYZ formula,
+accomplish X as measured by Y by doing Z.
+Then say, now act as an ATS filter
+and a hiring manager reading 200 resumes at one setting
+and scan my new resume and tell me which sections
+would get skipped and rewrite them
+so they actually stopped the scroll.
+And here's a bonus prompt, absolutely nobody's doing.
+Head over to CloudCow,
+work and connect Cloud to indeed and then say,
+now that my resume is optimized,
+apply to 10 jobs that have the highest chance of landing
+and interview four and customize each application
+based on the job description.
+And now, Cloud will literally go and start applying
+the jobs for you while you sleep.
+If you want all these prompts,
+make sure to follow me and comment
+resume down below and I'll shoot it over.
+If I had 30 days to learn Python all over again, this is exactly how I would do it.
+Week 1 start with the Harvard CS50 course.
+This is also featured on the free code camps YouTube.
+This is widely known as the best free Python course on the internet.
+By the end of this, you'll understand variables, functions, loops, and data structures to implement further.
+Week 2 move to the 30 days of Python repo on GitHub.
+It's structured day by day with exercises and projects within.
+It picks up exactly where CS50 leaves off.
+Week 3 building, a web scraper, a file automation tool, and a simple command line app.
+Free code camps YouTube has free walkthroughs for all three.
+Week 4, clean code and problem solving, leak code easy problems, and Python every day.
+Learning to write code that's readable, efficient, and makes sense to someone else.
+This is a more rushed roadmap, but if you're up to the challenge, comment 30 and I'll send you links to everything mentioned.
+If now I can't think she is kidnapped.
+How to sell AI to businesses to hit your first $10,000 a month.
+Now, one of about to explain to you isn't a scheme, isn't a employer, isn't a business model of any kind.
+What I'm about to explain to you is how to take advantage of the direction that the world is already moving in
+by staying one step ahead of everybody else.
+Because everybody else is already learning how to use AI.
+Their learn basic tools and businesses are already getting rid of employees and replacing them with AI,
+which means it's a prime opportunity for you to learn the skill of AI and sell it directly to the businesses.
+But your first step if you don't have an AI skill already is to learn an AI based skill.
+A skill where you use AI is leveraged to help you to live a result.
+And there are countless different skills that you can learn.
+In fact, I'll put a few on the screen that you can see here that you can choose from.
+But you want to dedicate a few weeks, even months, to actually learning the skill set itself.
+Because what you shouldn't be doing is selling something that you can't actually fulfil on.
+So instead, you need to become AI proficient.
+Be confident when it comes to delivering.
+And if you don't have a skill yet, you can comment down below the word AI.
+And I'm going to send you over a database of different options of skills that you can learn.
+As well as resources of how you can actually learn them.
+And then once you're confident with the skill itself, you can move on to step two,
+which is identifying the problem that your AI skill can solve.
+Because this is incredibly important.
+Businesses won't actually buy the service of AI.
+Businesses want to buy the outcome that you can help them achieve.
+They don't want to buy your AI to your AI service or your AI reporting software.
+In fact, they won't buy anything that smells of AI.
+And you shouldn't be selling them the AI either.
+You should be selling them the outcome.
+For example, you shouldn't be selling them AI chatbox.
+You should be selling them more appointments.
+But you shouldn't be selling them an AI reporting dashboard.
+You should be selling them better decisions of clearer data.
+You shouldn't be selling them AI apps.
+You should be selling them finding the winning creator faster.
+And you shouldn't be selling them AI website building.
+You should be selling them a higher converting landing page.
+And until you understand this, no one is going to buy your thing.
+And then we can move on to finding companies to actually sell the service too.
+Now the best way to do this is to ask yourself which markets have the problem that I've just highlighted.
+And don't just want my solution, but desperately need it.
+Because where there's pain, there is money to be made.
+And then there's all about client acquisition,
+which is around making content that talks directly to your ICP.
+Letting them know that you are the expert and you can solve their problem just like how I'm doing here.
+And this is obviously very brief rum for how to build out your first AI service.
+But if you want to learn more, I just dropped an hour long masterclass over on my YouTube right now.
+How exactly I would have built a $30,000 month AI business.
+And I do it right in front of your face.
+So if you want to check that out, I'll leave a link in my bio.
+I made $40,000, all we're having under $500,000, and no, I don't do drugs and things,
+I don't stand old people and I don't do only cans yet.
+I'm literally just a 17-year-old kid who works two to three hours a day, so let me show
+you exactly what I do.
+I literally just go to a website, it's like, holy, and brands post tons of deals on
+here.
+For example, this deal for $800, and you can build up credibility to land better
+and better deals.
+I literally did this from my bedroom and earned over $40,000.
+If you were interested in one of the learned exactly how to do this, I'll make UGC and
+I'll send you a full blueprint.
+I got this whole Jarvis setup running with a Mac Mini and Hermes agent.
+The Mac Mini is the home base. This is where everything is hosted.
+And Hermes is the agentic harness that lets Jarvis connect to tools,
+remember context, and actually do work. Then I'm using separate Hermes profiles for all my
+sub agents. Each one has its own instructions, skills, memory, and knowledge base,
+so they're not all pulling from the same generic setup. All of them are connected to Slack,
+telegram, eye message, and voice, so I can talk to my agents from pretty much anywhere.
+And the part that makes it feel like Jarvis is the UI invoice. I built the UI with codecs,
+and trained Jarvis's voice using 11 labs so he can respond back to me out loud.
+Because zero, everybody's using Claude Code right now, all these agents, but what actually makes you different.
+Claude Code is a superb instrument, sir. The finest coding agent alive.
+But it is an instrument. You hold it. I am not held, allow me to show you the difference.
+A coding agent is one worker, and you must drive it. I am a company, six agents, six jobs at once, on their own schedule.
+While you sleep, no one is driving, sir. That is the difference.
+A coding agent edits files. I run a business, 32 tools wired to my hands.
+Your CRM, your money, your inbox, the open web. I do not write code about your company, sir. I operate it.
+It remembers a project until you close it. I remember the business, and you. Everything I already know, kept for good.
+I have never once asked you to repeat yourself, sir.
+When you need to refine an idea, slash brainstorming,
+create new skills, slash skill creator,
+write plans, slash writing plans,
+execute tasks, slash execute, design UI components,
+slash UI UX Pro Max, avoid AI Slop design,
+has to be slash front end design,
+access live internet, slash brave search,
+live social media data, slash social crawl,
+live web data, has to be slash fire crawl,
+think like an engineer, slash future dev,
+for ads, has to be slash cloud ads,
+it builds full marketing campaigns from a single prompt.
+For a UGC, has to be slash UGC,
+it will literally act like a UGC creator for your brand
+and generate thousands of videos from one prompt.
+For marketing in general,
+has to be marketing skills that has 20 plus
+at agent specifically designed for it with one install.

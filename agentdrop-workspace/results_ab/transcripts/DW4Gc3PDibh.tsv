@@ -1,0 +1,17 @@
+start	end	text
+0	6000	If you're using Claude code and you think it actually knows your business, it's just pretending to.
+6000	10600	Every time you start a new session with Claude, it re reads your files from scratch.
+10600	15600	We're looking at hundreds of tokens that are wasted for Claude to just remember what it already knew.
+15600	19200	What we're looking at is graphify inside of Obsidian.
+19200	27000	Graphify turns your entire code base, your documents, your strategy notes, even your images into this.
+27000	28000	A knowledge graph.
+28000	31600	It maps how everything in your business actually connects with one another.
+31600	33600	And it actually persists.
+33600	38200	So you could see how some of my digital assets actually connect to other parts of my code base.
+38200	42600	Now, when I ask Claude, how does my content pipeline connect to revenue?
+42600	45200	It doesn't grab through 300 files.
+45200	46600	It already has the map.
+46600	48000	And it was a one time build.
+48000	51000	70x fewer tokens per search.
+51000	55000	In the next video, I'm going to show you how to set this up, so make sure you shoot me a follow.
+55000	60000	And comment AI agent for access to all of my free Claude code guides and templates.

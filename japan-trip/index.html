@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Japan, Together — Day Planner</title>
+<meta name="description" content="Interactive day-by-day Japan trip planner — 50+ activities across Tokyo, Kyoto and Osaka with budgets, booking links and a live route map.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#100c0b" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#100c0b" media="(prefers-color-scheme: dark)">
+<meta property="og:title" content="Japan, Together — Day Planner">
+<meta property="og:description" content="Build a 10-day Tokyo–Kyoto–Osaka itinerary: 50+ activities, budgets, booking links and a live route map.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://natehcmd.github.io/japan-trip/">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%97%BE%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+:root {
+  --bg: #0d0f14;
+  --bg2: #141822;
+  --ink: #f4ece0;
+  --ink-dim: #aab2c8;
+  --ink-faint: #78829c;
+  --mint: #e05343;
+  --lav: #9e2a3b;
+  --peach: #f5c9a8;
+  --rose: #e6413a;
+  --sky: #3b82f6;
+  --glass: rgba(255, 255, 255, 0.045);
+  --glass-brd: rgba(244, 236, 224, 0.12);
+  --r: 18px; /* Border radius */
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background: var(--bg); background-image: radial-gradient(circle at 15% 50%, rgba(224,83,67,0.16), transparent 40%), radial-gradient(circle at 85% 30%, rgba(158,42,59,0.14), transparent 40%), radial-gradient(circle at 50% 80%, rgba(244,236,224,0.06), transparent 40%); background-attachment: fixed; color: var(--ink);font-family: "Avenir Next", -apple-system, "SF Pro Text", sans-serif;line-height:1.65;-webkit-font-smoothing:antialiased;min-height:100vh}
+h1,h2,h3,h4{font-family:"Avenir Next", -apple-system, "SF Pro Text", sans-serif;letter-spacing:-.01em}
+button{cursor:pointer;font-family:inherit}
+
+/* Focus rings — soft glow instead of default outline */
+:focus{outline:none}
+:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(224,83,67,.5);border-radius:8px}
+button:focus-visible,a:focus-visible,input:focus-visible{box-shadow:0 0 0 3px rgba(224,83,67,.5)}
+
+/* Thin custom scrollbars */
+*{scrollbar-width:thin;scrollbar-color:var(--glass-brd) transparent}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--glass-brd);border-radius:8px}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-dim)}
+
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{transition-duration:.01ms !important;animation-duration:.01ms !important}
+}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(13,15,20,0.88);backdrop-filter:blur(16px);border-bottom:1px solid var(--glass-brd);color:var(--ink)}
+.nav-in{max-width:1200px;margin:0 auto;padding:10px clamp(16px,4vw,36px);display:flex;align-items:center;gap:14px}
+.brand{font-family:"Avenir Next", -apple-system, "SF Pro Text", sans-serif;font-weight:700;font-size:1rem;display:flex;align-items:center;gap:8px}
+.brand .mk{color:var(--mint);font-size:1.4rem}
+.nav-back{font-size:.82rem;color:var(--ink-dim);text-decoration:none;padding:5px 10px;border-radius:8px;border:1px solid var(--glass-brd);transition:background .14s}
+.nav-back:hover{background:var(--glass); backdrop-filter:blur(18px);color:var(--ink)}
+.nav-budget{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:.84rem}
+.budget-pill{background:var(--glass); backdrop-filter:blur(18px);border:1px solid var(--glass-brd);border-radius:30px;padding:6px 14px;font-weight:600;font-family:"Avenir Next", -apple-system, "SF Pro Text", sans-serif}
+.budget-pill span{color:var(--peach)}
+.nav-reset{background:none;border:1px solid var(--glass-brd);color:var(--ink-dim);font-size:.76rem;padding:5px 10px;border-radius:8px;transition:all .14s}
+.nav-reset:hover{border-color:var(--peach);color:var(--peach)}
+
+/* HERO */
+.hero{background:linear-gradient(180deg, rgba(20,24,34,0.95), rgba(13,15,20,1));padding:clamp(32px,7vw,56px) clamp(16px,4vw,36px) clamp(28px,5vw,44px);max-width:1200px;margin:0 auto;border-bottom:1px solid var(--glass-brd)}
+.hero .eyebrow{font-size:.74rem;letter-spacing:.32em;text-transform:uppercase;color:var(--mint);font-weight:700;margin-bottom:10px}
+.hero h1{font-size:clamp(1.8rem,6vw,3.4rem);line-height:1;font-weight:800;margin-bottom:8px;color:var(--ink)}
+.hero .sub{color:var(--ink-dim);font-size:1.02rem;max-width:50ch;margin-bottom:20px}
+.date-strip{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.date-label{font-size:.82rem;color:var(--ink-dim);font-weight:600}
+.date-input-wrap{display:flex;align-items:center;gap:6px}
+.date-input-wrap label{font-size:.8rem;color:var(--ink-dim)}
+#startDate{border:1.5px solid var(--glass-brd);background:var(--glass); backdrop-filter:blur(18px);border-radius: var(--r);padding:6px 10px;font-family:inherit;font-size:.88rem;color:var(--ink)}
+#startDate:focus{outline:none;border-color:var(--peach)}
+
+/* MAIN LAYOUT */
+.main{max-width:1200px;margin:0 auto;padding:0 clamp(16px,4vw,36px) 120px;display:grid;grid-template-columns:1fr 380px;gap:28px;align-items:start}
+@media(max-width:900px){.main{grid-template-columns:1fr}}
+
+/* ACTIVITY PANEL */
+.panel-title{font-size:1.3rem;font-weight:700;margin-bottom:4px;padding-top:24px}
+.panel-sub{font-size:.88rem;color:var(--ink-dim);margin-bottom:16px}
+
+/* FILTERS */
+.filter-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.filter-btn{background:var(--glass); backdrop-filter:blur(18px);border:1.5px solid var(--glass-brd);border-radius:30px;padding:6px 14px;font-size:.8rem;font-weight:600;color:var(--ink-dim);transition:all .14s}
+.filter-btn:hover{border-color:var(--peach);color:var(--peach)}
+.filter-btn.active{background:var(--ink);border-color:var(--ink);color:var(--bg2)}
+.filter-btn.city-tokyo.active{background:#3b82f6;border-color:#3b82f6;color:#fff}
+.filter-btn.city-kyoto.active{background:#16a34a;border-color:#16a34a;color:#fff}
+.filter-btn.city-osaka.active{background:#c026d3;border-color:#c026d3;color:#fff}
+.filter-sep{width:1px;background:var(--glass-brd);align-self:stretch;margin:2px 2px}
+
+/* PRIORITY FEATURED SECTION */
+.priority-section{background:rgba(245,201,168,0.05);border:1px solid rgba(245,201,168,0.25);border-radius:var(--r);padding:22px;margin-bottom:28px;box-shadow:0 12px 36px rgba(0,0,0,0.4)}
+.priority-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px}
+.priority-title{font-size:1.15rem;font-weight:800;color:var(--peach);display:flex;align-items:center;gap:8px}
+.priority-sub{font-size:.85rem;color:var(--ink-dim);margin-bottom:16px}
+.priority-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.prio-badge{font-size:.7rem;font-weight:800;padding:3px 9px;border-radius:20px;background:rgba(245,201,168,0.18);border:1px solid rgba(245,201,168,0.4);color:var(--peach);display:inline-flex;align-items:center;gap:4px}
+
+/* ACTIVITY GRID */
+.activity-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.act-card{background:var(--glass); backdrop-filter:blur(18px);border:1px solid var(--glass-brd);border-radius: var(--r);padding:18px;box-shadow:var(--shadow);transition:transform .14s,box-shadow .14s,border-color .14s;position:relative}
+.act-card:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(0,0,0,.6);border-color:rgba(224,83,67,.4)}
+.act-card.scheduled{border-color:#16a34a;background:rgba(22,163,74,0.12)}
+.act-card.scheduled::after{content:"✓ Added";position:absolute;top:12px;right:12px;background:#16a34a;color:#fff;font-size:.72rem;font-weight:700;padding:3px 8px;border-radius:20px}
+.act-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}
+.act-emoji{font-size:1.6rem;line-height:1;flex:0 0 auto}
+.act-info{flex:1;min-width:0}
+.act-name{font-weight:700;font-size:.97rem;line-height:1.2;margin-bottom:4px;color:var(--ink)}
+.act-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
+.city-tag{font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:20px;color:#fff}
+.city-tag.Tokyo{background:#3b82f6}
+.city-tag.Kyoto{background:#16a34a}
+.city-tag.Osaka{background:#c026d3}
+.cat-tag{font-size:.7rem;padding:2px 8px;border-radius:20px;background:var(--bg2);border:1px solid var(--glass-brd);color:var(--ink-dim)}
+.act-desc{font-size:.85rem;color:var(--ink-dim);margin-bottom:12px;line-height:1.5}
+.act-meta{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.meta-pill{font-size:.75rem;font-weight:600;padding:3px 8px;border-radius:20px;background:var(--bg2);border:1px solid var(--glass-brd);color:var(--ink-dim)}
+.book-badge{font-size:.72rem;font-weight:700;padding:3px 8px;border-radius:20px;background:rgba(234,179,8,0.15);border:1px solid rgba(234,179,8,0.4);color:#fef08a}
+.book-note{margin-top:8px;font-size:.76rem;background:rgba(234,179,8,0.12);border:1px solid rgba(234,179,8,0.3);border-radius:8px;padding:6px 10px;color:#fef08a}
+.act-bottom{display:flex;align-items:center;justify-content:flex-end;gap:8px}
+.add-btn{background: linear-gradient(135deg, var(--mint), #b3352a);color: #fbf1e4;border:none;border-radius:20px;padding:7px 16px;font-size:.82rem;font-weight:700;transition:background .14s,transform .14s}
+.add-btn:hover{background:var(--peach);color:var(--bg2);transform:scale(1.04)}
+.add-btn.added{background:#16a34a;color:#fff}
+.act-links{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.act-link{font-size:.76rem;font-weight:700;padding:4px 10px;border-radius:20px;text-decoration:none;transition:all .14s;border:1.5px solid}
+.map-link{color:#60a5fa;border-color:rgba(96,165,250,.4);background:rgba(96,165,250,.1)}
+.map-link:hover{background:rgba(96,165,250,.22);border-color:#60a5fa}
+.site-link{color:var(--ink-dim);border-color:rgba(244,236,224,.2);background:rgba(244,236,224,.06)}
+.site-link:hover{background:rgba(244,236,224,.15);color:var(--ink)}
+.book-link{color:#fef08a;border-color:rgba(234,179,8,0.4);background:rgba(234,179,8,0.15)}
+.book-link:hover{background:rgba(234,179,8,0.28);border-color:#fef08a}
+
+/* DAY PICKER POPUP */
+.day-picker-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
+.day-picker-overlay.open{opacity:1;pointer-events:all}
+.day-picker{background:var(--bg2);border:1px solid var(--glass-brd);border-radius: var(--r);padding:28px;max-width:460px;width:100%;box-shadow:0 30px 80px -20px rgba(0,0,0,.8);transform:translateY(16px);transition:transform .2s;color:var(--ink)}
+.day-picker-overlay.open .day-picker{transform:translateY(0)}
+.day-picker h3{font-size:1.2rem;margin-bottom:4px}
+.day-picker .dp-sub{font-size:.85rem;color:var(--ink-dim);margin-bottom:18px}
+.day-picker .day-act-name{color:var(--peach);font-weight:700}
+.day-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:20px}
+.day-opt{background:var(--glass);border:1.5px solid var(--glass-brd);border-radius:10px;padding:10px 6px;text-align:center;cursor:pointer;transition:all .14s;color:var(--ink)}
+.day-opt:hover{border-color:var(--peach);background:rgba(245,201,168,0.12)}
+.day-opt.taken{border-color:#16a34a;background:rgba(22,163,74,0.18)}
+.day-opt .d-num{font-family:"Avenir Next", -apple-system, "SF Pro Text", sans-serif;font-weight:700;font-size:1.1rem;line-height:1;display:block}
+.day-opt .d-date{font-size:.68rem;color:var(--ink-dim);display:block;margin-top:2px}
+.day-opt .d-city{font-size:.65rem;font-weight:700;display:block;margin-top:1px}
+.day-opt .d-city.Tokyo{color:#3b82f6}
+.day-opt .d-city.Kyoto{color:#16a34a}
+.day-opt .d-city.Osaka{color:#c026d3}
+.dp-cancel{background:none;border:1.5px solid var(--glass-brd);border-radius:10px;padding:9px 20px;font-size:.88rem;color:var(--ink-dim);width:100%}
+.dp-cancel:hover{border-color:var(--ink-dim)}
+
+/* ITINERARY PANEL */
+.itinerary-panel{position:sticky;top:70px}
+.days-list{display:flex;flex-direction:column;gap:10px;padding-top:24px}
+.day-card{background:var(--glass); backdrop-filter:blur(18px);border:1px solid var(--glass-brd);border-radius: var(--r);overflow:hidden;box-shadow:var(--shadow)}
+.day-header{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;transition:background .14s;user-select:none}
+.day-header:hover{background:rgba(255,255,255,0.06)}
+.day-num{font-family:"Avenir Next", -apple-system, "SF Pro Text", sans-serif;font-weight:800;font-size:1.3rem;line-height:1;min-width:28px;color:var(--peach)}
+.day-info{flex:1}
+.day-date{font-size:.8rem;color:var(--ink-dim);font-weight:600}
+.day-cityname{font-size:.74rem;font-weight:700;padding:2px 7px;border-radius:12px;color:#fff;display:inline-block;margin-left:5px}
+.day-cityname.Tokyo{background:#3b82f6}
+.day-cityname.Kyoto{background:#16a34a}
+.day-cityname.Osaka{background:#c026d3}
+.day-summary{font-size:.8rem;color:var(--ink-dim);margin-top:1px}
+.day-cost-badge{font-family:"Avenir Next", -apple-system, "SF Pro Text", sans-serif;font-weight:700;font-size:.9rem;color:var(--peach);white-space:nowrap}
+.day-chevron{font-size:.8rem;color:var(--ink-dim);transition:transform .2s;margin-left:4px}
+.day-body{display:none;padding:0 16px 14px;border-top:1px solid var(--glass-brd)}
+.day-body.open{display:block}
+.day-empty{font-size:.84rem;color:var(--ink-dim);padding:12px 0;font-style:italic}
+.sched-act{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--glass-brd)}
+.sched-act:last-child{border-bottom:0}
+.sched-emoji{font-size:1.1rem;flex:0 0 auto}
+.sched-info{flex:1;min-width:0}
+.sched-name{font-size:.88rem;font-weight:700;color:var(--ink)}
+.sched-detail{font-size:.76rem;color:var(--ink-dim)}
+.sched-cost{font-family:"Avenir Next", -apple-system, "SF Pro Text", sans-serif;font-weight:700;font-size:.85rem;color:var(--peach);white-space:nowrap}
+.sched-remove{background:none;border:none;color:var(--ink-dim);font-size:.9rem;padding:2px 6px;border-radius:6px;transition:color .14s,background .14s}
+.sched-remove:hover{color:#ef4444;background:rgba(239,68,68,0.15)}
+
+/* TOTAL BUDGET */
+.budget-section{grid-column:1/-1;background:var(--glass); backdrop-filter:blur(18px);border:1px solid var(--glass-brd);border-radius: var(--r);padding:clamp(20px,3vw,32px);box-shadow:var(--shadow);margin-top:8px}
+.budget-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-top:16px}
+.b-item{background:var(--bg2);border:1px solid var(--glass-brd);border-radius:12px;padding:14px}
+.b-item .b-label{font-size:.76rem;color:var(--ink-dim);font-weight:600;margin-bottom:4px}
+.b-item .b-val{font-family:"Avenir Next", -apple-system, "SF Pro Text", sans-serif;font-weight:700;font-size:1.15rem;color:var(--ink)}
+.b-total{background:var(--ink);border-radius:12px;padding:14px}
+.b-total .b-label{font-size:.76rem;color:rgba(244,238,225,.7);font-weight:600;margin-bottom:4px}
+.b-total .b-val{font-family:"Avenir Next", -apple-system, "SF Pro Text", sans-serif;font-weight:800;font-size:1.3rem;color:var(--bg2)}
+.b-note{font-size:.8rem;color:var(--ink-dim);margin-top:10px}
+
+/* CHATBOT */
+.chat-fab{position:fixed;bottom:28px;right:28px;z-index:300;width:56px;height:56px;border-radius:50%;background:var(--ink);color:var(--bg2);border:none;font-size:1.4rem;box-shadow:0 8px 28px -8px rgba(33,28,22,.7);transition:transform .15s,background .15s;display:flex;align-items:center;justify-content:center}
+.chat-fab:hover{transform:scale(1.08);background:var(--peach)}
+.chat-fab .notif{position:absolute;top:-2px;right:-2px;width:14px;height:14px;background:var(--peach);border-radius:50%;border:2px solid var(--bg2)}
+
+.chat-panel{position:fixed;bottom:100px;right:28px;z-index:300;width:360px;max-width:calc(100vw - 40px);background:var(--glass); backdrop-filter:blur(18px);border:1px solid var(--glass-brd);border-radius: var(--r);box-shadow:0 20px 60px -16px rgba(33,28,22,.5);display:flex;flex-direction:column;overflow:hidden;transform:translateY(20px) scale(.95);opacity:0;pointer-events:none;transition:all .22s;transform-origin:bottom right;max-height:520px}
+.chat-panel.open{transform:translateY(0) scale(1);opacity:1;pointer-events:all}
+.chat-head{background:var(--ink);color:var(--bg2);padding:14px 18px;display:flex;align-items:center;gap:10px;flex:0 0 auto}
+.chat-head .ch-avatar{font-size:1.4rem}
+.chat-head .ch-info .ch-name{font-family:"Avenir Next", -apple-system, "SF Pro Text", sans-serif;font-weight:700;font-size:.98rem}
+.chat-head .ch-info .ch-status{font-size:.72rem;opacity:.7}
+.chat-close{margin-left:auto;background:none;border:none;color:rgba(244,238,225,.7);font-size:1.1rem;padding:4px;transition:color .14s}
+.chat-close:hover{color:var(--bg2)}
+.chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;min-height:200px}
+.msg{max-width:88%;padding:10px 13px;border-radius:14px;font-size:.87rem;line-height:1.5}
+.msg.bot{background:var(--bg2);border:1px solid var(--glass-brd);align-self:flex-start;border-bottom-left-radius:4px}
+.msg.user{background:var(--ink);color:var(--bg2);align-self:flex-end;border-bottom-right-radius:4px}
+.msg b{font-weight:700}
+.chat-suggestions{padding:0 14px 10px;display:flex;flex-wrap:wrap;gap:6px}
+.sug-btn{background:var(--bg2);border:1px solid var(--glass-brd);border-radius:20px;padding:5px 12px;font-size:.76rem;font-weight:600;color:var(--ink-dim);transition:all .14s}
+.sug-btn:hover{border-color:var(--peach);color:var(--peach)}
+.chat-input-row{padding:12px 14px;border-top:1px solid var(--glass-brd);display:flex;gap:8px;flex:0 0 auto}
+#chatInput{flex:1;border:1.5px solid var(--glass-brd);border-radius:20px;padding:8px 14px;font-family:inherit;font-size:.86rem;background:var(--bg2);color:var(--ink);transition:border .14s}
+#chatInput:focus{outline:none;border-color:var(--peach)}
+.chat-send{background: linear-gradient(135deg, var(--mint), #b3352a);color: #fbf1e4;border:none;border-radius:20px;padding:8px 16px;font-size:.82rem;font-weight:700;transition:background .14s}
+.chat-send:hover{background:var(--peach)}
+
+/* MINI MAP */
+.mini-map-panel{position:fixed;bottom:28px;left:28px;z-index:250;width:260px;background:var(--glass); backdrop-filter:blur(18px);border:1px solid var(--glass-brd);border-radius: var(--r);overflow:hidden;box-shadow:0 8px 32px -8px rgba(33,28,22,.55);display:none;transition:all .2s}
+.mini-map-head{padding:9px 14px;border-bottom:1px solid var(--glass-brd);display:flex;align-items:center;justify-content:space-between;background:var(--glass); backdrop-filter:blur(18px)}
+.mini-map-head .mm-title{font-size:.8rem;font-weight:700;display:flex;align-items:center;gap:6px}
+.mini-map-head .mm-count{font-size:.72rem;background:var(--peach);color:#fff;border-radius:20px;padding:1px 7px;font-weight:700}
+.mini-map-toggle{background:none;border:none;color:var(--ink-dim);font-size:.9rem;padding:2px 6px;cursor:pointer;border-radius:6px;transition:background .14s}
+.mini-map-toggle:hover{background:var(--glass-brd)}
+#miniMap{height:180px;transition:height .2s}
+#miniMap.collapsed{height:0}
+.mini-map-legend{display:flex;gap:10px;padding:7px 14px;border-top:1px solid var(--glass-brd);flex-wrap:wrap}
+.mini-map-legend.collapsed{display:none}
+.mm-leg{display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--ink-dim);font-weight:600}
+.mm-dot{width:9px;height:9px;border-radius:50%}
+
+/* MOBILE */
+@media(max-width:640px){
+  .nav-budget .budget-label{display:none}
+  .chat-panel{right:12px;bottom:90px;width:calc(100vw - 24px)}
+  .chat-fab{bottom:16px;right:16px}
+  .mini-map-panel{left:12px;bottom:90px;width:calc(100vw - 24px)}
+}
+
+/* DARK MODE — sumi-inverted washi palette */
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-in">
+    <span class="brand"><span class="mk">旅</span>Japan Planner</span>
+    <a href="overview.html" class="nav-back">← Overview</a>
+    <div class="nav-budget">
+      <span class="budget-label" style="font-size:.8rem;color:var(--ink-dim)">Activities total:</span>
+      <div class="budget-pill">$<span id="navTotal">0</span></div>
+      <button class="nav-reset" onclick="resetPlan()">Reset</button>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <p class="eyebrow">Father &amp; Son · September 2026</p>
+  <h1>Build Your Japan Days</h1>
+  <p class="sub">Browse 50+ activities, add them to any day, and watch your itinerary come together.</p>
+  <div class="date-strip">
+    <span class="date-label">Arrive:</span>
+    <div class="date-input-wrap">
+      <input type="date" id="startDate" value="2026-09-24">
+    </div>
+    <span class="date-label" style="margin-left:8px">→ <span id="endDateDisplay"></span></span>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- LEFT: ACTIVITIES -->
+  <div>
+    <h2 class="panel-title">Activities</h2>
+    <p class="panel-sub">Click <strong>Add to Day</strong> to put any activity on your schedule.</p>
+
+    <!-- NATE & DAD'S TOP PRIORITY FAVORITES -->
+    <div class="priority-section">
+      <div class="priority-header">
+        <h3 class="priority-title">⭐ Nate & Dad's Top Priority Favorites</h3>
+        <span class="prio-badge">🔥 Most Requested Experiences</span>
+      </div>
+      <p class="priority-sub">Your hand-picked crown jewel activities — Daikoku PA, Fuji Speedway & Hotel, Skytree, Sumo Practice, A5 Wagyu, Ryokan & Kaiseki.</p>
+      <div class="priority-grid" id="priorityGrid"></div>
+    </div>
+
+    <!-- CITY FILTERS -->
+    <div class="filter-row" id="cityFilters">
+      <button class="filter-btn active" data-city="All">All Cities</button>
+      <button class="filter-btn city-tokyo" data-city="Tokyo">🗼 Tokyo</button>
+      <button class="filter-btn city-kyoto" data-city="Kyoto">⛩️ Kyoto</button>
+      <button class="filter-btn city-osaka" data-city="Osaka">🏯 Osaka</button>
+    </div>
+    <!-- CATEGORY FILTERS -->
+    <div class="filter-row" id="catFilters">
+      <button class="filter-btn active" data-cat="All">All Types</button>
+      <button class="filter-btn" data-cat="Nature">🌿 Nature</button>
+      <button class="filter-btn" data-cat="History">⛩️ History</button>
+      <button class="filter-btn" data-cat="Food">🍜 Food</button>
+      <button class="filter-btn" data-cat="Tech">🤖 Tech</button>
+      <button class="filter-btn" data-cat="Cars">🚗 Cars</button>
+      <button class="filter-btn" data-cat="Nightlife">🌙 Nightlife</button>
+    </div>
+
+    <div class="activity-grid" id="activityGrid"></div>
+  </div>
+
+  <!-- RIGHT: ITINERARY -->
+  <div>
+    <h2 class="panel-title">Your Itinerary</h2>
+    <p class="panel-sub">10 days, click any day to expand.</p>
+    <div class="days-list" id="daysList"></div>
+
+    <!-- BUDGET SUMMARY -->
+    <div style="margin-top:20px;background:var(--glass); backdrop-filter:blur(18px);border:1px solid var(--glass-brd);border-radius:16px;padding:20px;box-shadow:var(--shadow)">
+      <h3 style="font-size:1rem;margin-bottom:12px">💴 Budget Summary</h3>
+      <div style="display:flex;flex-direction:column;gap:7px;font-size:.85rem">
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--ink-dim)">Flights (est.)</span><span style="font-family:'Shippori Mincho',serif;font-weight:700">$1,000–1,200</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--ink-dim)">JR Pass (14-day)</span><span style="font-family:'Shippori Mincho',serif;font-weight:700">~$435</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--ink-dim)">Hotels (10 nights)</span><span style="font-family:'Shippori Mincho',serif;font-weight:700">$800–1,200</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--ink-dim)">Food (~$50/day)</span><span style="font-family:'Shippori Mincho',serif;font-weight:700">~$500</span></div>
+        <div style="display:flex;justify-content:space-between;padding-top:7px;border-top:1px solid var(--glass-brd)"><span style="color:var(--ink-dim)">Your activities</span><span style="font-family:'Shippori Mincho',serif;font-weight:700;color:var(--peach)">$<span id="actTotal">0</span></span></div>
+        <div style="display:flex;justify-content:space-between;padding-top:7px;border-top:2px solid var(--ink);font-weight:700"><span>Est. per person</span><span style="font-family:'Shippori Mincho',serif;font-size:1.1rem;color:var(--peach)">~$<span id="grandTotal">2,735</span></span></div>
+      </div>
+      <p style="font-size:.76rem;color:var(--ink-dim);margin-top:10px">Base ~$2,735 + your planned activities. Shopping & souvenirs extra — especially at Up Garage 😄</p>
+    </div>
+  </div>
+</div>
+
+<!-- DAY PICKER OVERLAY -->
+<div class="day-picker-overlay" id="dayPickerOverlay">
+  <div class="day-picker">
+    <h3>Add to which day?</h3>
+    <p class="dp-sub">Adding: <span class="day-act-name" id="dpActName"></span></p>
+    <div class="day-grid" id="dayGrid"></div>
+    <button class="dp-cancel" onclick="closeDayPicker()">Cancel</button>
+  </div>
+</div>
+
+<!-- MINI MAP -->
+<div class="mini-map-panel" id="miniMapPanel">
+  <div class="mini-map-head">
+    <span class="mm-title">🗺️ Your Route <span class="mm-count" id="mmCount">0</span></span>
+    <button class="mini-map-toggle" id="mmToggleBtn" onclick="toggleMiniMap()">−</button>
+  </div>
+  <div id="miniMap"></div>
+  <div class="mini-map-legend" id="mmLegend">
+    <span class="mm-leg"><span class="mm-dot" style="background:#355074"></span>Tokyo</span>
+    <span class="mm-leg"><span class="mm-dot" style="background:#48624b"></span>Kyoto</span>
+    <span class="mm-leg"><span class="mm-dot" style="background:#6d4b66"></span>Osaka</span>
+  </div>
+</div>
+
+<!-- CHATBOT -->
+<button class="chat-fab" id="chatFab" onclick="toggleChat()" aria-label="Open trip assistant">
+  <span>🗾</span>
+  <span class="notif" id="chatNotif"></span>
+</button>
+
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-head">
+    <span class="ch-avatar">🤖</span>
+    <div class="ch-info">
+      <div class="ch-name">Japan Trip Assistant</div>
+      <div class="ch-status">Ask me anything about the trip</div>
+    </div>
+    <button class="chat-close" onclick="toggleChat()">✕</button>
+  </div>
+  <div class="chat-messages" id="chatMessages"></div>
+  <div class="chat-suggestions" id="chatSuggestions"></div>
+  <div class="chat-input-row">
+    <input type="text" id="chatInput" placeholder="Ask a question…" onkeydown="if(event.key==='Enter')sendChat()">
+    <button class="chat-send" onclick="sendChat()">Send</button>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const ACTIVITIES = [
+  // TOKYO
+  {id:'t1',name:'teamLab Borderless',city:'Tokyo',cat:'Tech',emoji:'🌐',duration:3,cost:30,desc:'Immersive rooms of living digital art — light and sound you can walk through. One of the most unique places on Earth.',bookAhead:true,bookNote:'Book at teamlab.art 2–4 weeks ahead',bookUrl:'https://teamlab.art/e/borderless-tokyo/',siteUrl:'https://teamlab.art/e/borderless-tokyo/',mapUrl:'https://maps.google.com/?q=teamLab+Borderless+Tokyo',lat:35.6580,lng:139.7431},
+  {id:'t2',name:'Shibuya Sky',city:'Tokyo',cat:'Tech',emoji:'🌆',duration:1.5,cost:20,desc:'360° rooftop observation deck high above the Shibuya Scramble crossing. Stunning day or night.',bookAhead:true,bookNote:'Book online to skip the line',bookUrl:'https://www.klook.com/en-US/search/?q=shibuya+sky+observation+deck',siteUrl:'https://www.shibuya-sky.com/en/',mapUrl:'https://maps.google.com/?q=Shibuya+Sky+Tokyo',lat:35.6580,lng:139.7016},
+  {id:'t3',name:'Akihabara Arcades',city:'Tokyo',cat:'Tech',emoji:'🕹️',duration:2,cost:20,desc:'Multi-floor game arcades packed with retro cabs, claw machines, and every game you can imagine.',bookAhead:false,siteUrl:'https://www.gotokyo.org/en/spot/15/index.html',mapUrl:'https://maps.google.com/?q=Akihabara+Electric+Town+Tokyo',lat:35.7023,lng:139.7745},
+  {id:'t4',name:'Ghibli Museum',city:'Tokyo',cat:'Tech',emoji:'🎬',duration:3,cost:15,desc:"Studio Ghibli's magical museum in Mitaka. Robots, original animation cells, and a rooftop Totoro.",bookAhead:true,bookNote:'Sells out months ahead — book at l-tike.com the moment tickets open (10th of each month)',bookUrl:'https://www.klook.com/en-US/search/?q=ghibli+museum+tokyo+tickets',siteUrl:'https://www.ghibli-museum.jp/en/',mapUrl:'https://maps.google.com/?q=Ghibli+Museum+Mitaka+Tokyo',lat:35.6963,lng:139.5705},
+  {id:'t5',name:'Tokyo Skytree',city:'Tokyo',cat:'Tech',emoji:'🗼',duration:1.5,cost:25,desc:'Ascend to the top observation deck of the world’s 2nd tallest structure (634m) for breathtaking night views of Tokyo illuminated below.',bookAhead:true,bookNote:'Book online ahead to skip lines and secure sunset/night slots',siteUrl:'https://www.tokyo-skytree.jp/en/',bookUrl:'https://www.klook.com/en-US/search/?q=tokyo+skytree',mapUrl:'https://maps.google.com/?q=Tokyo+Skytree',lat:35.7101,lng:139.8107},
+  {id:'t6',name:'Tsukiji Market Breakfast',city:'Tokyo',cat:'Food',emoji:'🍣',duration:2,cost:25,desc:"The outer market still hums with the world's best sushi breakfast. Go 6–8am for the freshest cuts.",bookAhead:false,siteUrl:'https://www.tsukiji.or.jp/english/',mapUrl:'https://maps.google.com/?q=Tsukiji+Outer+Market+Tokyo',lat:35.6654,lng:139.7707},
+  {id:'t7',name:'Ramen in Shinjuku',city:'Tokyo',cat:'Food',emoji:'🍜',duration:1,cost:15,desc:'Deep broth, chewy noodles, perfect egg. Ichiran or Fuunji — both lines are worth it.',bookAhead:false,siteUrl:'https://en.ichiran.com/',mapUrl:'https://maps.google.com/?q=Ichiran+Ramen+Shinjuku+Tokyo',lat:35.6940,lng:139.7039},
+  {id:'t8',name:'Jiggly Pancakes',city:'Tokyo',cat:'Food',emoji:'🥞',duration:1,cost:15,desc:'Soufflé pancakes that wobble when the plate arrives. The line is part of the experience.',bookAhead:false,siteUrl:'https://www.thehappypancake.com/',mapUrl:'https://maps.google.com/?q=A+Happy+Pancake+Omotesando+Tokyo',lat:35.6689,lng:139.7077},
+  {id:'t9',name:'Omoide Yokocho',city:'Tokyo',cat:'Food',emoji:'🏮',duration:2,cost:30,desc:'Memory Lane — a tiny smoky alley in Shinjuku packed with izakayas. Order yakitori and cold beer.',bookAhead:false,mapUrl:'https://maps.google.com/?q=Omoide+Yokocho+Shinjuku+Tokyo',lat:35.6909,lng:139.7001},
+  {id:'t10',name:'Golden Gai Bar Hopping',city:'Tokyo',cat:'Nightlife',emoji:'🍺',duration:3,cost:30,desc:'Six narrow alleys with 200+ tiny bars, each seating 6–8 people. Every bar has its own personality.',bookAhead:false,mapUrl:'https://maps.google.com/?q=Golden+Gai+Shinjuku+Tokyo',lat:35.6938,lng:139.7027},
+  {id:'t11',name:'Shimokitazawa Vintage',city:'Tokyo',cat:'Nightlife',emoji:'👕',duration:2,cost:0,desc:"Tokyo's coolest neighborhood — vintage clothes, record shops, live music, and great coffee.",bookAhead:false,mapUrl:'https://maps.google.com/?q=Shimokitazawa+Tokyo',lat:35.6614,lng:139.6681},
+  {id:'t12',name:'Harajuku & Takeshita Dori',city:'Tokyo',cat:'Nightlife',emoji:'🌈',duration:1.5,cost:0,desc:'Wild fashion, crepe stands, and people-watching at its most Tokyo. Short walk from Meiji Shrine.',bookAhead:false,mapUrl:'https://maps.google.com/?q=Takeshita+Street+Harajuku+Tokyo',lat:35.6702,lng:139.7026},
+  {id:'t13',name:'Senso-ji Temple',city:'Tokyo',cat:'History',emoji:'⛩️',duration:1.5,cost:0,desc:"Tokyo's oldest temple in Asakusa. Nakamise shopping street leads up to it — buy ningyo-yaki cakes.",bookAhead:false,siteUrl:'https://www.senso-ji.jp/english/',mapUrl:'https://maps.google.com/?q=Senso-ji+Temple+Asakusa+Tokyo',lat:35.7147,lng:139.7966},
+  {id:'t14',name:'Meiji Shrine',city:'Tokyo',cat:'History',emoji:'🌲',duration:1,cost:0,desc:'A forested Shinto shrine in the middle of the city. Peaceful, grand, and a completely different world from Shibuya.',bookAhead:false,siteUrl:'https://www.meijijingu.or.jp/en/',mapUrl:'https://maps.google.com/?q=Meiji+Shrine+Tokyo',lat:35.6763,lng:139.6993},
+  {id:'t15',name:'Guided Daikoku PA JDM Night Tour',city:'Tokyo',cat:'Cars',emoji:'🚗',duration:3.5,cost:60,desc:'Guided night tour/private transport to Yokohama’s Daikoku Parking Area — the world’s holy grail late-night JDM car meet (GT-Rs, RWBs, tuning legends).',bookAhead:true,bookNote:'Book a guided Daikoku JDM car tour with private vehicle transport from Tokyo',bookUrl:'https://www.klook.com/en-US/search/?q=daikoku+pa+car+tour+tokyo',mapUrl:'https://maps.google.com/?q=Daikoku+Parking+Area+Yokohama',lat:35.4738,lng:139.6630},
+  {id:'t16',name:'Up Garage Parts Hunt',city:'Tokyo',cat:'Cars',emoji:'🔧',duration:2,cost:0,desc:"Japan's biggest used JDM parts chain. You will find things you didn't know you needed.",bookAhead:false,siteUrl:'https://www.up-garage.com/shop/',mapUrl:'https://maps.google.com/?q=Up+Garage+Tokyo',lat:35.6900,lng:139.7200},
+  {id:'t17',name:'Street Go-Karting',city:'Tokyo',cat:'Cars',emoji:'🏎️',duration:1.5,cost:50,desc:'Drive Mario Kart-style go-karts through real Tokyo streets in costume. Wild and completely legal.',bookAhead:true,bookNote:'Requires International Driving Permit (get from AAA before flying, ~$20)',bookUrl:'https://www.klook.com/en-US/search/?q=tokyo+go+kart+street',siteUrl:'https://www.klook.com/en-US/search/?q=tokyo+go+kart+street',mapUrl:'https://maps.google.com/?q=MariCar+Akihabara+Tokyo',lat:35.6980,lng:139.7716},
+  {id:'t18',name:'Nissan Gallery Ginza',city:'Tokyo',cat:'Cars',emoji:'🏁',duration:1,cost:0,desc:"Nissan's glass showroom in Ginza — concept cars, GT-Rs, and the latest models on display.",bookAhead:false,siteUrl:'https://www.nissan.co.jp/EXPERIENCE/NISSAN_GALLERY/',mapUrl:'https://maps.google.com/?q=Nissan+Gallery+Ginza+Tokyo',lat:35.6718,lng:139.7649},
+  {id:'t19',name:'Karaoke in Shinjuku',city:'Tokyo',cat:'Nightlife',emoji:'🎤',duration:2,cost:20,desc:'Private room karaoke — English songs, unlimited drinks, and zero judgment. A must-do night.',bookAhead:false,siteUrl:'https://www.joysound.com/web/search/shop',mapUrl:'https://maps.google.com/?q=Karaoke+Kan+Shinjuku+Tokyo',lat:35.6940,lng:139.7039},
+  {id:'t20',name:'Ueno Park & Museums',city:'Tokyo',cat:'Nature',emoji:'🌸',duration:2,cost:5,desc:'Big green park with the National Museum, zoo, Shinobazu Pond, and food stalls.',bookAhead:false,siteUrl:'https://www.tnm.jp/?lang=en',mapUrl:'https://maps.google.com/?q=Ueno+Park+Tokyo',lat:35.7146,lng:139.7734},
+  {id:'t21',name:'Downtown Tokyo Walk',city:'Tokyo',cat:'Tech',emoji:'🏙️',duration:3,cost:0,desc:'Walk the main arteries of central Tokyo — Shinjuku neon, the Shibuya scramble crossing, Ginza luxury boulevard, and the Imperial Palace gardens. The city itself is the attraction.',bookAhead:false,siteUrl:'https://www.gotokyo.org/en/index.html',mapUrl:'https://maps.google.com/?q=Shinjuku+Tokyo',lat:35.6896,lng:139.6917},
+  {id:'t22',name:'Mt. Fuji Day Trip',city:'Tokyo',cat:'Nature',emoji:'🗻',duration:10,cost:30,desc:"A 2-hour bus from Shinjuku to Fuji 5th Station (2,305m) — volcanic rock fields, sweeping views, and the crater trail if weather allows. September is the last month the summit trail is officially open. Even a clear view from the Kawaguchiko lake shore is unforgettable.",bookAhead:false,siteUrl:'https://www.fujisan-climb.jp/en/',bookUrl:'https://www.klook.com/en-US/search/?q=mount+fuji+day+trip+tokyo',mapUrl:'https://maps.google.com/?q=Mt+Fuji+5th+Station+Japan',lat:35.3606,lng:138.7274},
+  {id:'t23',name:'Fuji Speedway Circuit',city:'Tokyo',cat:'Cars',emoji:'🏎️',duration:6,cost:40,desc:"Legendary FIA Grade-1 circuit at the foot of Mt. Fuji. Motorsport museum, circuit tours, and supercar driving experiences.",bookAhead:true,bookNote:'Book circuit experience or museum ticket in advance',siteUrl:'https://www.fsw.tv/en/',mapUrl:'https://maps.google.com/?q=Fuji+Speedway',lat:35.3717,lng:138.9267},
+  {id:'t24',name:'Miraikan Robotics Museum',city:'Tokyo',cat:'Tech',emoji:'🤖',duration:2.5,cost:12,desc:"National Museum of Emerging Science and Innovation in Odaiba — androids, AI robotics, humanoids, and space exploration.",bookAhead:false,siteUrl:'https://www.miraikan.jst.go.jp/en/',mapUrl:'https://maps.google.com/?q=Miraikan+Tokyo',lat:35.6193,lng:139.7764},
+  {id:'t75',name:'Sumo Stable Practice Visit',city:'Tokyo',cat:'History',emoji:'🥋',duration:2,cost:45,desc:"Watch active sumo wrestlers train up close during early morning practice (asageiko) at a Ryogoku stable.",bookAhead:true,bookNote:'Book guided morning sumo stable practice weeks ahead',bookUrl:'https://www.klook.com/en-US/search/?q=sumo+morning+practice+tokyo',siteUrl:'https://www.klook.com/en-US/search/?q=sumo+morning+practice+tokyo',mapUrl:'https://maps.google.com/?q=Ryogoku+Kokugikan+Tokyo',lat:35.6969,lng:139.7933},
+  {id:'t76',name:'Pro Drift Taxi Ride-Along',city:'Tokyo',cat:'Cars',emoji:'💨',duration:4,cost:120,desc:"Buckle into the passenger seat of a tuned 500hp Silvia/Chaser with a pro D1 drift driver sliding sideways at full speed.",bookAhead:true,bookNote:'Book drift taxi passenger experience in advance',siteUrl:'https://www.ebisu-circuit.com/',mapUrl:'https://maps.google.com/?q=Ebisu+Circuit+Japan',lat:37.6439,lng:140.5283},
+  {id:'t77',name:'Circuit Race Spectating (mid-September)',city:'Tokyo',cat:'Cars',emoji:'🏁',duration:6,cost:50,desc:"Live Japanese circuit racing at Fuji Speedway during your trip window — Super GT, Formula Drift Japan, and WEC/Super Taikyu rounds are all plausible mid-September dates, but none are confirmed yet for 2026. Check the official Fuji Speedway calendar close to your trip before planning around it.",bookAhead:true,bookNote:'Confirm exact September 2026 event dates on fsw.tv before booking tickets',siteUrl:'https://www.fsw.tv/en/',mapUrl:'https://maps.google.com/?q=Fuji+Speedway',lat:35.3717,lng:138.9267},
+  {id:'t78',name:'Fuji Speedway Hotel & Museum',city:'Tokyo',cat:'Cars',emoji:'🏨',duration:24,cost:250,desc:"Luxury Hyatt Unbound Collection hotel built directly alongside Fuji Speedway track — confirmed real property, opened 2022. Circuit-view rooms, Mt. Fuji views, onsen, and the Fuji Motorsports Museum (~40 historic race cars) on-site.",bookAhead:true,bookNote:'Book track-view rooms several months ahead',siteUrl:'https://www.hyatt.com/en-US/hotel/japan/fuji-speedway-hotel/fswub',mapUrl:'https://maps.google.com/?q=Fuji+Speedway+Hotel',lat:35.3672,lng:138.9280},
+  // KYOTO
+  {id:'k1',name:'Fushimi Inari Gates',city:'Kyoto',cat:'History',emoji:'⛩️',duration:3,cost:0,desc:"Thousands of vermillion torii gates winding up a mountain — one of Japan's most iconic sights. Go at dawn or after 6pm.",bookAhead:false,siteUrl:'https://inari.jp/en/',mapUrl:'https://maps.google.com/?q=Fushimi+Inari+Taisha+Kyoto',lat:34.9671,lng:135.7727},
+  {id:'k2',name:'Arashiyama Bamboo Grove',city:'Kyoto',cat:'Nature',emoji:'🎋',duration:1.5,cost:0,desc:'A path through towering bamboo that creaks and rustles in the wind. Get there by 7am to beat the crowds.',bookAhead:false,siteUrl:'https://www.arashiyama-kyoto.com/',mapUrl:'https://maps.google.com/?q=Arashiyama+Bamboo+Grove+Kyoto',lat:35.0166,lng:135.6724},
+  {id:'k3',name:'Kinkaku-ji (Golden Pavilion)',city:'Kyoto',cat:'History',emoji:'🏯',duration:1,cost:5,desc:"A Zen temple covered in real gold leaf, reflected in a still pond. One of Japan's most photographed spots.",bookAhead:false,siteUrl:'https://www.kinkakuji.com/en/',mapUrl:'https://maps.google.com/?q=Kinkaku-ji+Golden+Pavilion+Kyoto',lat:35.0394,lng:135.7292},
+  {id:'k4',name:'Gion at Dusk',city:'Kyoto',cat:'History',emoji:'🏮',duration:1.5,cost:0,desc:"Kyoto's ancient geisha district — wooden teahouses, stone lanterns, and if you're lucky, a glimpse of a geiko.",bookAhead:false,siteUrl:'https://www.kyoto.travel/en/neighborhood/gion',mapUrl:'https://maps.google.com/?q=Gion+District+Kyoto',lat:35.0036,lng:135.7752},
+  {id:'k5',name:'Tea Ceremony',city:'Kyoto',cat:'History',emoji:'🍵',duration:1.5,cost:30,desc:'Sit, slow down, and learn the centuries-old art of preparing and drinking matcha. Deeply calming.',bookAhead:true,bookNote:'Book a session in Gion ahead of time',bookUrl:'https://www.klook.com/en-US/search/?q=kyoto+tea+ceremony',siteUrl:'https://www.klook.com/en-US/search/?q=kyoto+tea+ceremony',mapUrl:'https://maps.google.com/?q=Tea+Ceremony+Gion+Kyoto',lat:35.0036,lng:135.7752},
+  {id:'k6',name:'Nishiki Market',city:'Kyoto',cat:'Food',emoji:'🛒',duration:1.5,cost:20,desc:"Kyoto's Kitchen — a narrow covered market with pickles, skewers, tamagoyaki, and every snack imaginable.",bookAhead:false,siteUrl:'https://www.kyoto-nishiki.or.jp/en/',mapUrl:'https://maps.google.com/?q=Nishiki+Market+Kyoto',lat:35.0053,lng:135.7670},
+  {id:'k7',name:'Kaiseki Dinner',city:'Kyoto',cat:'Food',emoji:'🍱',duration:2,cost:80,desc:"Traditional multi-course Japanese cuisine — a dozen tiny, perfect dishes. The most elegant meal you'll ever have.",bookAhead:true,bookNote:'Book 2–4 weeks ahead — look for English-friendly restaurants',bookUrl:'https://www.tablecheck.com/en/japan/reserve?area=kyoto',siteUrl:'https://www.tablecheck.com/en/japan/reserve?area=kyoto',mapUrl:'https://maps.google.com/?q=Kaiseki+Restaurant+Kyoto',lat:35.0080,lng:135.7680},
+  {id:'k8',name:'Ryokan Night Stay & Kaiseki',city:'Kyoto',cat:'History',emoji:'🛁',duration:24,cost:200,desc:'Sleep in an authentic traditional Japanese inn — tatami floors, yukata robes, private onsen hot spring bath, and a multi-course seasonal Kaiseki dinner & breakfast included.',bookAhead:true,bookNote:'Book several months ahead — fills fast. Includes multi-course Kaiseki dinner & breakfast.',bookUrl:'https://www.booking.com/searchresults.en-gb.html?ss=Kyoto+ryokan',siteUrl:'https://www.booking.com/searchresults.en-gb.html?ss=Kyoto+ryokan',mapUrl:'https://maps.google.com/?q=Ryokan+Kyoto',lat:35.0160,lng:135.7680},
+  {id:'k9',name:'Kiyomizu-dera Temple',city:'Kyoto',cat:'History',emoji:'🕌',duration:1.5,cost:5,desc:'A wooden stage temple built on a cliff over the forest — panoramic views of Kyoto below.',bookAhead:false,siteUrl:'https://www.kiyomizudera.or.jp/en/',mapUrl:'https://maps.google.com/?q=Kiyomizudera+Temple+Kyoto',lat:34.9948,lng:135.7851},
+  {id:'k10',name:"Philosopher's Path",city:'Kyoto',cat:'Nature',emoji:'🚶',duration:1.5,cost:0,desc:'A quiet stone path along a canal connecting several temples. Named after a philosopher who walked it daily.',bookAhead:false,siteUrl:'https://www.japan-guide.com/e/e3950.html',mapUrl:'https://maps.google.com/?q=Philosopher%27s+Path+Kyoto',lat:35.0177,lng:135.7938},
+  {id:'k11',name:'Sake Tasting — Fushimi',city:'Kyoto',cat:'Food',emoji:'🍶',duration:1.5,cost:15,desc:"Kyoto's Fushimi district has been brewing sake for centuries. Walk the sake street and taste at multiple breweries.",bookAhead:false,siteUrl:'https://www.gekkeikan.co.jp/english/enjoy/museum/',mapUrl:'https://maps.google.com/?q=Fushimi+Sake+District+Kyoto',lat:34.9440,lng:135.7659},
+  {id:'k12',name:'Sagano Scenic Railway',city:'Kyoto',cat:'Nature',emoji:'🚞',duration:1,cost:10,desc:'A charming open-air train through the Hozu River gorge and bamboo forests of Arashiyama.',bookAhead:true,bookNote:'Buy tickets at the station early — can sell out on weekends',bookUrl:'https://www.klook.com/en-US/search/?q=sagano+scenic+railway+kyoto',siteUrl:'https://www.sagano-kanko.co.jp/en/',mapUrl:'https://maps.google.com/?q=Sagano+Scenic+Railway+Arashiyama+Kyoto',lat:35.0172,lng:135.6714},
+  {id:'k13',name:'Arashiyama Monkey Park',city:'Kyoto',cat:'Nature',emoji:'🐒',duration:1.5,cost:7,desc:'Hike a small mountain to reach a park with 170 wild Japanese macaques. Feed them through wire from the inside.',bookAhead:false,siteUrl:'https://www.monkeypark.jp/',mapUrl:'https://maps.google.com/?q=Iwatayama+Monkey+Park+Arashiyama+Kyoto',lat:35.0098,lng:135.6720},
+  {id:'k14',name:'Nijo Castle',city:'Kyoto',cat:'History',emoji:'🏰',duration:1.5,cost:8,desc:"The shogun's Kyoto palace with famous 'nightingale floors' that squeak when walked on — an early security system.",bookAhead:false,siteUrl:'https://nijo-jocastle.city.kyoto.lg.jp/en/',mapUrl:'https://maps.google.com/?q=Nijo+Castle+Kyoto',lat:35.0142,lng:135.7481},
+  {id:'k15',name:'Samurai Post Town Sake Flights',city:'Kyoto',cat:'Food',emoji:'🍶',duration:5,cost:25,desc:'Stroll preserved Edo-period samurai post towns (Narai-juku / Tsumago) and sample craft sake flights inside centuries-old wooden teahouses.',bookAhead:false,mapUrl:'https://maps.google.com/?q=Narai-juku+Japan',lat:35.9680,lng:137.8150},
+  // OSAKA
+  {id:'o1',name:'Dotonbori Street Food',city:'Osaka',cat:'Food',emoji:'🦑',duration:2,cost:30,desc:"Osaka's neon entertainment district and the city's beating culinary heart. Takoyaki, ramen, crab claw signs.",bookAhead:false,siteUrl:'https://dotonbori.or.jp/en/',mapUrl:'https://maps.google.com/?q=Dotonbori+Osaka',lat:34.6687,lng:135.5013},
+  {id:'o2',name:'Kuromon Market',city:'Osaka',cat:'Food',emoji:'🐟',duration:1.5,cost:20,desc:"Osaka's biggest covered market — fresh seafood, wagyu skewers, and vendors who'll cook on the spot.",bookAhead:false,siteUrl:'https://kuromon.com/en/',mapUrl:'https://maps.google.com/?q=Kuromon+Market+Osaka',lat:34.6680,lng:135.5071},
+  {id:'o3',name:'Takoyaki & Okonomiyaki',city:'Osaka',cat:'Food',emoji:'🥘',duration:1,cost:15,desc:"Osaka invented both — octopus balls and savory pancakes. Mandatory eating. Kiji restaurant for okonomiyaki.",bookAhead:false,siteUrl:'https://www.osaka-info.jp/en/food/',mapUrl:'https://maps.google.com/?q=Kiji+Okonomiyaki+Osaka',lat:34.6687,lng:135.5020},
+  {id:'o4',name:'Super Nintendo World',city:'Osaka',cat:'Tech',emoji:'🍄',duration:4,cost:80,desc:"A fully immersive Mario world inside Universal Studios Japan. Mario Kart ride, Donkey Kong area, interactive power-ups.",bookAhead:true,bookNote:'Book USJ tickets + Nintendo World express pass weeks ahead',bookUrl:'https://www.usj.co.jp/web/en/us/tickets',siteUrl:'https://www.usj.co.jp/web/en/us/areas/super-nintendo-world',mapUrl:'https://maps.google.com/?q=Universal+Studios+Japan+Osaka',lat:34.6654,lng:135.4321},
+  {id:'o5',name:'Osaka Castle',city:'Osaka',cat:'History',emoji:'🏯',duration:1.5,cost:6,desc:"One of Japan's most iconic castles surrounded by a moat and cherry trees. Great museum inside.",bookAhead:false,siteUrl:'https://www.osakacastle.net/english/',mapUrl:'https://maps.google.com/?q=Osaka+Castle',lat:34.6873,lng:135.5262},
+  {id:'o6',name:'Day Trip to Nara',city:'Osaka',cat:'Nature',emoji:'🦌',duration:4,cost:15,desc:'Hundreds of wild deer roam freely and bow to you for crackers. Todai-ji temple houses a giant bronze Buddha.',bookAhead:false,siteUrl:'https://www.japan-guide.com/e/e4103.html',mapUrl:'https://maps.google.com/?q=Nara+Park+Japan',lat:34.6851,lng:135.8048},
+  {id:'o7',name:'Umeda Sky Building',city:'Osaka',cat:'Tech',emoji:'🔭',duration:1,cost:16,desc:'Two towers connected by a floating sky garden 170m up — one of the most striking modern buildings in Japan.',bookAhead:false,siteUrl:'https://www.skybldg.co.jp/en/',bookUrl:'https://www.klook.com/en-US/search/?q=umeda+sky+building',mapUrl:'https://maps.google.com/?q=Umeda+Sky+Building+Osaka',lat:34.7056,lng:135.4904},
+  {id:'o8',name:'Den Den Town',city:'Osaka',cat:'Tech',emoji:'🎮',duration:2,cost:20,desc:"Osaka's own Akihabara — electronics, anime, retro games, figures, and the densest concentration of hobby shops.",bookAhead:false,siteUrl:'https://www.osaka-info.jp/en/',mapUrl:'https://maps.google.com/?q=Den+Den+Town+Nipponbashi+Osaka',lat:34.6620,lng:135.5060},
+  {id:'o9',name:'Himeji Castle',city:'Osaka',cat:'History',emoji:'🏯',duration:4,cost:30,desc:"Japan's most beautiful castle — a UNESCO World Heritage Site nicknamed the White Heron. 45 min from Osaka by bullet train.",bookAhead:false,siteUrl:'https://www.himejicastle.jp/en/',mapUrl:'https://maps.google.com/?q=Himeji+Castle',lat:34.8394,lng:134.6939},
+  {id:'o10',name:'Kobe Beef Lunch',city:'Osaka',cat:'Food',emoji:'🥩',duration:4,cost:95,desc:'Day trip to Kobe for the real thing — teppanyaki-grilled A5 Kobe beef. Misono restaurant is the famous one.',bookAhead:true,bookNote:'Reserve at your restaurant — popular spots book up',bookUrl:'https://www.tablecheck.com/en/japan/reserve?area=kobe',siteUrl:'https://www.kobe-tourism.com/en/',mapUrl:'https://maps.google.com/?q=Kobe+Beef+Misono+Restaurant',lat:34.6901,lng:135.1956},
+  {id:'o11',name:'Shinsaibashi Shopping',city:'Osaka',cat:'Nightlife',emoji:'🛍️',duration:2,cost:0,desc:"Osaka's main covered shopping arcade — 600m of stores, street food, and people.",bookAhead:false,siteUrl:'https://www.shinsaibashi.or.jp/en/',mapUrl:'https://maps.google.com/?q=Shinsaibashi+Shopping+Street+Osaka',lat:34.6726,lng:135.5013},
+  {id:'o12',name:'Osaka Baseball Game',city:'Osaka',cat:'Nightlife',emoji:'⚾',duration:3,cost:30,desc:"Orix Buffaloes play September home games at Kyocera Dome. Japanese baseball crowds are the loudest in the world.",bookAhead:true,bookNote:'Check the September schedule and buy tickets online',bookUrl:'https://www.buffaloes.co.jp/ticket/',siteUrl:'https://www.buffaloes.co.jp/en/',mapUrl:'https://maps.google.com/?q=Kyocera+Dome+Osaka',lat:34.6678,lng:135.4744},
+  {id:'o13',name:'Hida & Kobe Beef in Takayama',city:'Osaka',cat:'Food',emoji:'🥩',duration:6,cost:90,desc:'Sample melt-in-your-mouth A5 Hida beef nigiri skewers in Takayama old town and teppanyaki Kobe beef — prime beef heaven.',bookAhead:true,bookNote:'Reserve Takayama/Kobe beef restaurants in advance',mapUrl:'https://maps.google.com/?q=Takayama+Old+Town+Japan',lat:36.1408,lng:137.2582},
+  // ADDED 2026-07-21 — expanded activity list
+  {id:'t26',name:'Super Autobacs Tokyo Bay',city:'Tokyo',cat:'Cars',emoji:'🔧',duration:1.5,cost:0,desc:'Multi-story automotive megastore packed with racing seats, performance parts, tools, and tuned demo cars.',bookAhead:false,mapUrl:'https://maps.google.com/?q=Super+Autobacs+Tokyo+Bay',lat:35.6267,lng:139.7995},
+  {id:'t27',name:'Fun2Drive Hakone Sports Car Rental',city:'Tokyo',cat:'Cars',emoji:'🏎️',duration:6,cost:250,desc:'Rent an R34 GT-R, Supra, or AE86 to drive the legendary Touge mountain passes near Mt. Fuji.',bookAhead:true,bookNote:'Book ahead, requires International Driving Permit',bookUrl:'https://www.fun2drive.jp/',mapUrl:'https://maps.google.com/?q=Fun2Drive+Hakone',lat:35.2323,lng:139.0267},
+  {id:'t28',name:'Honda Welcome Plaza Aoyama',city:'Tokyo',cat:'Cars',emoji:'🏁',duration:1,cost:0,desc:'Honda\'s global HQ exhibit featuring F1 championship engines, Type R prototypes, and robotics history.',bookAhead:false,siteUrl:'https://www.honda.co.jp/welcomeplaza/',mapUrl:'https://maps.google.com/?q=Honda+Welcome+Plaza+Aoyama',lat:35.6716,lng:139.7157},
+  {id:'t29',name:'Toyota GAZOO Racing Showcase',city:'Tokyo',cat:'Cars',emoji:'🏎️',duration:1.5,cost:0,desc:'Inspect Toyota\'s GAZOO Racing lineup, rally cars, and futuristic concept vehicles at Megaweb/Toyota City Showcase.',bookAhead:false,siteUrl:'https://gazooracing.com/',mapUrl:'https://maps.google.com/?q=Toyota+Mega+Web+Tokyo',lat:35.6255,lng:139.7767},
+  {id:'t30',name:'Liberty Walk Tokyo/Saitama',city:'Tokyo',cat:'Cars',emoji:'🚘',duration:1.5,cost:0,desc:'Check out famous widebody supercar builds and custom stance cars up close.',bookAhead:false,siteUrl:'http://libertywalk.co.jp/',mapUrl:'https://maps.google.com/?q=Liberty+Walk+Saitama',lat:35.8617,lng:139.6455},
+  {id:'t31',name:'Spoon Sports / Type ONE Workshop',city:'Tokyo',cat:'Cars',emoji:'🔧',duration:1,cost:0,desc:'The ultimate sanctuary for Civic Type-R and Honda performance tuning enthusiasts.',bookAhead:false,siteUrl:'https://www.spoonsports.com/',mapUrl:'https://maps.google.com/?q=Spoon+Sports+Tokyo',lat:35.6812,lng:139.7671},
+  {id:'t32',name:'RE Amemiya RX-7 Workshop',city:'Tokyo',cat:'Cars',emoji:'🔧',duration:1.5,cost:0,desc:'Rotary engine legends and D1GP drift car tuning house in Chiba.',bookAhead:false,siteUrl:'https://www.re-amemiya.co.jp/',mapUrl:'https://maps.google.com/?q=RE+Amemiya+Chiba',lat:35.6073,lng:140.1233},
+  {id:'t33',name:'APEXi & HKS Tuning Shops',city:'Tokyo',cat:'Cars',emoji:'🔧',duration:1.5,cost:0,desc:'Visit iconic aftermarket tuning brand showrooms around Greater Tokyo.',bookAhead:false,mapUrl:'https://maps.google.com/?q=HKS+Tokyo+Office',lat:35.5308,lng:139.4419},
+  {id:'t34',name:'Subaru World HQ Showroom',city:'Tokyo',cat:'Cars',emoji:'🏁',duration:1,cost:0,desc:'WRX STI rally heritage models and cutaway boxer engine displays at the Ebisu showroom.',bookAhead:false,siteUrl:'https://www.subaru.jp/showroom/',mapUrl:'https://maps.google.com/?q=Subaru+Showroom+Ebisu+Tokyo',lat:35.6467,lng:139.7157},
+  {id:'t35',name:'Bingo Media / BH Auction Showroom',city:'Tokyo',cat:'Cars',emoji:'🚘',duration:1,cost:0,desc:'Ultra-rare Japanese collector cars, NISMO 400Rs, and vintage Skylines.',bookAhead:false,mapUrl:'https://maps.google.com/?q=BH+Auction+Tokyo',lat:35.6900,lng:139.7200},
+  {id:'t36',name:'Midnight Wangan Highway Cruise',city:'Tokyo',cat:'Cars',emoji:'🌃',duration:2,cost:40,desc:'Night taxi or rental cruise along Tokyo\'s famous elevated Wangan (C1 Loop) Metropolitan Expressway.',bookAhead:false,mapUrl:'https://maps.google.com/?q=Wangan+Line+Tokyo',lat:35.6100,lng:139.8100},
+  {id:'t37',name:'D1 Grand Prix / Ebisu Circuit',city:'Tokyo',cat:'Cars',emoji:'🏁',duration:4,cost:50,desc:'Track down Japanese drift culture roots and exhibition runs at Ebisu Circuit.',bookAhead:true,bookNote:'Check D1GP schedule ahead — event dates vary',siteUrl:'https://d1gp.co.jp/',mapUrl:'https://maps.google.com/?q=Ebisu+Circuit+Fukushima',lat:37.4408,lng:140.4108},
+  {id:'t38',name:'Gundam Factory & Statue',city:'Tokyo',cat:'Tech',emoji:'🤖',duration:1,cost:10,desc:'Giant life-sized transforming Unicorn Gundam statue in Odaiba.',bookAhead:false,siteUrl:'https://www.gundam-factory.net/en/',mapUrl:'https://maps.google.com/?q=Gundam+Factory+Yokohama',lat:35.4547,lng:139.6497},
+  {id:'t39',name:'Nintendo Tokyo Flagship Store',city:'Tokyo',cat:'Tech',emoji:'🍄',duration:1,cost:0,desc:'Official flagship store with life-sized statues of Mario, Link, and Pokemon in Shibuya Parco.',bookAhead:false,siteUrl:'https://www.nintendo.co.jp/officialstore/en/',mapUrl:'https://maps.google.com/?q=Nintendo+Tokyo+Shibuya+Parco',lat:35.6615,lng:139.6993},
+  {id:'t40',name:'Super Potato Akihabara',city:'Tokyo',cat:'Tech',emoji:'🎮',duration:1,cost:10,desc:'Legendary retro video game store and arcade museum — Famicom, Game Boy, arcade classics.',bookAhead:false,siteUrl:'http://www.superpotato.com/',mapUrl:'https://maps.google.com/?q=Super+Potato+Akihabara',lat:35.6989,lng:139.7717},
+  {id:'t41',name:'Small Worlds Tokyo',city:'Tokyo',cat:'Tech',emoji:'🏙️',duration:1.5,cost:25,desc:'Miniature indoor theme park featuring 1:80 scale Evangelion hangar and Space Center models.',bookAhead:true,bookNote:'Book online ahead',bookUrl:'https://smallworlds.jp/en/',mapUrl:'https://maps.google.com/?q=Small+Worlds+Tokyo',lat:35.6260,lng:139.7854},
+  {id:'t42',name:'Joypolis Indoor Arcade Park',city:'Tokyo',cat:'Tech',emoji:'🎢',duration:2.5,cost:45,desc:'SEGA-operated indoor amusement park in Odaiba with VR rollercoasters and interactive games.',bookAhead:false,siteUrl:'https://tokyo-joypolis.com/',mapUrl:'https://maps.google.com/?q=Joypolis+Odaiba+Tokyo',lat:35.6296,lng:139.7752},
+  {id:'t43',name:'Red° Tokyo Tower Esports Arena',city:'Tokyo',cat:'Tech',emoji:'🕹️',duration:1.5,cost:25,desc:'High-tech esports, VR gaming, and motor racing simulator arena inside Tokyo Tower.',bookAhead:false,siteUrl:'https://at-tokyotower.jp/red/',mapUrl:'https://maps.google.com/?q=RED+Tokyo+Tower',lat:35.6586,lng:139.7454},
+  {id:'t44',name:'Capcom Store & Square Enix Cafe',city:'Tokyo',cat:'Tech',emoji:'🎮',duration:1,cost:20,desc:'Specialized game-themed cafes and official merchandise shops in Ikebukuro/Shinjuku.',bookAhead:false,mapUrl:'https://maps.google.com/?q=Square+Enix+Cafe+Tokyo',lat:35.6938,lng:139.7034},
+  {id:'t45',name:'Tokyo Metropolitan Govt Building Observatory',city:'Tokyo',cat:'Tech',emoji:'🏙️',duration:1,cost:0,desc:'Free 45th-floor view of the endless Tokyo skyline.',bookAhead:false,siteUrl:'https://www.yokoso.metro.tokyo.lg.jp/',mapUrl:'https://maps.google.com/?q=Tokyo+Metropolitan+Government+Building',lat:35.6896,lng:139.6917},
+  {id:'t46',name:'Convenience Store Raid',city:'Tokyo',cat:'Food',emoji:'🍙',duration:0.5,cost:10,desc:'Egg salad sandwiches, Famichiki fried chicken, and onigiri from 7-Eleven / Lawson / FamilyMart.',bookAhead:false,mapUrl:'https://maps.google.com/?q=7-Eleven+Shinjuku+Tokyo',lat:35.6909,lng:139.7003},
+  {id:'t47',name:'Gyukatsu Motomura',city:'Tokyo',cat:'Food',emoji:'🥩',duration:1,cost:20,desc:'Crispy breaded beef cutlets cooked on your own personal tabletop mini-stone grill.',bookAhead:false,siteUrl:'https://gyukatsu-motomura.com/',mapUrl:'https://maps.google.com/?q=Gyukatsu+Motomura+Shibuya',lat:35.6595,lng:139.7005},
+  {id:'t48',name:'Depachika Food Halls',city:'Tokyo',cat:'Food',emoji:'🍱',duration:1.5,cost:25,desc:'Underground gourmet department store food paradises — Isetan / Takashimaya basement.',bookAhead:false,mapUrl:'https://maps.google.com/?q=Isetan+Shinjuku+Depachika',lat:35.6906,lng:139.7040},
+  {id:'k17',name:'Matcha Parfait & Tea House (Uji)',city:'Kyoto',cat:'Food',emoji:'🍵',duration:1.5,cost:15,desc:'Rich green tea ice cream and traditional Japanese sweets in Uji, the heart of Japanese matcha.',bookAhead:false,mapUrl:'https://maps.google.com/?q=Uji+Kyoto+Matcha',lat:34.8843,lng:135.7998},
+  {id:'t49',name:'CoCo Ichibanya Curry',city:'Tokyo',cat:'Food',emoji:'🍛',duration:1,cost:12,desc:'Customizable Japanese curry with chicken katsu and adjustable spice levels.',bookAhead:false,siteUrl:'https://www.ichibanya.co.jp/',mapUrl:'https://maps.google.com/?q=CoCo+Ichibanya+Shinjuku',lat:35.6909,lng:139.7003},
+  {id:'t50',name:'Yakitori Alley under Yurakucho Tracks',city:'Tokyo',cat:'Food',emoji:'🍢',duration:1.5,cost:25,desc:'Cold draft beer and charcoal chicken skewers under rattling train lines.',bookAhead:false,mapUrl:'https://maps.google.com/?q=Yurakucho+Yakitori+Alley',lat:35.6749,lng:139.7638},
+  {id:'t51',name:'Sushiro / Kura Conveyor-Belt Sushi',city:'Tokyo',cat:'Food',emoji:'🍣',duration:1,cost:20,desc:'Automated sushi delivery with gachapon game rewards for empty plates.',bookAhead:false,siteUrl:'https://www.sushiro.co.jp/',mapUrl:'https://maps.google.com/?q=Sushiro+Shinjuku+Tokyo',lat:35.6909,lng:139.7003},
+  {id:'t52',name:'Tonkatsu at Tonki / Maisen',city:'Tokyo',cat:'Food',emoji:'🍖',duration:1,cost:20,desc:'Deep-fried pork cutlets with shredded cabbage and sesame sauce.',bookAhead:false,siteUrl:'https://mai-sen.com/en/',mapUrl:'https://maps.google.com/?q=Maisen+Tonkatsu+Aoyama',lat:35.6654,lng:139.7135},
+  {id:'t53',name:'Japanese Whisky Tasting',city:'Tokyo',cat:'Food',emoji:'🥃',duration:1.5,cost:40,desc:'Yamazaki, Hakushu, and Hibiki flights at a Tokyo highball bar.',bookAhead:false,mapUrl:'https://maps.google.com/?q=Whisky+Bar+Ginza+Tokyo',lat:35.6717,lng:139.7650},
+  {id:'t54',name:'Imperial Palace East Gardens',city:'Tokyo',cat:'History',emoji:'🏯',duration:1.5,cost:0,desc:'Walk the stone foundations of the former Edo Castle.',bookAhead:false,siteUrl:'https://sankan.kunaicho.go.jp/english/',mapUrl:'https://maps.google.com/?q=Imperial+Palace+East+Gardens+Tokyo',lat:35.6852,lng:139.7528},
+  {id:'t55',name:'Zojo-ji Temple with Tokyo Tower Backdrop',city:'Tokyo',cat:'History',emoji:'🗼',duration:1,cost:0,desc:'Striking juxtaposition of an ancient temple and the modern red Tokyo Tower.',bookAhead:false,siteUrl:'https://www.zojoji.or.jp/en/',mapUrl:'https://maps.google.com/?q=Zojoji+Temple+Tokyo',lat:35.6567,lng:139.7492},
+  {id:'k18',name:'Sanjusangendo Temple',city:'Kyoto',cat:'History',emoji:'🙏',duration:1,cost:8,desc:'Hall filled with 1,001 life-sized carved statues of Kannon.',bookAhead:false,siteUrl:'http://www.sanjusangendo.jp/',mapUrl:'https://maps.google.com/?q=Sanjusangendo+Kyoto',lat:34.9878,lng:135.7719},
+  {id:'o14',name:'Tennoji & Shitennoji Temple',city:'Osaka',cat:'History',emoji:'🏯',duration:1.5,cost:3,desc:'One of Japan\'s oldest official Buddhist temples.',bookAhead:false,siteUrl:'https://www.shitennoji.or.jp/',mapUrl:'https://maps.google.com/?q=Shitennoji+Temple+Osaka',lat:34.6538,lng:135.5163},
+  {id:'k16',name:'Philosopher\'s Path Walk',city:'Kyoto',cat:'Nature',emoji:'🚶',duration:1.5,cost:0,desc:'Stone walkway alongside a canal lined with cherry trees and temples.',bookAhead:false,mapUrl:'https://maps.google.com/?q=Philosophers+Path+Kyoto',lat:35.0272,lng:135.7944},
+  {id:'o15',name:'Onsen Day Trip (Hakone/Kurama)',city:'Osaka',cat:'Nature',emoji:'♨️',duration:6,cost:60,desc:'Soak in natural mineral thermal hot springs surrounded by nature.',bookAhead:false,mapUrl:'https://maps.google.com/?q=Hakone+Onsen',lat:35.2323,lng:139.1069},
+  {id:'t56',name:'Kabukicho Neon Walk & Godzilla Head',city:'Tokyo',cat:'Nightlife',emoji:'🦖',duration:1,cost:0,desc:'Walk Shinjuku\'s nightlife district under the giant hotel Godzilla head.',bookAhead:false,mapUrl:'https://maps.google.com/?q=Kabukicho+Godzilla+Head',lat:35.6950,lng:139.7028},
+  {id:'t57',name:'Roppongi Hills Mori Art Museum & Deck',city:'Tokyo',cat:'Tech',emoji:'🖼️',duration:2,cost:20,desc:'Contemporary art exhibit with skyline views of Tokyo Tower.',bookAhead:false,siteUrl:'https://www.mori.art.museum/en/',mapUrl:'https://maps.google.com/?q=Mori+Art+Museum+Roppongi',lat:35.6605,lng:139.7292},
+  {id:'t58',name:'Shinjuku Gyoen National Garden',city:'Tokyo',cat:'Nature',emoji:'🌳',duration:1.5,cost:5,desc:'Serene Japanese landscape gardening with traditional tea houses.',bookAhead:false,siteUrl:'https://fng.or.jp/shinjuku/en/',mapUrl:'https://maps.google.com/?q=Shinjuku+Gyoen+Tokyo',lat:35.6852,lng:139.7100},
+  {id:'t59',name:'Tokyo Bay Evening Dinner Cruise',city:'Tokyo',cat:'Nightlife',emoji:'🚢',duration:2.5,cost:70,desc:'View the illuminated Rainbow Bridge and Tokyo skyline from the water.',bookAhead:true,bookNote:'Book ahead for dinner cruise seating',bookUrl:'https://www.symphony-cruise.co.jp/',mapUrl:'https://maps.google.com/?q=Tokyo+Bay+Dinner+Cruise',lat:35.6267,lng:139.7727},
+  {id:'t60',name:'Yoyogi Park Street Performers',city:'Tokyo',cat:'Nightlife',emoji:'🎸',duration:1,cost:0,desc:'Weekend rockabilly dancers, musicians, and dog walks.',bookAhead:false,mapUrl:'https://maps.google.com/?q=Yoyogi+Park+Tokyo',lat:35.6720,lng:139.6949},
+  {id:'t61',name:'Edo-Tokyo Open Air Architectural Museum',city:'Tokyo',cat:'History',emoji:'🏘️',duration:2,cost:4,desc:'Preserved historic Japanese storefronts, bathhouses, and homes.',bookAhead:false,siteUrl:'https://www.tatemonoen.jp/english/',mapUrl:'https://maps.google.com/?q=Edo-Tokyo+Open+Air+Museum',lat:35.7133,lng:139.5397},
+  {id:'t62',name:'Yokohama Minato Mirai Waterfront',city:'Tokyo',cat:'Nature',emoji:'🎡',duration:3,cost:10,desc:'Red Brick Warehouses, Landmark Tower, and giant Ferris wheel.',bookAhead:false,mapUrl:'https://maps.google.com/?q=Minato+Mirai+Yokohama',lat:35.4562,lng:139.6380},
+  {id:'t63',name:'Don Quijote Midnight Shopping',city:'Tokyo',cat:'Nightlife',emoji:'🛍️',duration:1,cost:20,desc:'24/7 multi-story mega-discount store with Japanese snacks and gadgets.',bookAhead:false,siteUrl:'https://www.donki.com/en/',mapUrl:'https://maps.google.com/?q=Don+Quijote+Shibuya',lat:35.6595,lng:139.6998},
+  {id:'t64',name:'Tokyu Hands Shibuya',city:'Tokyo',cat:'Nightlife',emoji:'🛠️',duration:1.5,cost:20,desc:'8 floors of Japanese stationery, tools, lifestyle goods, and travel gear.',bookAhead:false,siteUrl:'https://shibuya.tokyu-hands.co.jp/',mapUrl:'https://maps.google.com/?q=Tokyu+Hands+Shibuya',lat:35.6595,lng:139.7005},
+  {id:'t65',name:'Kiddyland Harajuku',city:'Tokyo',cat:'Nightlife',emoji:'🧸',duration:1,cost:15,desc:'Character goods paradise — Star Wars, Ghibli, Sanrio, Pokemon.',bookAhead:false,siteUrl:'https://www.kiddyland.co.jp/',mapUrl:'https://maps.google.com/?q=Kiddyland+Harajuku',lat:35.6708,lng:139.7038},
+  {id:'t66',name:'Bic Camera / Yodobashi Megastore',city:'Tokyo',cat:'Nightlife',emoji:'📷',duration:1.5,cost:30,desc:'Multi-floor electronics, cameras, watches, and tech toys.',bookAhead:false,mapUrl:'https://maps.google.com/?q=Yodobashi+Camera+Akihabara',lat:35.6984,lng:139.7746},
+  {id:'t67',name:'Kappabashi Kitchen Town Knife Shopping',city:'Tokyo',cat:'Nightlife',emoji:'🔪',duration:1.5,cost:80,desc:'Hand-forged chef knives, customized with engraving.',bookAhead:false,mapUrl:'https://maps.google.com/?q=Kappabashi+Street+Tokyo',lat:35.7137,lng:139.7889},
+  {id:'t68',name:'Gachapon Kaikan',city:'Tokyo',cat:'Nightlife',emoji:'🎰',duration:1,cost:15,desc:'Hundreds of capsule toy vending machines for quirky Japanese souvenirs.',bookAhead:false,mapUrl:'https://maps.google.com/?q=Gachapon+Kaikan+Akihabara',lat:35.7010,lng:139.7714},
+  {id:'t69',name:'Depachika Bento for the Shinkansen',city:'Tokyo',cat:'Food',emoji:'🍱',duration:0.5,cost:15,desc:'Pick up luxury bento boxes at Tokyo Station before boarding the Bullet Train.',bookAhead:false,mapUrl:'https://maps.google.com/?q=Tokyo+Station+Ekiben',lat:35.6812,lng:139.7671},
+  {id:'t70',name:'Animate Main Store (Ikebukuro)',city:'Tokyo',cat:'Nightlife',emoji:'📚',duration:1,cost:20,desc:'World\'s largest anime goods and manga department store.',bookAhead:false,siteUrl:'https://www.animate.co.jp/',mapUrl:'https://maps.google.com/?q=Animate+Ikebukuro',lat:35.7295,lng:139.7127},
+  {id:'t71',name:'Sento Neighborhood Bathhouse',city:'Tokyo',cat:'Nature',emoji:'♨️',duration:1,cost:5,desc:'Join locals in a traditional public neighborhood bathhouse.',bookAhead:false,mapUrl:'https://maps.google.com/?q=Sento+Tokyo',lat:35.7000,lng:139.7700},
+  {id:'t72',name:'Mandarake / Book-Off Bazaar',city:'Tokyo',cat:'Nightlife',emoji:'📦',duration:1,cost:20,desc:'Pre-owned Japanese figures, watches, vintage leather, and clothing.',bookAhead:false,siteUrl:'https://www.mandarake.co.jp/',mapUrl:'https://maps.google.com/?q=Mandarake+Akihabara',lat:35.6994,lng:139.7719},
+  {id:'t73',name:'Kappabashi Fake Food Samples (Sampuru)',city:'Tokyo',cat:'Nightlife',emoji:'🍜',duration:0.5,cost:25,desc:'Buy realistic wax food models used in restaurant windows.',bookAhead:false,mapUrl:'https://maps.google.com/?q=Kappabashi+Sampuru+Shop',lat:35.7139,lng:139.7891},
+  {id:'t74',name:'Hakone Ropeway & Owakudani Volcanic Valley',city:'Tokyo',cat:'Nature',emoji:'🚡',duration:5,cost:45,desc:'Ride cable cars over sulfur vents and eat black eggs cooked in volcanic waters.',bookAhead:false,siteUrl:'https://www.hakoneropeway.co.jp/en/',mapUrl:'https://maps.google.com/?q=Owakudani+Hakone',lat:35.2439,lng:139.0231},
+];
+
+// City defaults: which days each city covers
+const CITY_DAYS = {Tokyo:[1,2,3,4],Kyoto:[5,6,7],Osaka:[8,9,10]};
+const DAY_CITY = {};
+for(const [city,days] of Object.entries(CITY_DAYS)) days.forEach(d=>DAY_CITY[d]=city);
+
+// State
+let plan = {};      // { dayNum: [actId, ...] }
+let pendingActId = null;
+let activeCityFilter = 'All';
+let activeCatFilter = 'All';
+let chatOpen = false;
+let chatInitialized = false;
+
+// Load from localStorage
+try { const saved = localStorage.getItem('japanPlan'); if(saved) plan = JSON.parse(saved); } catch(e){}
+
+// ============================================================
+// RENDER
+// ============================================================
+function savePlan() {
+  try { localStorage.setItem('japanPlan', JSON.stringify(plan)); } catch(e){}
+}
+
+function getStartDate() {
+  const val = document.getElementById('startDate').value;
+  return val ? new Date(val+'T12:00:00') : new Date('2026-09-24T12:00:00');
+}
+
+function getDayDate(dayNum) {
+  const d = new Date(getStartDate());
+  d.setDate(d.getDate() + dayNum - 1);
+  return d;
+}
+
+function fmtDate(d) {
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric',weekday:'short'});
+}
+
+function calcTotal() {
+  let total = 0;
+  for(const [,ids] of Object.entries(plan)) {
+    ids.forEach(id => { const a = ACTIVITIES.find(x=>x.id===id); if(a) total += a.cost; });
+  }
+  return total;
+}
+
+function updateBudget() {
+  const t = calcTotal();
+  document.getElementById('navTotal').textContent = t;
+  document.getElementById('actTotal').textContent = t;
+  const base = 2735;
+  document.getElementById('grandTotal').textContent = (base + t).toLocaleString();
+}
+
+function getScheduledDaysForAct(actId) {
+  return Object.entries(plan).filter(([,ids])=>ids.includes(actId)).map(([d])=>parseInt(d));
+}
+
+const PRIORITY_IDS = ['t15', 't23', 't78', 't5', 'k8', 't76', 't77', 't75', 'o13', 'k15', 't24', 't1'];
+
+function renderCardHTML(a, isPriority = false) {
+  const days = getScheduledDaysForAct(a.id);
+  const isScheduled = days.length > 0;
+  const dayLabel = days.length ? ` · Day ${days.join(', ')}` : '';
+  return `<div class="act-card${isScheduled?' scheduled':''}" id="card-${a.id}">
+    <div class="act-top">
+      <span class="act-emoji">${a.emoji}</span>
+      <div class="act-info">
+        <div class="act-name">${a.name}</div>
+        <div class="act-tags">
+          <span class="city-tag ${a.city}">${a.city}</span>
+          <span class="cat-tag">${a.cat}</span>
+          ${isPriority ? `<span class="prio-badge">⭐ Priority</span>` : ''}
+        </div>
+      </div>
+    </div>
+    <div class="act-desc">${a.desc}</div>
+    <div class="act-meta">
+      <span class="meta-pill">⏱ ${a.duration}h</span>
+      ${a.bookAhead?`<span class="book-badge">📋 Book ahead</span>`:''}
+      ${dayLabel ? `<span class="meta-pill" style="color:#16a34a">✓ Day ${days.join(', ')}</span>` : ''}
+    </div>
+    <div class="act-bottom">
+      <button class="add-btn${isScheduled?' added':''}" onclick="openDayPicker('${a.id}')">${isScheduled?'Change Day':'Add to Day'}</button>
+    </div>
+    <div class="act-links">
+      ${a.mapUrl?`<a href="${a.mapUrl}" target="_blank" rel="noopener" class="act-link map-link">📍 Map</a>`:''}
+      ${a.siteUrl?`<a href="${a.siteUrl}" target="_blank" rel="noopener" class="act-link site-link">🌐 Official Site</a>`:''}
+      ${a.bookUrl?`<a href="${a.bookUrl}" target="_blank" rel="noopener" class="act-link book-link">🎟 Book Ticket</a>`:''}
+    </div>
+    ${a.bookAhead?`<div class="book-note">⚠️ ${a.bookNote}</div>`:''}
+  </div>`;
+}
+
+function renderPriorityGrid() {
+  const prioGrid = document.getElementById('priorityGrid');
+  if (!prioGrid) return;
+  const priorityItems = PRIORITY_IDS.map(id => ACTIVITIES.find(x => x.id === id)).filter(Boolean);
+  prioGrid.innerHTML = priorityItems.map(a => renderCardHTML(a, true)).join('');
+}
+
+function renderActivities() {
+  renderPriorityGrid();
+  const grid = document.getElementById('activityGrid');
+  const filtered = ACTIVITIES.filter(a => {
+    const cityOk = activeCityFilter === 'All' || a.city === activeCityFilter;
+    const catOk = activeCatFilter === 'All' || a.cat === activeCatFilter;
+    return cityOk && catOk;
+  });
+  grid.innerHTML = filtered.map(a => renderCardHTML(a, false)).join('') || '<p style="color:var(--ink-dim);padding:20px 0;font-size:.9rem">No activities match this filter.</p>';
+}
+
+function renderDays() {
+  const list = document.getElementById('daysList');
+  list.innerHTML = Array.from({length:10},(_,i)=>i+1).map(day => {
+    const city = DAY_CITY[day];
+    const date = getDayDate(day);
+    const ids = plan[day] || [];
+    const acts = ids.map(id=>ACTIVITIES.find(a=>a.id===id)).filter(Boolean);
+    const dayCost = acts.reduce((s,a)=>s+a.cost,0);
+    return `<div class="day-card" id="day-${day}">
+      <div class="day-header" onclick="toggleDay(${day})">
+        <span class="day-num">${day}</span>
+        <div class="day-info">
+          <div style="display:flex;align-items:center">
+            <span style="font-size:.9rem;font-weight:600">${fmtDate(date)}</span>
+            <span class="day-cityname ${city}">${city}</span>
+          </div>
+          <div class="day-summary">${acts.length === 0 ? 'Nothing planned yet' : `${acts.length} activit${acts.length===1?'y':'ies'}`}</div>
+        </div>
+        ${dayCost > 0 ? `<span class="day-cost-badge">$${dayCost}</span>` : ''}
+        <span class="day-chevron" id="chev-${day}">▾</span>
+      </div>
+      <div class="day-body" id="body-${day}">
+        ${acts.length === 0
+          ? '<p class="day-empty">No activities yet — add some from the left!</p>'
+          : acts.map(a=>`<div class="sched-act">
+              <span class="sched-emoji">${a.emoji}</span>
+              <div class="sched-info">
+                <div class="sched-name">${a.name}</div>
+                <div class="sched-detail">${a.duration}h · ${a.city}</div>
+              </div>
+              <span class="sched-cost">${a.cost===0?'Free':'$'+a.cost}</span>
+              <button class="sched-remove" onclick="removeFromDay(${day},'${a.id}')" title="Remove">✕</button>
+            </div>`).join('')
+        }
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleDay(day) {
+  const body = document.getElementById('body-'+day);
+  const chev = document.getElementById('chev-'+day);
+  const open = body.classList.toggle('open');
+  chev.textContent = open ? '▴' : '▾';
+}
+
+function renderAll() {
+  renderActivities();
+  renderDays();
+  updateBudget();
+  updateMiniMap();
+  updateEndDate();
+}
+
+function updateEndDate() {
+  const start = getStartDate();
+  const end = new Date(start);
+  end.setDate(end.getDate() + 9);
+  document.getElementById('endDateDisplay').textContent = fmtDate(end);
+}
+
+// ============================================================
+// INTERACTIONS
+// ============================================================
+function openDayPicker(actId) {
+  pendingActId = actId;
+  const act = ACTIVITIES.find(a=>a.id===actId);
+  document.getElementById('dpActName').textContent = act.name;
+  const grid = document.getElementById('dayGrid');
+  grid.innerHTML = Array.from({length:10},(_,i)=>i+1).map(day => {
+    const city = DAY_CITY[day];
+    const date = getDayDate(day);
+    const ids = plan[day] || [];
+    const alreadyHere = ids.includes(actId);
+    return `<div class="day-opt${alreadyHere?' taken':''}" onclick="addToDay(${day})">
+      <span class="d-num">${day}</span>
+      <span class="d-date">${date.toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>
+      <span class="d-city ${city}">${city}</span>
+      ${alreadyHere?'<span style="font-size:.65rem;color:var(--mint)">✓ here</span>':''}
+    </div>`;
+  }).join('');
+  document.getElementById('dayPickerOverlay').classList.add('open');
+}
+
+function closeDayPicker() {
+  document.getElementById('dayPickerOverlay').classList.remove('open');
+  pendingActId = null;
+}
+
+function addToDay(day) {
+  if(!pendingActId) return;
+  if(!plan[day]) plan[day] = [];
+  // Remove from other days first
+  for(const d in plan) {
+    plan[d] = plan[d].filter(id=>id!==pendingActId);
+  }
+  plan[day].push(pendingActId);
+  savePlan();
+  closeDayPicker();
+  renderAll();
+}
+
+function removeFromDay(day, actId) {
+  if(plan[day]) plan[day] = plan[day].filter(id=>id!==actId);
+  savePlan();
+  renderAll();
+}
+
+function resetPlan() {
+  if(!confirm('Clear all your planned days and start fresh?')) return;
+  plan = {};
+  savePlan();
+  renderAll();
+}
+
+// FILTERS
+document.getElementById('cityFilters').addEventListener('click', e => {
+  const btn = e.target.closest('[data-city]');
+  if(!btn) return;
+  activeCityFilter = btn.dataset.city;
+  document.querySelectorAll('[data-city]').forEach(b=>b.classList.toggle('active',b===btn));
+  renderActivities();
+});
+
+document.getElementById('catFilters').addEventListener('click', e => {
+  const btn = e.target.closest('[data-cat]');
+  if(!btn) return;
+  activeCatFilter = btn.dataset.cat;
+  document.querySelectorAll('[data-cat]').forEach(b=>b.classList.toggle('active',b===btn));
+  renderActivities();
+});
+
+document.getElementById('startDate').addEventListener('change', () => {
+  renderAll();
+});
+
+document.getElementById('dayPickerOverlay').addEventListener('click', e => {
+  if(e.target === document.getElementById('dayPickerOverlay')) closeDayPicker();
+});
+
+// ============================================================
+// CHATBOT
+// ============================================================
+const KB = [
+  {p:['teamlab','team lab','digital art museum'],r:`<b>teamLab Borderless</b> is an immersive digital art museum in Tokyo where entire rooms are filled with living light, sound, and movement — you literally walk inside the art. It's one of the most unique experiences in the world and absolutely worth it.<br><br>⚠️ <b>Must book ahead</b> at teamlab.art — usually 2–4 weeks out. It costs about $30/person and takes 2–3 hours. Don't miss it!`},
+  {p:['ghibli','studio ghibli','spirited away','totoro'],r:`<b>The Ghibli Museum</b> in Mitaka (western Tokyo) is a dream if you grew up with Spirited Away, My Neighbor Totoro, or any of Miyazaki's films. It's small, magical, and packed with original animation art.<br><br>⚠️ <b>Extremely hard to book</b> — tickets sell out within minutes on the 10th of each month at l-tike.com. Set a reminder! It costs ~$15/person and takes about 3 hours.`},
+  {p:['nintendo world','super nintendo','mario','universal'],r:`<b>Super Nintendo World</b> is inside Universal Studios Japan in Osaka — a fully immersive Mario theme park with a real Mario Kart ride, interactive Koopa shells to punch, and the new Donkey Kong Country area.<br><br>⚠️ Book USJ tickets + the Nintendo World Express Pass well ahead at usj.co.jp. It fills up. Budget about $80/person plus park entry. Give it 3–4 hours minimum.`},
+  {p:['fushimi inari','torii','gates','thousand gates'],r:`<b>Fushimi Inari</b> is the famous tunnel of thousands of red torii gates winding up a mountain in Kyoto — one of Japan's most iconic sights and completely free to enter. The full hike takes 2–4 hours.<br><br>💡 Go at <b>dawn or after 6pm</b> to avoid the crowds. Early morning light through the gates is magical.`},
+  {p:['daikoku','car meet','jdm'],r:`<b>Daikoku PA</b> (Parking Area) is a highway service area near Yokohama that becomes the world's greatest spontaneous car show late at night. R34 GT-Rs, RWB Porsches, LC500s, S2000s — all gathering on their own.<br><br>🚗 It's completely <b>free</b> and no planning needed. Go around <b>10pm–2am</b> for the best action. Take the train to Yokohama and taxi over.`},
+  {p:['jr pass','bullet train','shinkansen','train pass'],r:`The <b>JR Pass</b> is a rail pass that covers all of Japan's bullet trains (Shinkansen) and most JR lines — it's how you get from Tokyo to Kyoto to Osaka.<br><br>💴 A 14-day pass costs around <b>$435/person</b>. You <b>must buy it before flying to Japan</b> — it's only sold outside Japan (or at airports on arrival but pricier). The Tokyo → Kyoto bullet train takes about 2h 15min and the views are incredible — you can see Mt. Fuji from the right side.`},
+  {p:['suica','ic card','train card','tap'],r:`A <b>Suica card</b> is a rechargeable IC card for trains, buses, and convenience stores across Japan. You tap in, tap out — no buying individual tickets.<br><br>📱 The easiest way is to add it to your Apple Wallet or Google Pay before you arrive. Otherwise pick one up at any major train station for ¥1,000 (~$7) including a ¥500 deposit.`},
+  {p:['idp','international driving permit','driving permit','go kart','karting'],r:`An <b>International Driving Permit (IDP)</b> is required for both driving a car and for the street go-karting in Tokyo.<br><br>📋 Get it from <b>AAA</b> before you fly — bring your driver's license, a passport photo, and $20. Takes about 15 minutes. It's valid for 1 year. The go-kart companies will turn you away without it, so don't skip this!`},
+  {p:['ryokan','onsen','hot spring'],r:`A <b>ryokan</b> is a traditional Japanese inn — you sleep on a futon on tatami floors, wear a yukata robe, and soak in a private onsen (hot spring bath). Dinner and breakfast are included and served in your room.<br><br>✨ It's one of the most memorable nights of any Japan trip. Budget around <b>$200/person</b> including dinner and breakfast. Book several months ahead — they fill up fast. The Kyoto ryokan night on your plan is one not to miss.`},
+  {p:['capsule hotel','capsule'],r:`A <b>capsule hotel</b> is a uniquely Japanese concept — you sleep in a pod about the size of a large coffin, stacked in rows, with a curtain or screen for privacy. They're perfectly comfortable, very clean, and usually have great shared baths.<br><br>It's a fun experience to try for at least one night — they typically cost $30–50/night.`},
+  {p:['silver week','holiday week','national holiday'],r:`⚠️ <b>Silver Week is September 19–23</b> — a cluster of national holidays when millions of Japanese people travel domestically. Hotels get expensive, trains are packed, and popular spots like Fushimi Inari get insanely crowded.<br><br>Your planned arrival on September 24 <b>avoids Silver Week entirely</b> — smart move! Just don't rebook to arrive during that window.`},
+  {p:['weather','temperature','rain','typhoon','what to wear'],r:`Late September in Japan is warm and very walkable — expect highs around <b>24–26°C (75–79°F)</b>, dropping to ~18°C at night. Much more comfortable than the humid August heat.<br><br>🌀 September is technically typhoon season, but Tokyo, Kyoto and Osaka sit inland and usually just see passing rain. Pack a <b>light rain jacket</b> (not a big umbrella — crowds on covered shopping streets make those annoying). The last week of September is the sweet spot of the whole year.`},
+  {p:['pack','packing','what to bring','suitcase','luggage'],r:`Here's what actually matters for Japan:<br><br>✅ Light rain jacket (not a heavy umbrella)<br>✅ Comfortable walking shoes — you'll do 15,000+ steps a day<br>✅ Slip-on shoes — you remove them at temples, ryokans, etc.<br>✅ Cash — many places in Japan are still cash-only<br>✅ Power bank — for navigating with Google Maps all day<br>✅ IDP if you're driving or go-karting<br>✅ Adapters (Japan is Type A, same as US — you're fine!)<br>✅ Passport + printed JR Pass voucher`},
+  {p:['cash','money','yen','card','credit card','atm'],r:`Japan is <b>more cash-based</b> than most countries — many temples, small restaurants, and markets are cash-only.<br><br>💴 1 USD ≈ 145–155 JPY. Budget about ¥5,000–8,000/day for cash spending (~$35–55). <b>7-Eleven and Japan Post ATMs</b> reliably accept foreign debit/credit cards. Major credit cards work at convenience stores, chain restaurants, and hotels. Always carry at least ¥10,000 on you.`},
+  {p:['tip','tipping'],r:`🚫 <b>Do not tip in Japan.</b> It's considered rude — it implies the person needs charity, which is insulting to Japanese service culture. The price on the bill is the price. You'll get exceptional service and no tipping ever expected. It's one of the best things about traveling there.`},
+  {p:['language','japanese','speak','translate'],r:`You don't need to speak Japanese, but a few phrases go a very long way:<br><br>🙇 <b>Sumimasen</b> — Excuse me / Sorry (most useful word)<br>🙏 <b>Arigatou gozaimasu</b> — Thank you<br>🔢 <b>Ikura desu ka?</b> — How much?<br>🚻 <b>Toire wa doko desu ka?</b> — Where is the bathroom?<br><br>📱 Google Translate's camera mode reads Japanese menus instantly. Basically everyone in tourist areas can handle basic English. The Japanese are incredibly patient and helpful with foreign visitors.`},
+  {p:['budget','cost','how much','total','expensive'],r:`Here's the rough per-person budget for the trip:<br><br>✈️ Flights (DFW→Tokyo): $900–1,200<br>🚅 JR Pass (14-day): ~$435<br>🏨 Hotels (10 nights): $800–1,200<br>🍜 Food (~$50/day): ~$500<br>🎟️ Activities: varies (see your planner)<br><br>💰 <b>Total: roughly $3,000–3,500/person</b>, not counting shopping or souvenirs. The biggest variables are flights and hotels — booking early is where you save the most.`},
+  {p:['book','reserve','advance','sell out','popular'],r:`These <b>must be booked in advance</b> — they sell out:<br><br>⚠️ <b>Ghibli Museum</b> — goes in minutes on the 10th of each month<br>⚠️ <b>teamLab Borderless</b> — 2–4 weeks ahead<br>⚠️ <b>Super Nintendo World</b> Express Pass — book with USJ tickets<br>⚠️ <b>Ryokan</b> — 1–3 months ahead<br>⚠️ <b>Shibuya Sky</b> — recommended (skip the line)<br>⚠️ <b>Kaiseki dinner</b> — 2–4 weeks ahead<br>⚠️ <b>Go-karting</b> — get your IDP first<br><br>Everything else you can usually walk up to.`},
+  {p:['airport','narita','haneda','arrive','how to get'],r:`Japan has two major Tokyo airports:<br><br>🛫 <b>Narita (NRT)</b> — further out, ~1hr to central Tokyo. Take the <b>Narita Express (N'EX)</b> — covered by JR Pass!<br>🛫 <b>Haneda (HND)</b> — closer to central Tokyo, ~30min by monorail or train.<br><br>Both are clean, well-signed in English, and have easy train connections. From DFW, you'll likely fly into Narita. The N'EX deposits you right at Shinjuku or Tokyo Station — no taxi needed.`},
+  {p:['food','eat','best food','hungry','restaurant','sushi','ramen','yakitori'],r:`Japan might be the best country on Earth for food, at every price point:<br><br>🗼 <b>Tokyo</b>: Tsukiji sushi breakfast, Shinjuku ramen, Omoide Yokocho yakitori, jiggly pancakes<br>⛩️ <b>Kyoto</b>: Kaiseki, Nishiki Market snacks, Fushimi sake, matcha everything<br>🏯 <b>Osaka</b>: Dotonbori street food, takoyaki, okonomiyaki, Kuromon Market, Kobe beef day trip<br><br>💡 Rule of thumb: if there's a line, join it. Cheap ramen is often better than expensive sushi. 7-Eleven onigiri and egg salad sandwiches are legitimately delicious.`},
+  {p:['vegetarian','vegan','allergy','gluten'],r:`Japan can be tricky for dietary restrictions since <b>dashi (fish stock)</b> is in almost everything — even items labeled vegetarian. Big cities (Tokyo, Osaka) have good vegetarian/vegan options but you often need to search specifically.<br><br>📱 Apps like <b>HappyCow</b> find vegetarian restaurants. Saying "niku nashi de onegaishimasu" (without meat please) helps in restaurants. Convenience stores like 7-Eleven always have safe options.`},
+  {p:['crowds','busy','early','best time'],r:`<b>Tips for avoiding crowds:</b><br><br>⏰ Fushimi Inari: arrive before 7am or after 6pm<br>🌅 Arashiyama Bamboo: 6–7am is magical and empty<br>⛩️ Senso-ji: early morning before 8am<br>🏯 Popular temples: weekdays beat weekends<br>📅 Silver Week (Sep 19–23): avoid entirely — your Sep 24 start date is perfect<br><br>Most places are fine mid-morning — the worst crowds hit 10am–3pm.`},
+  {p:['nara','deer'],r:`<b>Nara</b> is an easy 45-minute train ride from Osaka. Hundreds of wild sika deer roam freely through Nara Park — they're semi-tame and will literally bow to you in exchange for "shika senbei" (deer crackers) sold at stalls everywhere.<br><br>🦌 Todai-ji, the massive wooden temple with a giant bronze Buddha inside, is right in the park and costs ~$6 to enter. It's a perfect half-day trip from Osaka.`},
+  {p:['kobe beef','wagyu','beef'],r:`<b>Kobe beef</b> is the real thing — A5 wagyu from cattle raised in Hyogo Prefecture. It melts like butter and tastes unlike any beef you've had.<br><br>🥩 Kobe is 30 minutes from Osaka by shinkansen (JR Pass covers it). Misono restaurant is the most famous teppanyaki spot. Budget $80–120/person for a proper lunch. Book ahead — it's worth every yen.`},
+  {p:['himeji','castle','white heron'],r:`<b>Himeji Castle</b> is widely considered Japan's most beautiful castle — a UNESCO World Heritage Site nicknamed the White Heron for its brilliant white walls. It survived WWII bombing intact.<br><br>🏯 It's about 45 minutes west of Osaka by bullet train (JR Pass covers it). Entry is $10 and the interior has 6 floors to explore. Combine it with a half day in Osaka for a full day.`},
+  {p:['baseball','game','orix'],r:`<b>Japanese baseball</b> is one of the most fun experiences on the trip that most tourists miss. The crowd energy is completely different from the US — organized chants, cheerleaders, stadium-specific songs, and everyone going absolutely wild for their team.<br><br>⚾ Orix Buffaloes play home games at Kyocera Dome in Osaka in September. Tickets are ~$30 at the gate. Check buffaloes.co.jp for the schedule.`},
+];
+
+function getBotResponse(input) {
+  const lower = input.toLowerCase().replace(/[?!.,]/g,'');
+  for(const entry of KB) {
+    if(entry.p.some(p=>lower.includes(p))) return entry.r;
+  }
+  if(lower.includes('hello')||lower.includes('hi ')||lower.includes('^hi$')) return `Hey! I'm your Japan trip assistant 🗾 I know everything about this trip — activities, booking tips, budget, food, transportation, you name it. What would you like to know?`;
+  if(lower.includes('thank')) return `You're welcome! This trip is going to be amazing. Anything else you want to know?`;
+  if(lower.includes('itinerary')||lower.includes('plan')||lower.includes('schedule')) return `Your itinerary is on the right side of the screen — 10 days with Tokyo (1–4), Kyoto (5–7), and Osaka (8–10). Add activities from the left panel and they'll show up in your schedule. What else can I help with?`;
+  return `Great question! I'm not sure about that specific thing, but you can ask Nate — he planned every detail of this trip. Try asking me about activities, booking, budget, transportation, food, or what to pack!`;
+}
+
+const SUGGESTIONS = [
+  'What needs to be booked ahead?',
+  'What is a JR Pass?',
+  "Tell me about the Ryokan night",
+  'How much should I bring in cash?',
+];
+
+function toggleChat() {
+  chatOpen = !chatOpen;
+  document.getElementById('chatPanel').classList.toggle('open', chatOpen);
+  document.getElementById('chatNotif').style.display = 'none';
+  if(chatOpen && !chatInitialized) {
+    chatInitialized = true;
+    addBotMsg(`こんにちは！ I'm your Japan trip assistant 🗾<br><br>I know all about the trip Nate planned — activities, what to book ahead, budget, how to get around, and more. What would you like to know?`);
+    renderSuggestions();
+  }
+}
+
+function addBotMsg(text) {
+  const el = document.createElement('div');
+  el.className = 'msg bot';
+  el.innerHTML = text;
+  document.getElementById('chatMessages').appendChild(el);
+  document.getElementById('chatMessages').scrollTop = 99999;
+}
+
+function addUserMsg(text) {
+  const el = document.createElement('div');
+  el.className = 'msg user';
+  el.textContent = text;
+  document.getElementById('chatMessages').appendChild(el);
+  document.getElementById('chatMessages').scrollTop = 99999;
+}
+
+function renderSuggestions() {
+  const s = document.getElementById('chatSuggestions');
+  s.innerHTML = SUGGESTIONS.map(q=>`<button class="sug-btn" onclick="useSuggestion('${q.replace(/'/g,"\\'")}')">${q}</button>`).join('');
+}
+
+function useSuggestion(q) {
+  document.getElementById('chatSuggestions').innerHTML = '';
+  addUserMsg(q);
+  setTimeout(() => { addBotMsg(getBotResponse(q)); }, 300);
+}
+
+function sendChat() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if(!text) return;
+  document.getElementById('chatSuggestions').innerHTML = '';
+  input.value = '';
+  addUserMsg(text);
+  setTimeout(() => { addBotMsg(getBotResponse(text)); }, 350);
+}
+
+// ============================================================
+// MINI MAP
+// ============================================================
+let miniMap = null;
+let miniMapMarkers = [];
+let miniMapCollapsed = false;
+
+function initMiniMap() {
+  miniMap = L.map('miniMap', {
+    zoom: 6,
+    center: [35.5, 136.5],
+    zoomControl: false,
+    attributionControl: false,
+    scrollWheelZoom: false,
+    dragging: true,
+    doubleClickZoom: false
+  });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:18}).addTo(miniMap);
+}
+
+function updateMiniMap() {
+  // Collect all planned activities with coordinates
+  const planned = [];
+  for (const [day, ids] of Object.entries(plan)) {
+    ids.forEach(id => {
+      const a = ACTIVITIES.find(x => x.id === id);
+      if (a && a.lat && a.lng) planned.push({a, day: parseInt(day)});
+    });
+  }
+
+  const panel = document.getElementById('miniMapPanel');
+  const countEl = document.getElementById('mmCount');
+
+  if (planned.length === 0) {
+    panel.style.display = 'none';
+    return;
+  }
+
+  panel.style.display = 'block';
+  countEl.textContent = planned.length;
+
+  if (!miniMap) initMiniMap();
+
+  // Clear old markers
+  miniMapMarkers.forEach(m => miniMap.removeLayer(m));
+  miniMapMarkers = [];
+
+  const bounds = [];
+  const COLORS = {Tokyo:'#355074', Kyoto:'#48624b', Osaka:'#6d4b66'};
+
+  planned.forEach(({a, day}) => {
+    const color = COLORS[a.city] || '#888';
+    const icon = L.divIcon({
+      className: '',
+      html: `<div style="position:relative"><div style="width:12px;height:12px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.4)"></div><div style="position:absolute;top:-16px;left:50%;transform:translateX(-50%);background:${color};color:#fff;font-size:9px;font-weight:700;padding:1px 4px;border-radius:8px;white-space:nowrap">${day}</div></div>`,
+      iconSize: [12, 12],
+      iconAnchor: [6, 6]
+    });
+    const marker = L.marker([a.lat, a.lng], {icon}).addTo(miniMap);
+    marker.bindPopup(`<b>${a.emoji} ${a.name}</b><br><span style="font-size:.78rem;color:#555">Day ${day} · ${a.city}</span>`);
+    miniMapMarkers.push(marker);
+    bounds.push([a.lat, a.lng]);
+  });
+
+  if (bounds.length > 0) {
+    miniMap.fitBounds(bounds, {padding: [20, 20], maxZoom: 10});
+    setTimeout(() => miniMap.invalidateSize(), 100);
+  }
+}
+
+function toggleMiniMap() {
+  miniMapCollapsed = !miniMapCollapsed;
+  document.getElementById('miniMap').classList.toggle('collapsed', miniMapCollapsed);
+  document.getElementById('mmLegend').classList.toggle('collapsed', miniMapCollapsed);
+  document.getElementById('mmToggleBtn').textContent = miniMapCollapsed ? '+' : '−';
+  if (!miniMapCollapsed && miniMap) setTimeout(() => miniMap.invalidateSize(), 150);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+renderAll();
+
+// Show notif badge initially
+setTimeout(() => {
+  if(!chatOpen) document.getElementById('chatNotif').style.display = 'block';
+}, 2000);
+</script>
+</body>
+</html>

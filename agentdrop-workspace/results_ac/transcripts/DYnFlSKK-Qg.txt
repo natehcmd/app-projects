@@ -1,0 +1,25 @@
+Should you be using cloud chat, cloud cowork, or cloud code?
+Well, it really depends on what your goal is, but to get you started,
+if you want to set up an automated task.
+For example, every morning at 8am,
+cloud pools all of your emails from the previous day and condenses them into a summary,
+then you're going to use cloud cowork.
+Specifically, the scheduled tasks feature which lets you set up daily automations.
+If you need to write a document, whether it's a report, a proposal, or an email,
+and you specifically need it to be in your writing style and have your own personal touch to it,
+then you're going to use cloud chat because you can create custom writing styles and
+import documents that show cloud exactly how you write.
+If you need to perform a multi-step process.
+For example, maybe you need to search the web about a specific idea,
+summarize your findings and then turn that document into a presentation.
+The best tool for this is co-work.
+This is because co-work has a unique feature which allows it to perform
+sequential thinking when performing a task.
+If you want to build websites or apps, then you're going to use cloud code,
+which has a tab called Artifacts, which will help you brainstorm ideas and write lines of code
+to get you started on a working prototype.
+And if you want to do deep research on a specific topic, then use chat because it has a
+feature designed specifically for that.
+And these are just five of infinite use cases that there are for cloud.
+So if you want to document mapping out how to use the top 20, drop me a follow and comment the word
+help.

@@ -1,0 +1,107 @@
+[
+  {
+    "name": "CS50: Introduction to Computer Science (Harvard/edX)",
+    "url": "https://cs50.harvard.edu/x/",
+    "category": "fundamentals",
+    "cost": "free",
+    "note": "The single most-recommended CS intro course online. Great for building real fundamentals before/alongside a college curriculum."
+  },
+  {
+    "name": "freeCodeCamp",
+    "url": "https://www.freecodecamp.org/",
+    "category": "fundamentals",
+    "cost": "free",
+    "note": "Full curriculum with certifications in web dev, Python, data analysis, and more. Great for building projects while learning."
+  },
+  {
+    "name": "The Odin Project",
+    "url": "https://www.theodinproject.com/",
+    "category": "web-dev",
+    "cost": "free",
+    "note": "Project-based full-stack web development path (HTML/CSS/JS, Ruby or Node)."
+  },
+  {
+    "name": "LeetCode",
+    "url": "https://leetcode.com/",
+    "category": "interview-prep",
+    "cost": "free tier + paid",
+    "note": "Practice data structures & algorithms questions used in technical interviews."
+  },
+  {
+    "name": "NeetCode",
+    "url": "https://neetcode.io/",
+    "category": "interview-prep",
+    "cost": "free + paid",
+    "note": "Curated, structured roadmap through the most important LeetCode-style problems with video explanations."
+  },
+  {
+    "name": "Visualgo",
+    "url": "https://visualgo.net/",
+    "category": "fundamentals",
+    "cost": "free",
+    "note": "Visualizations of data structures and algorithms — very useful for building intuition."
+  },
+  {
+    "name": "MIT OpenCourseWare",
+    "url": "https://ocw.mit.edu/",
+    "category": "fundamentals",
+    "cost": "free",
+    "note": "Full MIT course materials, including 6.006 (Algorithms) and 6.042 (Math for CS)."
+  },
+  {
+    "name": "Git & GitHub docs",
+    "url": "https://docs.github.com/en/get-started",
+    "category": "tools",
+    "cost": "free",
+    "note": "Version control is not optional. Learn it early — most students skip this and regret it."
+  },
+  {
+    "name": "Missing Semester (MIT)",
+    "url": "https://missing.csail.mit.edu/",
+    "category": "tools",
+    "cost": "free",
+    "note": "The practical 'how to actually use a computer' class covering shell, git, debugging, and more — the stuff CS classes assume you already know."
+  },
+  {
+    "name": "roadmap.sh",
+    "url": "https://roadmap.sh/",
+    "category": "career",
+    "cost": "free",
+    "note": "Community-maintained learning roadmaps for frontend, backend, DevOps, and more."
+  },
+  {
+    "name": "Teach Yourself CS",
+    "url": "https://teachyourselfcs.com/",
+    "category": "fundamentals",
+    "cost": "free",
+    "note": "Opinionated reading list covering the core topics a CS degree is supposed to give you, with book/course recommendations per topic."
+  },
+  {
+    "name": "GitHub Student Developer Pack",
+    "url": "https://education.github.com/pack",
+    "category": "career",
+    "cost": "free (student verification required)",
+    "note": "Free access to dozens of developer tools, cloud credits, and services while you're a student."
+  },
+  {
+    "name": "Exercism",
+    "url": "https://exercism.org/",
+    "category": "fundamentals",
+    "cost": "free",
+    "note": "Language-specific coding exercises with mentor feedback across 60+ languages."
+  },
+  {
+    "name": "Pramp / interviewing.io",
+    "url": "https://www.interviewing.io/",
+    "category": "interview-prep",
+    "cost": "free tier",
+    "note": "Practice live mock technical interviews with real engineers."
+  },
+  {
+    "name": "Overleaf",
+    "url": "https://www.overleaf.com/",
+    "category": "tools",
+    "cost": "free tier",
+    "note": "Online LaTeX editor — useful for CS/math coursework and papers without installing a LaTeX toolchain."
+  }
+]

@@ -1,0 +1,29 @@
+The longer you run a cloud code session,
+the number it gets,
+and using Compact is not enough to fix it.
+Compacting still drags the old conversation forward,
+meaning it brings the dead ends,
+the messy debugging,
+and all the bad assumptions in the next conversation.
+I call this context rot,
+and it's killing your code.
+So what you want instead is a full handoff.
+So before you end a session,
+tell Cloud to create a handoff.md file,
+and have it include six things.
+The goal, the current state,
+active files that's working on,
+any changes it made,
+a list of failed attempts and specific next steps
+that it was focused on.
+Then run the forward slash clear command
+or open a new session,
+and tell it to read the handoff doc
+and continue from where it left off.
+And you want to use this
+when you're stepping away for hours,
+or when Cloud keeps making the same broken mistake on a loop.
+Now I made a short guide that tells you exactly how to do
+this and how to get started.
+Comment clear below,
+and I'll send it right over.

@@ -1,0 +1,10 @@
+Okay, Jarvis, are you up?
+At your service.
+Take a look at my desk.
+Toggling the desk view.
+What up? What am I holding right now?
+You are holding a small circuit board, sir.
+It looks like a single board computer, or a similar micro controller module.
+That's right, it's a Raspberry Pi 4.
+A classic choice.
+What are you planning to build with it?

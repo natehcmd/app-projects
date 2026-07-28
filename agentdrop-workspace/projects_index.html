@@ -1,0 +1,193 @@
+<title>Everything We've Built</title>
+<style>
+:root {
+  --bg: #0b0d12; --bg2: #11141c; --panel: #14171f;
+  --ink: #e8eaf2; --ink-dim: #9aa0b4; --ink-faint: #5c6275;
+  --line: rgba(255,255,255,0.08);
+  --mint: #9fe8c9; --lav: #c3b8f5; --peach: #f5c9a8; --rose: #f2a9c4; --sky: #a8d8f5;
+  --glass: rgba(255,255,255,0.045); --glass-brd: rgba(255,255,255,0.09);
+}
+:root[data-theme="light"] {
+  --bg: #f4f5f8; --bg2: #ffffff; --panel: #ffffff;
+  --ink: #1c1f2a; --ink-dim: #565d70; --ink-faint: #8a90a3;
+  --line: rgba(20,22,30,0.09);
+  --mint: #1a8f66; --lav: #6e5bc4; --peach: #b96a2e; --rose: #c14670; --sky: #2478b0;
+  --glass: rgba(20,22,30,0.03); --glass-brd: rgba(20,22,30,0.08);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f4f5f8; --bg2: #ffffff; --panel: #ffffff;
+    --ink: #1c1f2a; --ink-dim: #565d70; --ink-faint: #8a90a3;
+    --line: rgba(20,22,30,0.09);
+    --mint: #1a8f66; --lav: #6e5bc4; --peach: #b96a2e; --rose: #c14670; --sky: #2478b0;
+    --glass: rgba(20,22,30,0.03); --glass-brd: rgba(20,22,30,0.08);
+  }
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: -apple-system, "SF Pro Text", "Inter", system-ui, sans-serif;
+  margin: 0; padding: 32px 28px 60px; -webkit-font-smoothing: antialiased;
+}
+.mono { font-family: "SF Mono", ui-monospace, Menlo, monospace; font-variant-numeric: tabular-nums; }
+.wrap { max-width: 1180px; margin: 0 auto; }
+h1 { font-size: 26px; font-weight: 650; letter-spacing: -0.01em; margin: 0 0 4px; text-wrap: balance; }
+.sub { color: var(--ink-dim); font-size: 14px; line-height: 1.5; max-width: 760px; margin-bottom: 26px; }
+h2.section {
+  font-size: 15px; font-weight: 700; margin: 34px 0 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+h2.section .count {
+  font-size: 11px; font-weight: 600; color: var(--ink-dim);
+  background: var(--glass); border: 1px solid var(--glass-brd);
+  border-radius: 999px; padding: 2px 9px;
+}
+.section-note { color: var(--ink-faint); font-size: 12.5px; margin: -6px 0 14px; }
+
+/* app cards */
+.apps-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px,1fr)); gap: 12px; }
+.app-card {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+  padding: 14px 16px;
+}
+.app-card .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.app-card .name { font-size: 14.5px; font-weight: 650; }
+.app-card .desc { color: var(--ink-dim); font-size: 12.5px; margin: 4px 0 8px; line-height: 1.45; }
+.app-card .fix { color: var(--ink-faint); font-size: 11.5px; border-top: 1px solid var(--line); padding-top: 7px; margin-top: 2px; }
+.status { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.status.live { background: rgba(159,232,201,0.16); color: var(--mint); }
+.status.fixed { background: rgba(168,216,245,0.16); color: var(--sky); }
+
+/* mode chips */
+.modes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px,1fr)); gap: 8px; }
+.mode-chip {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+  padding: 9px 12px; display: flex; align-items: center; gap: 8px; font-size: 12.5px;
+}
+.mode-chip .num { font-family: "SF Mono", ui-monospace, Menlo, monospace; color: var(--ink-faint); font-size: 11px; width: 18px; }
+.mode-chip .label { font-weight: 600; }
+.mode-chip .d { color: var(--ink-dim); font-size: 11px; }
+
+/* table */
+.table-wrap { border: 1px solid var(--line); border-radius: 12px; overflow: auto; background: var(--panel); }
+table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+thead th {
+  position: sticky; top: 0; background: var(--bg2); text-align: left; padding: 9px 10px;
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-dim);
+  border-bottom: 1px solid var(--line); white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid var(--line); }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--glass); }
+td { padding: 8px 10px; vertical-align: top; }
+td.id { color: var(--ink-faint); white-space: nowrap; font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 11px; }
+td.name { font-weight: 600; white-space: nowrap; }
+td.desc { color: var(--ink-dim); }
+
+/* install list */
+.install-list { display: flex; flex-direction: column; gap: 6px; }
+.install-row {
+  display: flex; justify-content: space-between; gap: 10px; align-items: baseline;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px;
+}
+.install-row .n { font-weight: 650; font-size: 13px; }
+.install-row .w { color: var(--ink-faint); font-size: 11.5px; font-family: "SF Mono", ui-monospace, Menlo, monospace; }
+
+footer { color: var(--ink-faint); font-size: 11.5px; margin-top: 30px; }
+</style>
+
+<div class="wrap">
+  <h1>Everything We've Built</h1>
+  <div class="sub">Full index of every app, service, tool, and system touched this session — native apps rebuilt and
+    fixed, background services restored, 37 tools reverse-engineered from saved reels, real third-party installs,
+    and the Mac Mode system. Generated 2026-07-21.</div>
+
+  <h2 class="section">Native macOS Apps <span class="count">7</span></h2>
+  <div class="apps-grid" id="apps"></div>
+
+  <h2 class="section">Background Services <span class="count">3</span></h2>
+  <div class="section-note">Persistent, launchd-managed, survive reboot — two of these were completely dead with no
+    persistence at all until today.</div>
+  <div class="apps-grid" id="services"></div>
+
+  <h2 class="section">Mac Mode System <span class="count">14 modes</span></h2>
+  <div class="section-note"><code>~/.modes/</code> — <code>mode &lt;n&gt;</code> or <code>mode &lt;name&gt;</code>. Modes 1-3 (performance) untouched; old-Mac modes 4-6 removed; 7-14 (look &amp; feel) added new.</div>
+  <div class="modes-grid" id="modes"></div>
+
+  <h2 class="section">Reel-Derived Tools <span class="count">37</span></h2>
+  <div class="section-note">Real, working tools reverse-engineered from AgentDrop reel source material — QA'd, bug-fixed, and live in Mission Control's "Reel Tools" tab.</div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Shortcode</th><th>Name</th><th>What it does</th></tr></thead>
+      <tbody id="tools_body"></tbody>
+    </table>
+  </div>
+
+  <h2 class="section">Real Third-Party Installs <span class="count">from reel research</span></h2>
+  <div class="section-note">Verified legitimate (organic star growth, source inspected, no malware) before installing — several sketchy lookalikes were investigated and explicitly declined instead.</div>
+  <div class="install-list" id="installs"></div>
+
+  <footer>Also audited and left alone: gmail-sorter-v5.2, jcode, ruflo (CLIs working as designed) · legacy Electron
+    "hands-ai" (superseded by hands-ai-mac, correctly dormant) · apps-and-skills (56 fake stub "skills" removed
+    earlier this session).</footer>
+</div>
+
+<script>
+const apps = [
+  {name:"AgentDrop", desc:"Drop a video/file/link, tell it what you want, a Claude Code agent does the job.", fix:"Fixed duplicate Theme/LibraryView code, dead files outside the build target, added real session-resume; output buffer now capped at 200K chars.", status:"live"},
+  {name:"Hands AI", desc:"Native voice/tool assistant with hardware + software control.", fix:"Install was a corrupted 0-byte file — completely broken until today. Also fixed a stats sampler blocking the main thread every second.", status:"fixed"},
+  {name:"Net Worth", desc:"Personal finance tracker — assets, liabilities, budget, CSV import.", fix:"Installed binary was stale (predated last source commit). CSV import ran on the main thread — now async.", status:"fixed"},
+  {name:"Unified OS", desc:"Combines Hands AI's source (via live path reference, not a copy) with its own shell.", fix:"Rebuilt fresh — automatically inherits every Hands AI fix since it shares the same files on disk.", status:"live"},
+  {name:"MyApps", desc:"The launcher for everything on this list — App Store-style browser for all your apps/projects/skills.", fix:"Full redesign: sidebar nav, featured row, real macOS icons (not generic glyphs), detail sheet. Fixed icon re-fetch on every render and a main-thread directory scan.", status:"fixed"},
+  {name:"Mission Control (app)", desc:"Native WKWebView wrapper around the Mission Control dashboard.", fix:"Found a stale duplicate stuck running as an orphaned login item for 21+ hours — killed it, rebuilt, redeployed.", status:"fixed"},
+  {name:"FileGraph", desc:"Codebase relationship visualizer — 2D/3D graph views.", fix:"Installed with a broken nested .app/.app structure and a completely dead backend with zero persistence — effectively non-functional until today.", status:"fixed"},
+];
+
+const services = [
+  {name:"Mission Control server", desc:"FastAPI dashboard — reels, tools, Learning Mode, flows, swarm, terminal. localhost:8450.", fix:"Was serving yesterday's code all day (never restarted after edits) — the biggest single workflow break found. Also fixed an unbounded job-tracker memory leak.", status:"fixed"},
+  {name:"FileGraph server", desc:"Backend for the FileGraph app. localhost:8437.", fix:"Was not running at all, no launchd service existed. Created one from scratch.", status:"fixed"},
+  {name:"Agent Deck", desc:"Terminal/agent tracker with live PTYs. localhost:8444.", fix:"Same as FileGraph — dead, no persistence. Created a proper launchd service.", status:"fixed"},
+];
+
+const modes = [
+  [1,"performance","🔴 Max power, DND on"],[2,"balanced","🔵 Full visuals, everyday"],[3,"battery","🟡 Low power"],
+  [7,"coding","🟣 Dark, VS Code + Terminal"],[8,"design","🌸 Light, big magnified dock"],[9,"dark","🌑 Just flips dark mode"],
+  [10,"eyecandy","✨ Light, full polish"],[11,"darkeyecandy","🌌 Dark, full polish"],
+  [12,"purelight","⬜ Light, flat/basic"],[13,"puredark","⬛ Dark, flat/basic"],[14,"presentation","🎤 Screen-share ready"],
+];
+
+const installs = [
+  {n:"skills (npm)", w:"Vercel Labs, maintainer rauchg — global CLI"},
+  {n:"ruflo (npm)", w:"ruvnet/claude-flow — passed star-growth check"},
+  {n:"jcode", w:"Built from source, 9,562★/6.5mo — organic curve"},
+  {n:"Camoufox + Hyperframes", w:"Scoped venv + global npm"},
+  {n:"claude-cookbooks + anthropic-courses", w:"Official Anthropic repos → ~/Learning/"},
+];
+
+function esc(s){ return (s||"").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+document.getElementById("apps").innerHTML = apps.map(a => `
+  <div class="app-card">
+    <div class="top"><div class="name">${esc(a.name)}</div><span class="status ${a.status}">${a.status === "fixed" ? "Fixed today" : "Verified live"}</span></div>
+    <div class="desc">${esc(a.desc)}</div>
+    <div class="fix">${esc(a.fix)}</div>
+  </div>`).join("");
+
+document.getElementById("services").innerHTML = services.map(a => `
+  <div class="app-card">
+    <div class="top"><div class="name">${esc(a.name)}</div><span class="status ${a.status}">Fixed today</span></div>
+    <div class="desc">${esc(a.desc)}</div>
+    <div class="fix">${esc(a.fix)}</div>
+  </div>`).join("");
+
+document.getElementById("modes").innerHTML = modes.map(([n,name,d]) => `
+  <div class="mode-chip"><span class="num mono">${n}</span><span class="label">${esc(name)}</span><span class="d">${esc(d)}</span></div>`).join("");
+
+document.getElementById("installs").innerHTML = installs.map(i => `
+  <div class="install-row"><span class="n">${esc(i.n)}</span><span class="w">${esc(i.w)}</span></div>`).join("");
+
+fetch("/tools_data.json").catch(()=>{});
+const TOOLS = [{"id": "Daa8fy8PKC1", "name": "CS Resources CLI", "script": "resources_cli.py", "desc": "Curated offline list of real CS learning resources.", "usage": "python3 resources_cli.py --list"}, {"id": "DaagbUMP8Tg", "name": "Claude Code Setup Advisor", "script": "scan_setup.py", "desc": "Scans a repo and suggests hooks/skills/subagents/MCP servers to add.", "usage": "python3 scan_setup.py <path-to-repo>"}, {"id": "DactwNnswpk", "name": "Skill Scanner", "script": "skill_scanner.py", "desc": "Static security scanner for downloaded Claude Skills (curl-pipe-to-shell, exfil, persistence detection).", "usage": "python3 skill_scanner.py <path-to-skill-dir>"}, {"id": "DadvdvitVke", "name": "Codemap", "script": "codemap.py", "desc": "Dependency-free codebase visualizer \u2014 HTML graph + JSON of imports/definitions.", "usage": "python3 codemap.py <path-to-repo>"}, {"id": "Dae5fOUOphe", "name": "Graphify", "script": "graphify.py", "desc": "Codebase knowledge-graph CLI \u2014 imports/definitions as JSON + Markdown index.", "usage": "python3 graphify.py <path-to-repo>"}, {"id": "DafiQ5iPlC7", "name": "Design System Extractor", "script": "design_extract.py", "desc": "Extracts colors/fonts/spacing tokens from a codebase into a design system doc.", "usage": "python3 design_extract.py <path-to-repo>"}, {"id": "Dai5Uq0COe1", "name": "DESIGN.md Scaffolder", "script": "init_design_system.py", "desc": "Generates a starter DESIGN.md for a new project.", "usage": "python3 init_design_system.py <path-to-repo>"}, {"id": "Dalkk16Sy81", "name": "AI Assembly Line", "script": "assembly_line.py", "desc": "Spec -> draft -> mass-produce -> QA gate pipeline pattern.", "usage": "python3 assembly_line.py --help"}, {"id": "DaNjtbcFSLE", "name": "Behavioral Skills CLAUDE.md", "script": "install.py", "desc": "Installs a behavioral-skills CLAUDE.md template into a project.", "usage": "python3 install.py <path-to-repo>"}, {"id": "DappXCcvuE3", "name": "Animated UI Component Finder", "script": "finder.py", "desc": "Finds animated UI components across a frontend codebase.", "usage": "python3 finder.py <path-to-repo>"}, {"id": "DarPBb4sxlg", "name": "Forge Loop", "script": "forge_loop.py", "desc": "Self-correction loop pattern for iterative code generation.", "usage": "python3 forge_loop.py --help"}, {"id": "DaSlpSjPVe-", "name": "Session Handoff", "script": "handoff.py", "desc": "Writes a session handoff doc for Claude Code to avoid context rot.", "usage": "python3 handoff.py --help"}, {"id": "DaSwegFCZO7", "name": "skillkit", "script": "skillkit.py", "desc": "Scaffold and lint Claude Code Skills.", "usage": "python3 skillkit.py --help"}, {"id": "DaTUI9xChIR", "name": "Jarvis Command Assistant", "script": "jarvis.py", "desc": "Voice/text command assistant scaffold.", "usage": "python3 jarvis.py --help"}, {"id": "DaWVAIrh_EB", "name": "Bond Yield Calculator", "script": "bond_calculator.py", "desc": "Computes bond yield-to-maturity and related metrics.", "usage": "python3 bond_calculator.py --help"}, {"id": "dm_32917943269963244995258185722888192", "name": "Idea Council", "script": "council.py", "desc": "Runs multiple perspectives/personas over an idea for critique.", "usage": "python3 council.py --help"}, {"id": "dm_32917944601702137096864179318423552", "name": "Target Job Project Builder", "script": "target_job_project_builder.py", "desc": "Suggests a portfolio project tailored to a target job description.", "usage": "python3 target_job_project_builder.py --help"}, {"id": "DWwLhCEAtV_", "name": "vibecheck", "script": "vibecheck.py", "desc": "Quick codebase health/vibe check.", "usage": "python3 vibecheck.py <path-to-repo>"}, {"id": "DY_SoPGKv2A", "name": "Cost-Routed Multi-Agent Orchestrator", "script": "orchestrator.py", "desc": "Multi-agent Claude workflow with cost-based model routing.", "usage": "python3 orchestrator.py --help"}, {"id": "DYaA7dnxfUi", "name": "Student Software Perks Directory", "script": "student_perks.py", "desc": "Offline directory of real student software discounts.", "usage": "python3 student_perks.py --list"}, {"id": "DYkjSXcA45p", "name": "App Stage Advisor", "script": "app_stage_advisor.py", "desc": "Suggests next steps based on what stage a project/app is at.", "usage": "python3 app_stage_advisor.py --help"}, {"id": "DYnFlSKK-Qg", "name": "Mode Picker", "script": "pick_mode.py", "desc": "Chat vs. Cowork vs. Code mode picker for a given task description.", "usage": "python3 pick_mode.py --help"}, {"id": "DYNm5GcSswI", "name": "agent-guard", "script": "guard.py", "desc": "Guards agentic tool calls against risky actions before they run.", "usage": "python3 guard.py --help"}, {"id": "DYQu6P0KOeL", "name": "cost-router", "script": "router.py", "desc": "Routes a prompt to the cheapest capable model given task complexity.", "usage": "python3 router.py --help"}, {"id": "DYXFtTFsbLt", "name": "proxy.py", "script": "proxy.py", "desc": "Lightweight local proxy utility.", "usage": "python3 proxy.py --help"}, {"id": "DZdkrPthOoM", "name": "scan.py", "script": "scan.py", "desc": "Scanner utility.", "usage": "python3 scan.py --help"}, {"id": "DZDksUcipwZ", "name": "skill_audit.py", "script": "skill_audit.py", "desc": "Safety-checks a Claude Agent Skill before you install it.", "usage": "python3 skill_audit.py <path-to-skill-dir>"}, {"id": "DZe-GLFy9DW", "name": "Second Brain", "script": "brain.py", "desc": "Relational (not backlink-based) personal knowledge base.", "usage": "python3 brain.py --help"}, {"id": "DZLHHJuOPVs", "name": "hybrid_rag.py", "script": "hybrid_rag.py", "desc": "Hybrid (keyword + embedding) retrieval over local documents.", "usage": "python3 hybrid_rag.py --help"}, {"id": "DZow139P5Wd", "name": "slop_check.py", "script": "slop_check.py", "desc": "Flags likely AI-generated 'slop' patterns in a codebase.", "usage": "python3 slop_check.py <path-to-repo>"}, {"id": "DZpeo9rId8j", "name": "find_skills.py", "script": "find_skills.py", "desc": "Finds installed Claude Skills across common locations.", "usage": "python3 find_skills.py"}, {"id": "DZY4CWVPiXl", "name": "Clap Trigger", "script": "clap_trigger.py", "desc": "Double-clap microphone trigger that launches a configured command.", "usage": "python3 clap_trigger.py --command '<cmd>'"}, {"id": "DYSUqcsuGX9", "name": "Instagram Saves -> Notion Sync", "script": "notion_saves_sync.py", "desc": "Syncs Instagram saves into a Notion database via the official Notion API.", "usage": "python3 notion_saves_sync.py --dry-run"}, {"id": "DZ5WrbDNrSZ", "name": "Resume Optimizer", "script": "resume_optimizer.py", "desc": "Runs a 3-prompt resume-vs-job-description optimization sequence via the local claude CLI.", "usage": "python3 resume_optimizer.py --resume resume.txt --job job.txt"}, {"id": "DX5MzljR0n7", "name": "Free Certifications Directory", "script": "certs_directory.py", "desc": "Offline directory of verified real, free student tech certifications.", "usage": "python3 certs_directory.py"}, {"id": "DZqg7QoMKI4", "name": "Prompt Macro Expander", "script": "prompt_macros.py", "desc": "Expands 13 named Claude prompt-prefix macros (/critique, /godmode, etc).", "usage": "python3 prompt_macros.py expand /critique \"review this function\""}, {"id": "DZsq1Ervqk7", "name": "Vibe-Coding Prompt Library", "script": "prompts.py", "desc": "Three verbatim vibe-coding prompts extracted from on-screen video text.", "usage": "python3 prompts.py 1"}];
+document.getElementById("tools_body").innerHTML = TOOLS.map(t => `
+  <tr><td class="id">${esc(t.id)}</td><td class="name">${esc(t.name)}</td><td class="desc">${esc(t.desc)}</td></tr>`).join("");
+</script>

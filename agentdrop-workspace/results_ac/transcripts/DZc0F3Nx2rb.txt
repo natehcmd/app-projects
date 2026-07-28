@@ -1,0 +1,9 @@
+I got this whole Jarvis setup running with a Mac Mini and Hermes agent.
+The Mac Mini is the home base. This is where everything is hosted.
+And Hermes is the agentic harness that lets Jarvis connect to tools,
+remember context, and actually do work. Then I'm using separate Hermes profiles for all my
+sub agents. Each one has its own instructions, skills, memory, and knowledge base,
+so they're not all pulling from the same generic setup. All of them are connected to Slack,
+telegram, eye message, and voice, so I can talk to my agents from pretty much anywhere.
+And the part that makes it feel like Jarvis is the UI invoice. I built the UI with codecs,
+and trained Jarvis's voice using 11 labs so he can respond back to me out loud.

@@ -1,0 +1,29 @@
+WEBVTT
+
+00:00.000 --> 00:03.280
+I wish someone would have told me this sooner, you can now run cloud code for free.
+
+00:03.280 --> 00:06.480
+Step 1, go to the skitab repo, install your V and this proxy.
+
+00:06.480 --> 00:09.280
+Then go to build.nv.com and get your API key.
+
+00:09.280 --> 00:11.920
+Nvidia gives you 40 lm calls per minute for free.
+
+00:11.920 --> 00:13.840
+Then go ahead and open two terminals.
+
+00:13.840 --> 00:16.560
+Configure the proxy in one and plot code in the other.
+
+00:16.560 --> 00:18.240
+It will allow and you got cloud code for free.
+
+00:18.240 --> 00:21.200
+I put together a free setup guide, comment in video and I will share it with you.
+
+00:21.200 --> 00:22.160
+Follow for more tips.
+

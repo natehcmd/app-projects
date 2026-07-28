@@ -1,0 +1,74 @@
+[
+  {
+    "name": "UIverse",
+    "url": "https://uiverse.io",
+    "tags": ["buttons", "cards", "loaders", "checkboxes", "toggles", "css", "tailwind", "free", "copy-paste"],
+    "description": "Huge open-source library of animated CSS/Tailwind UI elements (buttons, loaders, cards, switches) made by the community. Copy-paste HTML/CSS/Tailwind snippets, no build step required."
+  },
+  {
+    "name": "Aceternity UI",
+    "url": "https://ui.aceternity.com",
+    "tags": ["react", "next.js", "tailwind", "framer-motion", "hero-sections", "cards", "backgrounds", "free"],
+    "description": "Copy-paste React + Tailwind + Framer Motion components with heavy animation: animated hero sections, glowing cards, background beams, text reveals. Popular for landing pages."
+  },
+  {
+    "name": "Magic UI",
+    "url": "https://magicui.design",
+    "tags": ["react", "next.js", "tailwind", "framer-motion", "marketing", "free", "shadcn"],
+    "description": "50+ animated, open-source components built for marketing/landing pages, designed to pair with shadcn/ui. Includes marquees, particles, animated beams, dock menus."
+  },
+  {
+    "name": "HyperUI",
+    "url": "https://www.hyperui.dev",
+    "tags": ["tailwind", "marketing", "application-ui", "ecommerce", "free", "copy-paste"],
+    "description": "Free, open-source Tailwind CSS component library covering marketing and application UI; not all animated but a solid base for building animated variants on top of."
+  },
+  {
+    "name": "Animista",
+    "url": "https://animista.net",
+    "tags": ["css-animation", "keyframes", "generator", "free"],
+    "description": "Interactive CSS animation generator — pick an effect (entrance, exit, attention seekers, background), tweak timing/easing on sliders, and export ready-made @keyframes CSS."
+  },
+  {
+    "name": "Framer Motion Examples (Motion.dev)",
+    "url": "https://motion.dev",
+    "tags": ["react", "javascript", "vue", "framer-motion", "docs", "examples", "gestures"],
+    "description": "Official docs/examples for Motion (formerly Framer Motion), the most widely used animation library for React/JS. Great source of real animated component patterns and code."
+  },
+  {
+    "name": "React Bits",
+    "url": "https://www.reactbits.dev",
+    "tags": ["react", "tailwind", "gsap", "framer-motion", "text-animation", "backgrounds", "free"],
+    "description": "Animated React components (text effects, backgrounds, buttons, loaders) with plain CSS, Tailwind, or Framer Motion/GSAP variants — pick the stack you want and copy the code."
+  },
+  {
+    "name": "Tailwind CSS Buttons",
+    "url": "https://www.tailwind-buttons.com",
+    "tags": ["tailwind", "buttons", "hover-effects", "css", "free"],
+    "description": "Focused collection of animated/hover-effect buttons built purely in Tailwind CSS classes, easy to copy into any Tailwind project."
+  },
+  {
+    "name": "Cuberto (Awwwards-style inspiration)",
+    "url": "https://cuberto.com/work",
+    "tags": ["inspiration", "gsap", "webgl", "agency", "high-end"],
+    "description": "Agency portfolio full of award-winning, heavily-animated site builds — not copy-paste components, but excellent reference for what's achievable with GSAP/WebGL-driven UI motion."
+  },
+  {
+    "name": "shadcn/ui",
+    "url": "https://ui.shadcn.com",
+    "tags": ["react", "tailwind", "radix", "accessible", "free", "copy-paste"],
+    "description": "Not animation-first, but the de-facto base component set (accordion, dialog, tooltip) that most animated component libraries above (Magic UI, Aceternity) are built to extend."
+  },
+  {
+    "name": "Codrops (Tympanus)",
+    "url": "https://tympanus.net/codrops",
+    "tags": ["tutorials", "gsap", "webgl", "three.js", "css", "advanced"],
+    "description": "Long-running design/dev blog with in-depth, source-included tutorials for advanced animated UI — page transitions, WebGL effects, scroll-driven interactions."
+  },
+  {
+    "name": "Lottie Files",
+    "url": "https://lottiefiles.com",
+    "tags": ["lottie", "after-effects", "vector-animation", "icons", "free-and-paid"],
+    "description": "Marketplace/library of lightweight vector animations (Lottie JSON) exported from After Effects — drop-in animated icons, loaders, and illustrations for any web/app stack."
+  }
+]

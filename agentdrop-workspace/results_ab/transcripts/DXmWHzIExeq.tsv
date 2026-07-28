@@ -1,0 +1,10 @@
+start	end	text
+0	3280	I wish someone would have told me this sooner, you can now run cloud code for free.
+3280	6480	Step 1, go to the skitab repo, install your V and this proxy.
+6480	9280	Then go to build.nv.com and get your API key.
+9280	11920	Nvidia gives you 40 lm calls per minute for free.
+11920	13840	Then go ahead and open two terminals.
+13840	16560	Configure the proxy in one and plot code in the other.
+16560	18240	It will allow and you got cloud code for free.
+18240	21200	I put together a free setup guide, comment in video and I will share it with you.
+21200	22160	Follow for more tips.

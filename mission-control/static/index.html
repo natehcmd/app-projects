@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mission Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="os.css">
+<script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+<div class="bg-orbs"><i></i><i></i><i></i></div>
+
+<header class="topbar glass">
+  <div class="brand"><span class="orb"></span> Mission Control</div>
+  <div class="topstats" id="topstats"></div>
+</header>
+
+<main id="view"></main>
+
+<nav class="dock glass">
+  <button data-view="chat" class="active" title="Chat">🗨<span>Chat</span></button>
+  <button data-view="home" title="Home">⌂<span>Home</span></button>
+  <button data-view="reels" title="Reel Vault">▶<span>Reels</span></button>
+  <button data-view="life" title="Life HQ">◎<span>Life HQ</span></button>
+  <button data-view="briefs" title="CEO Briefs">☰<span>Briefs</span></button>
+  <button data-view="term" title="Terminal">❯<span>Term</span></button>
+  <button data-view="swarm" title="Swarm">⬡<span>Swarm</span></button>
+  <button data-view="flows" title="Flows">⛓<span>Flows</span></button>
+  <button data-view="tools" title="Toolbox">⚙<span>Tools</span></button>
+  <button data-view="reeltools" title="Reel Tools">🛠<span>Reel Tools</span></button>
+  <button data-view="learn" title="Learn">🎓<span>Learn</span></button>
+  <button data-view="compare" title="Compare">⚖️<span>Compare</span></button>
+  <button data-view="workflows" title="Workflows">⚡<span>Workflows</span></button>
+  <button data-view="filegraph" title="Understand Anything">🕸<span>FileGraph</span></button>
+  <button data-view="control" title="Control">🎛<span>Control</span></button>
+</nav>
+
+<div id="palette" hidden onclick="if(event.target===this)closePalette()">
+  <div class="pal-box glass" role="dialog" aria-label="Command palette">
+    <input id="palinput" placeholder="jump to a tab or search reels, goals, flows, briefs…"
+      oninput="palInput(this.value)" autocomplete="off" spellcheck="false">
+    <div id="palresults"></div>
+    <div class="pal-hint">↑↓ navigate · ↵ open · esc close · ⌘K or / anywhere · 1–9 switch tabs</div>
+  </div>
+</div>
+
+<script src="os.js"></script>
+</body>
+</html>

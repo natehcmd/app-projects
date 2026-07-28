@@ -1,0 +1,2147 @@
+[
+  {
+    "file": "__AUDIT_COVERAGE__",
+    "summary": {
+      "total_issues": 112,
+      "critical": 23,
+      "warnings": 89,
+      "suggestions": 0,
+      "overall_health": "CRITICAL"
+    },
+    "issues": [],
+    "global_notes": [
+      "Audit target: /Users/natehoward/Projects/Daisy.",
+      "Authored source, scripts, tests, and project configuration were inventoried. Generated or internal artifacts were excluded from line-level fix items: .git/**, target/**, __pycache__/**, .pytest_cache/**, compiled bytecode, and other derived build outputs.",
+      "Validation run: python3 -m compileall succeeded for daisy-microkernel and failed in daisy-native/daisy-layer only at daisy-input-engine.py line 21 with IndentationError.",
+      "Validation run: python3/python3.12 pytest could not run daisy-microkernel tests because pytest is not installed in the environment.",
+      "Validation run: cargo check --target x86_64-unknown-none succeeded for daisy-rust-kernel with warnings; cargo test on host failed due x86 inline assembly on the host target, and cargo test --target x86_64-unknown-none failed because the no_std test harness is not configured.",
+      "Systemic categories with findings: BUGS, FAILURES, SECURITY, PERFORMANCE, RELIABILITY, CODE_QUALITY/IMPROVEMENT-adjacent cleanup. No category was issue-free across the audited codebase.",
+      "Several Python Unix socket services perform privileged operations without peer credential authorization. Treat socket ACLs and SO_PEERCRED checks as a cross-cutting security fix.",
+      "Several Rust kernel modules are stubs that set success-like state or are invoked from boot despite incomplete hardware functionality. Treat feature readiness reporting as a cross-cutting reliability fix."
+    ]
+  },
+  {
+    "file": "daisy-microkernel/deploy-to-daisy.sh",
+    "summary": {
+      "total_issues": 3,
+      "critical": 0,
+      "warnings": 3,
+      "suggestions": 0,
+      "overall_health": "FAIR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-008",
+        "category": "RELIABILITY",
+        "severity": "MEDIUM",
+        "line_start": 5,
+        "line_end": 6,
+        "code_snippet": "DAISY=\"root@192.168.0.248\"\nDAISY_HOME=\"/opt/daisy-os\"",
+        "problem": "Deployment target and remote path are hard-coded to one developer machine.",
+        "failure_scenario": "Another developer or CI job runs the script and deploys to the wrong host or fails because the fixed IP/user/path are invalid.",
+        "fix_instruction": "Read TARGET and REMOTE_DIR from arguments or environment variables and fail with usage text when they are absent.",
+        "suggested_code": ""
+      },
+      {
+        "id": "ISSUE-009",
+        "category": "RELIABILITY",
+        "severity": "MEDIUM",
+        "line_start": 15,
+        "line_end": 26,
+        "code_snippet": "scp ../daisy-microkernel/../tmp/daisy-onboarding-v2.py $DAISY:$DAISY_HOME/desktop/daisy-onboarding.py 2>/dev/null\n\n# 2. Fix permissions\necho \"[2/7] Permissions...\"\nssh $DAISY \"chown -R nate:nate /var/lib/daisy/data/ /var/log/daisy/ 2>/dev/null\"\n\n# 3. Deploy microkernel\necho \"[3/7] Microkernel...\"\nscp kernel/microkernel.py $DAISY:$DAISY_HOME/kernel/microkernel.py\nscp kernel/boot.py $DAISY:$DAISY_HOME/kernel/boot.py 2>/dev/null\nscp kernel/hal.py $DAISY:$DAISY_HOME/lib/daisy_hal_v2.py 2>/dev/null\nscp kernel/config.py $DAISY:$DAISY_HOME/kernel/config.py 2>/dev/null",
+        "problem": "The script copies files without strict error handling; one scp command is explicitly allowed to fail and later steps continue anyway.",
+        "failure_scenario": "A missing source file leaves the remote system half-updated while the script prints success.",
+        "fix_instruction": "Add set -euo pipefail at the top, verify each required source exists, and remove the \"|| true\" from required scp commands.",
+        "suggested_code": ""
+      },
+      {
+        "id": "ISSUE-010",
+        "category": "SECURITY",
+        "severity": "HIGH",
+        "line_start": 19,
+        "line_end": 19,
+        "code_snippet": "ssh $DAISY \"chown -R nate:nate /var/lib/daisy/data/ /var/log/daisy/ 2>/dev/null\"",
+        "problem": "The deployment script forcibly changes ownership of the remote install tree to a hard-coded user.",
+        "failure_scenario": "Running this against a production or differently named Daisy host can give the wrong user ownership of privileged application files.",
+        "fix_instruction": "Make the target owner configurable and default to root-owned service files unless a non-root development install is explicitly requested.",
+        "suggested_code": "REMOTE_OWNER=${REMOTE_OWNER:-root:root}\nssh \"$TARGET\" \"sudo chown -R '$REMOTE_OWNER' '$REMOTE_DIR'"
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-microkernel/kernel/microkernel.py",
+    "summary": {
+      "total_issues": 7,
+      "critical": 0,
+      "warnings": 7,
+      "suggestions": 0,
+      "overall_health": "POOR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-001",
+        "category": "RELIABILITY",
+        "severity": "HIGH",
+        "line_start": 134,
+        "line_end": 143,
+        "code_snippet": "    def boot(self) -> int:\n        \"\"\"Boot the kernel. Creates root task. Returns root task ID.\"\"\"\n        with self._lock:\n            self._running = True\n            root = self._create_task_internal(\"root\", parent_id=-1, priority=0)\n            # Root gets a wildcard capability\n            self._grant_cap(root, \"task\", 0, {\"create\", \"destroy\"})\n            log.info(\"Daisy Kernel %s (%s) booted. Root task: %d\",\n                     self.VERSION, self.CODENAME, root)\n            return root",
+        "problem": "boot() is not idempotent. Every call creates another root task and mutates kernel state while the existing task table remains live.",
+        "failure_scenario": "A service that retries boot after a partial startup creates multiple root tasks with root capabilities, making scheduling and capability ownership inconsistent.",
+        "fix_instruction": "Guard boot() with the kernel lock. If the kernel is already running, either return the existing root task ID or raise KernelError; do not create another root task.",
+        "suggested_code": "def boot(self) -> int:\n    with self._lock:\n        if self._running:\n            if self._root_task_id is None:\n                raise KernelError('kernel is running without a root task')\n            return self._root_task_id\n        root_tid = self._create_task_internal('root', priority=0, parent=None)\n        self._root_task_id = root_tid\n        self._grant_initial_caps(root_tid)\n        self._running = True\n        return root_tid"
+      },
+      {
+        "id": "ISSUE-002",
+        "category": "RELIABILITY",
+        "severity": "MEDIUM",
+        "line_start": 145,
+        "line_end": 151,
+        "code_snippet": "    def shutdown(self):\n        \"\"\"Shut down the kernel. Kills all tasks.\"\"\"\n        with self._lock:\n            self._running = False\n            for tid in list(self._tasks):\n                self._tasks[tid].state = TaskState.DEAD\n            log.info(\"Kernel shut down. %d tasks terminated.\", len(self._tasks))",
+        "problem": "shutdown() marks tasks dead but leaves endpoints, memory regions, and capabilities in place.",
+        "failure_scenario": "A test or embedded process that boots again after shutdown can observe stale kernel objects and capabilities from the previous run.",
+        "fix_instruction": "Clear endpoints, memory regions, capabilities, counters, and ready queues during shutdown, or document that Microkernel instances are single-use.",
+        "suggested_code": ""
+      },
+      {
+        "id": "ISSUE-003",
+        "category": "BUGS",
+        "severity": "HIGH",
+        "line_start": 213,
+        "line_end": 219,
+        "code_snippet": "        if len(self._tasks) >= self._max_tasks:\n            raise KernelError(\"Task limit reached\", Err.RESOURCE_LIMIT)\n        tid = self._next_task_id\n        self._next_task_id += 1\n        task = Task(id=tid, name=name, parent_id=parent_id, priority=priority)\n        self._tasks[tid] = task\n        self._ready_queues[priority].append(tid)",
+        "problem": "Task creation indexes _ready_queues with an unchecked priority. Priorities outside 0..9 raise KeyError instead of a controlled KernelError.",
+        "failure_scenario": "A caller passes priority=99; the kernel throws KeyError and bypasses normal error handling.",
+        "fix_instruction": "Validate priority before creating the Task. Reject values not present in _ready_queues with KernelError.",
+        "suggested_code": "if priority not in self._ready_queues:\n    raise KernelError(f'invalid priority: {priority}')\nif sum(1 for task in self._tasks.values() if task.state is not TaskState.DEAD) >= self._max_tasks:\n    raise KernelError('maximum task count reached')"
+      },
+      {
+        "id": "ISSUE-004",
+        "category": "BUGS",
+        "severity": "HIGH",
+        "line_start": 213,
+        "line_end": 219,
+        "code_snippet": "        if len(self._tasks) >= self._max_tasks:\n            raise KernelError(\"Task limit reached\", Err.RESOURCE_LIMIT)\n        tid = self._next_task_id\n        self._next_task_id += 1\n        task = Task(id=tid, name=name, parent_id=parent_id, priority=priority)\n        self._tasks[tid] = task\n        self._ready_queues[priority].append(tid)",
+        "problem": "The maximum task check counts dead tasks forever. After enough create/destroy cycles, no new tasks can be created even though all old tasks are dead.",
+        "failure_scenario": "A long-running simulator repeatedly creates short-lived tasks and eventually hits \"maximum task count reached\" permanently.",
+        "fix_instruction": "Count only live tasks for the limit or purge dead tasks from _tasks after their resources are revoked.",
+        "suggested_code": "live_tasks = sum(1 for task in self._tasks.values() if task.state is not TaskState.DEAD)\nif live_tasks >= self._max_tasks:\n    raise KernelError('maximum task count reached')"
+      },
+      {
+        "id": "ISSUE-005",
+        "category": "RELIABILITY",
+        "severity": "HIGH",
+        "line_start": 261,
+        "line_end": 269,
+        "code_snippet": "            for cap_id in list(task.caps):\n                self._caps.pop(cap_id, None)\n            # Destroy owned endpoints\n            for eid in list(self._endpoints):\n                if self._endpoints[eid].owner_task_id == target:\n                    del self._endpoints[eid]\n            # Unmap memory regions\n            for rid in list(self._regions):\n                self._regions[rid].mapped_tasks.discard(target)",
+        "problem": "task_destroy() removes capabilities owned by the destroyed task but does not revoke capabilities in other tasks that reference endpoints or memory owned by that task.",
+        "failure_scenario": "Task A creates an endpoint, grants Task B a capability, then exits. Task B retains a stale endpoint capability and later sees confusing endpoint-not-found failures or incorrect authorization.",
+        "fix_instruction": "When destroying a task, collect every endpoint and memory region owned by it, then remove capabilities in all tasks that target those objects before deleting the objects.",
+        "suggested_code": "owned_endpoint_ids = {eid for eid, ep in self._endpoints.items() if ep.owner == tid}\nowned_region_ids = {rid for rid, region in self._memory_regions.items() if region.owner == tid}\nfor cap_id, cap in list(self._capabilities.items()):\n    if cap.owner == tid or cap.object_id in owned_endpoint_ids or cap.object_id in owned_region_ids:\n        del self._capabilities[cap_id]"
+      },
+      {
+        "id": "ISSUE-006",
+        "category": "RELIABILITY",
+        "severity": "HIGH",
+        "line_start": 301,
+        "line_end": 330,
+        "code_snippet": "    def syscall_endpoint_send(self, caller: int, endpoint_id: int,\n                              payload: dict, timeout: float = 5.0) -> bool:\n        \"\"\"Send a message to an endpoint. Caller must have send capability.\"\"\"\n        self._validate_task(caller)\n        if not self._check_cap(caller, \"endpoint\", endpoint_id, \"send\"):\n            raise KernelError(\"No endpoint:send capability\", Err.PERMISSION_DENIED)\n        ep = self._endpoints.get(endpoint_id)\n        if not ep:\n            raise KernelError(f\"Endpoint {endpoint_id} not found\", Err.INVALID_ENDPOINT)\n        self._seq += 1\n        msg = Message(type=\"call\", sender=caller, payload=payload, seq=self._seq)\n        try:\n            ep.queue.put(msg, timeout=timeout)\n            return True\n        except queue.Full:\n            raise KernelError(\"Endpoint queue full\", Err.TIMEOUT)\n\n    def syscall_endpoint_recv(self, caller: int, endpoint_id: int,\n                              timeout: float = 5.0) -> Optional[Message]:\n        \"\"\"Receive from an endpoint. Caller must be owner or have recv capability.\"\"\"\n        self._validate_task(caller)\n        if not self._check_cap(caller, \"endpoint\", endpoint_id, \"recv\"):\n            raise KernelError(\"No endpoint:recv capability\", Err.PERMISSION_DENIED)\n        ep = self._endpoints.get(endpoint_id)\n        if not ep:\n            raise KernelError(f\"Endpoint {endpoint_id} not found\", Err.INVALID_ENDPOINT)\n        try:\n            return ep.queue.get(timeout=timeout)\n        except queue.Empty:\n            return None",
+        "problem": "Endpoint send/receive operations mutate endpoint queues and sequence counters without the kernel lock, while destroy and capability revocation use the lock.",
+        "failure_scenario": "A task sends to an endpoint while another thread destroys the endpoint; the queue mutation races with deletion and can lose messages or raise intermittent KeyError/KernelError.",
+        "fix_instruction": "Hold the kernel lock while validating capabilities, looking up endpoints, appending/removing messages, and incrementing _seq. If blocking receive is later added, use per-endpoint conditions instead of sleeping under the global lock.",
+        "suggested_code": "with self._lock:\n    self._require_cap(tid, cap_id, CapabilityType.ENDPOINT, {Right.SEND})\n    endpoint = self._endpoints.get(endpoint_id)\n    if endpoint is None:\n        raise KernelError('endpoint not found')\n    self._seq += 1\n    endpoint.queue.append(Message(sender=tid, payload=bytes(payload), seq=self._seq))"
+      },
+      {
+        "id": "ISSUE-007",
+        "category": "BUGS",
+        "severity": "MEDIUM",
+        "line_start": 365,
+        "line_end": 379,
+        "code_snippet": "    def syscall_memory_read(self, caller: int, region_id: int,\n                            offset: int, length: int) -> bytes:\n        \"\"\"Read from a memory region.\"\"\"\n        with self._lock:\n            self._validate_task(caller)\n            region = self._regions.get(region_id)\n            if not region:\n                raise KernelError(f\"Region {region_id} not found\", Err.INVALID_REGION)\n            if caller not in region.mapped_tasks:\n                raise KernelError(\"Region not mapped\", Err.PERMISSION_DENIED)\n            if not self._check_cap(caller, \"memory\", region_id, \"read\"):\n                raise KernelError(\"No memory:read capability\", Err.PERMISSION_DENIED)\n            if offset < 0 or offset + length > region.size:\n                raise KernelError(\"Out of bounds\", Err.INVALID_REGION)\n            return bytes(region.data[offset:offset + length])",
+        "problem": "syscall_memory_read() does not reject negative length values.",
+        "failure_scenario": "A caller passes length=-1 and receives a Python slice with surprising semantics instead of a validation error.",
+        "fix_instruction": "Add length < 0 to the bounds check before slicing.",
+        "suggested_code": "if offset < 0 or length < 0 or offset + length > region.size:\n    raise KernelError('read outside memory region')"
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-native/daisy-layer/build-image.sh",
+    "summary": {
+      "total_issues": 3,
+      "critical": 0,
+      "warnings": 3,
+      "suggestions": 0,
+      "overall_health": "POOR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-110",
+        "category": "BUGS",
+        "severity": "HIGH",
+        "line_start": 21,
+        "line_end": 21,
+        "code_snippet": "ROOTFS=\"${1:-}\"",
+        "problem": "The script usage says --rootfs /path, but ROOTFS is assigned directly from $1, so --rootfs is treated as the rootfs path.",
+        "failure_scenario": "A documented invocation fails with \"Rootfs tarball not found: --rootfs\".",
+        "fix_instruction": "Parse flags with a while/case loop and assign ROOTFS from the argument after --rootfs.",
+        "suggested_code": "while [ $# -gt 0 ]; do\n  case \"$1\" in\n    --rootfs) ROOTFS=\"$2\"; shift 2 ;;\n    *) echo \"Unknown argument: $1\"; usage ;;\n  esac\ndone"
+      },
+      {
+        "id": "ISSUE-111",
+        "category": "FAILURES",
+        "severity": "HIGH",
+        "line_start": 49,
+        "line_end": 55,
+        "code_snippet": "LOOP=$(sudo losetup -fP --show \"$OUTPUT_DIR/$IMAGE_NAME\")\necho \"  Loop device: $LOOP\"\n\ncleanup() {\n    echo \"Cleaning up...\"\n    sudo umount /mnt/daisy-* 2>/dev/null || true\n    sudo losetup -d \"$LOOP\" 2>/dev/null || true",
+        "problem": "cleanup() references LOOP while set -u is enabled, but LOOP is not initialized before losetup succeeds.",
+        "failure_scenario": "If the script exits before LOOP is assigned, cleanup can fail with an unbound variable error and leave mounts/images behind.",
+        "fix_instruction": "Initialize LOOP=\"\" before installing the trap and guard every use with [ -n \"$LOOP\" ].",
+        "suggested_code": "LOOP=''\ncleanup() {\n  if [ -n \"$LOOP\" ]; then\n    sudo losetup -d \"$LOOP\" || true\n  fi\n}"
+      },
+      {
+        "id": "ISSUE-112",
+        "category": "FAILURES",
+        "severity": "HIGH",
+        "line_start": 140,
+        "line_end": 143,
+        "code_snippet": "if command -v grub-install >/dev/null 2>&1; then\n    sudo grub-install --target=x86_64-efi --efi-directory=/mnt/daisy-esp \\\n        --boot-directory=/mnt/daisy-esp/boot --removable --no-nvram 2>/dev/null || true\nfi",
+        "problem": "grub-install failure is ignored with || true, so the script can produce an image that is not bootable while reporting success.",
+        "failure_scenario": "A CI or release build publishes a disk image that cannot boot.",
+        "fix_instruction": "Remove || true and fail the build if grub-install fails; if GRUB is optional, make that an explicit flag and mark the image non-bootable.",
+        "suggested_code": "sudo grub-install --target=i386-pc --boot-directory=\"$MNT/boot\" \"$LOOP\""
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-native/daisy-layer/daisy-accounts.py",
+    "summary": {
+      "total_issues": 3,
+      "critical": 2,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "CRITICAL"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-016",
+        "category": "BUGS",
+        "severity": "CRITICAL",
+        "line_start": 16,
+        "line_end": 24,
+        "code_snippet": "    c.execute('''\n        CREATE TABLE IF NOT EXISTS users (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            username TEXT UNIQUE NOT NULL,\n            password_hash BLOB NOT NULL,\n            display_name TEXT NOT NULL,\n            avatar_path TEXT\n        )\n    ''')",
+        "problem": "The users table schema does not contain a salt column, but authentication and password changes query/update users.salt.",
+        "failure_scenario": "Any login or password change reaches sqlite3.OperationalError: no such column: salt, so account authentication is broken.",
+        "fix_instruction": "Add a salt column to the schema, migrate existing databases, and insert a salt when creating users.",
+        "suggested_code": "c.execute('''CREATE TABLE IF NOT EXISTS users (\n    username TEXT PRIMARY KEY,\n    password_hash BLOB NOT NULL,\n    salt BLOB NOT NULL,\n    full_name TEXT,\n    email TEXT,\n    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n)''')"
+      },
+      {
+        "id": "ISSUE-017",
+        "category": "RELIABILITY",
+        "severity": "MEDIUM",
+        "line_start": 39,
+        "line_end": 43,
+        "code_snippet": "    if row:\n        stored_password_hash, salt = row\n        if hashlib.pbkdf2_hmac('sha256', password.encode(), salt, 100000) == stored_password_hash:\n            return True\n    conn.close()",
+        "problem": "authenticate_user() leaks its SQLite connection on the successful return path.",
+        "failure_scenario": "Repeated successful logins can leave open database connections and file descriptors until the process is restarted.",
+        "fix_instruction": "Use sqlite3.connect(...) as a context manager or close the connection in a finally block before returning.",
+        "suggested_code": ""
+      },
+      {
+        "id": "ISSUE-018",
+        "category": "SECURITY",
+        "severity": "CRITICAL",
+        "line_start": 111,
+        "line_end": 115,
+        "code_snippet": "async def authenticate_pin(username, pin):\n    user_info = await get_user_info(username)\n    if user_info and len(pin) == PIN_LENGTH:\n        return True\n    return False",
+        "problem": "authenticate_pin() returns True for any four-character PIN when the username exists. It never verifies the PIN value.",
+        "failure_scenario": "An attacker can authenticate as any local user by entering any four characters.",
+        "fix_instruction": "Remove PIN login until a PIN hash exists, or store a per-user salted PIN hash and verify it with constant-time comparison.",
+        "suggested_code": "def authenticate_pin(username, pin):\n    if len(pin) != PIN_LENGTH:\n        return False\n    with sqlite3.connect(DB_PATH) as conn:\n        row = conn.execute('SELECT pin_hash, pin_salt FROM users WHERE username = ?', (username,)).fetchone()\n    if not row:\n        return False\n    expected_hash, salt = row\n    actual = hash_password(pin, salt)\n    return hmac.compare_digest(actual, expected_hash)"
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-native/daisy-layer/daisy-backup.py",
+    "summary": {
+      "total_issues": 2,
+      "critical": 1,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "CRITICAL"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-030",
+        "category": "SECURITY",
+        "severity": "CRITICAL",
+        "line_start": 27,
+        "line_end": 29,
+        "code_snippet": "            with tarfile.open(backup_path, 'w:gz') as tar:\n                for path in paths:\n                    tar.add(path, arcname=os.path.basename(path))",
+        "problem": "The backup service accepts arbitrary filesystem paths from any socket client and archives them.",
+        "failure_scenario": "A local process can request a backup of /etc/shadow or another readable sensitive path and retrieve it from the backup store.",
+        "fix_instruction": "Authenticate clients with peer credentials and restrict backup paths to approved user data roots. Reject absolute system paths unless a trusted policy explicitly allows them.",
+        "suggested_code": "allowed_roots = [Path('/home').resolve()]\npath = Path(requested_path).resolve()\nif not any(root == path or root in path.parents for root in allowed_roots):\n    return {'error': 'path is not allowed for backup'}"
+      },
+      {
+        "id": "ISSUE-031",
+        "category": "SECURITY",
+        "severity": "HIGH",
+        "line_start": 46,
+        "line_end": 53,
+        "code_snippet": "            with tarfile.open(restore_path, 'r:gz') as tar:\n                # Security: reject archives with path traversal or symlinks\n                for member in tar.getmembers():\n                    if member.name.startswith('/') or '..' in member.name:\n                        raise ValueError(f'Unsafe path in archive: {member.name}')\n                    if member.issym() or member.islnk():\n                        raise ValueError(f'Symlinks not allowed: {member.name}')\n                tar.extractall(path='/')",
+        "problem": "restore_backup() extracts archive contents directly to / as root after only partial path checks.",
+        "failure_scenario": "A malicious archive with special files, hard links, permissions, or crafted paths can overwrite system files during restore.",
+        "fix_instruction": "Restore into a staging directory first, use tarfile data filtering/safe extraction, reject links/devices, and copy only approved paths into place after validation.",
+        "suggested_code": "with tarfile.open(backup_file, 'r:gz') as tar:\n    tar.extractall(staging_dir, filter='data')\n# Validate staged tree, then copy approved paths into their destinations."
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-native/daisy-layer/daisy-disk-cleaner.py",
+    "summary": {
+      "total_issues": 2,
+      "critical": 1,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "CRITICAL"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-046",
+        "category": "BUGS",
+        "severity": "HIGH",
+        "line_start": 23,
+        "line_end": 25,
+        "code_snippet": "            if os.path.exists(path):\n                total_size += sum(os.path.getsize(f) for f in os.listdir(path))\n        report[category] = total_size",
+        "problem": "calculate_size() calls os.path.getsize() on bare child names instead of joining them to the scanned directory.",
+        "failure_scenario": "The cleaner reports wrong sizes or raises FileNotFoundError unless the current working directory happens to contain files with the same names.",
+        "fix_instruction": "Join each child name to path before checking size, and recurse safely with symlink handling.",
+        "suggested_code": "return sum(os.path.getsize(os.path.join(path, name)) for name in os.listdir(path))"
+      },
+      {
+        "id": "ISSUE-047",
+        "category": "SECURITY",
+        "severity": "CRITICAL",
+        "line_start": 31,
+        "line_end": 35,
+        "code_snippet": "    paths = CATEGORIES[category]\n    for path in paths:\n        if os.path.exists(path):\n            shutil.rmtree(path)\n            print(f\"Cleaned {path}\")",
+        "problem": "clean_path() deletes entire cache/temp/log directories with shutil.rmtree(), including /tmp, /var/tmp, and /var/log.",
+        "failure_scenario": "Running the cleaner can remove live sockets, logs, temporary files used by other processes, or user data wholesale.",
+        "fix_instruction": "Never rmtree broad system directories. Expand user paths, iterate children, skip mount points/symlinks, and delete only policy-matching files older than a configured age.",
+        "suggested_code": "base = Path(path).expanduser().resolve()\nfor child in base.iterdir():\n    if child.is_symlink() or child.is_mount():\n        continue\n    # Delete only files/directories matching the cleaner policy, not the base itself."
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-native/daisy-layer/daisy-hotkeys.py",
+    "summary": {
+      "total_issues": 1,
+      "critical": 0,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "FAIR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-069",
+        "category": "SECURITY",
+        "severity": "HIGH",
+        "line_start": 49,
+        "line_end": 75,
+        "code_snippet": "            if action == \"register\":\n                self.bindings.setdefault(combo, []).append(command)\n                self._save()\n                logger.info(f\"Registered {combo}: {command}\")\n                response = {\"status\": \"ok\", \"combo\": combo}\n            elif action == \"unregister\":\n                if combo in self.bindings:\n                    if command and command in self.bindings[combo]:\n                        self.bindings[combo].remove(command)\n                    else:\n                        del self.bindings[combo]\n                    if combo in self.bindings and not self.bindings[combo]:\n                        del self.bindings[combo]\n                    self._save()\n                    response = {\"status\": \"ok\"}\n                else:\n                    response = {\"error\": f\"No binding for {combo}\"}\n            elif action == \"list\":\n                response = {\"bindings\": self.bindings}\n            elif action == \"trigger\":\n                if combo in self.bindings:\n                    for cmd in self.bindings[combo]:\n                        subprocess.Popen(\n                            cmd.split(),\n                            stdout=subprocess.DEVNULL,\n                            stderr=subprocess.DEVNULL,\n                        )",
+        "problem": "Hotkey commands are accepted from the socket as arbitrary strings and later executed with subprocess.Popen(cmd.split()).",
+        "failure_scenario": "Any client that can register a hotkey can make the hotkey daemon execute arbitrary programs.",
+        "fix_instruction": "Limit registrations to trusted callers, store argv arrays or desktop app IDs, and reject arbitrary command strings from untrusted clients.",
+        "suggested_code": "# Accept only {'app_id': '...'} or a validated argv list from trusted peers.\n# Execute with subprocess.Popen(argv), never cmd.split() on untrusted text."
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-native/daisy-layer/daisy-init.py",
+    "summary": {
+      "total_issues": 1,
+      "critical": 0,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "FAIR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-065",
+        "category": "SECURITY",
+        "severity": "HIGH",
+        "line_start": 71,
+        "line_end": 92,
+        "code_snippet": "        p = subprocess.Popen(\n            svc[\"cmd\"], shell=True, start_new_session=True,\n            stdout=subprocess.DEVNULL, stderr=stderr_fh,\n        )\n        _procs[name] = p\n        log.info(\"Started %s (pid %d)\", name, p.pid)\n    except Exception as e:\n        log.error(\"Failed to start %s: %s\", name, e)\n        if svc.get(\"critical\"):\n            log.critical(\"Critical service %s failed. Halting.\", name)\n            shutdown()\n            sys.exit(1)\n\n\ndef start_sessiond():\n    \"\"\"Start the session controller (daisy-sessiond).\"\"\"\n    log.info(\"Starting session controller...\")\n    stderr_fh = _open_log(\"sessiond\")\n    try:\n        p = subprocess.Popen(\n            SESSIOND_CMD, shell=True, start_new_session=True,\n            stdout=subprocess.DEVNULL, stderr=stderr_fh,",
+        "problem": "Service commands are shell strings executed with shell=True, and some include paths derived from DAISY_HOME.",
+        "failure_scenario": "If DAISY_HOME is influenced or contains shell metacharacters, root-level init can execute unintended commands; paths with spaces also break.",
+        "fix_instruction": "Represent service commands as argv lists and use create_subprocess_exec instead of shell=True.",
+        "suggested_code": "proc = await asyncio.create_subprocess_exec(*service['cmd'], stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)"
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-native/daisy-layer/daisy-input-engine.py",
+    "summary": {
+      "total_issues": 5,
+      "critical": 2,
+      "warnings": 3,
+      "suggestions": 0,
+      "overall_health": "CRITICAL"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-011",
+        "category": "FAILURES",
+        "severity": "CRITICAL",
+        "line_start": 18,
+        "line_end": 22,
+        "code_snippet": "    async def start_server(self):\n        server = await os.makedirs('/run/daisy', exist_ok=True)\n    server = await asyncio.start_unix_server(self.handle_client, path=self.socket_path)\n        print(f\"Input Engine server started at {self.socket_path}\")\n        await server.serve_forever()",
+        "problem": "start_server() contains an indentation error that prevents the file from importing. It also awaits os.makedirs(), which is synchronous and would raise TypeError after the indentation is fixed.",
+        "failure_scenario": "The input engine service cannot start at all; Python exits with IndentationError before any server is created.",
+        "fix_instruction": "Fix the indentation, call os.makedirs() without await, remove any stale socket before binding, and set restrictive socket permissions after bind.",
+        "suggested_code": "async def start_server(self):\n    os.makedirs('/run/daisy', exist_ok=True)\n    if os.path.exists(self.socket_path):\n        os.unlink(self.socket_path)\n    server = await asyncio.start_unix_server(self.handle_client, path=self.socket_path)\n    os.chmod(self.socket_path, 0o660)\n    print(f'Input Engine server started at {self.socket_path}')\n    await server.serve_forever()"
+      },
+      {
+        "id": "ISSUE-012",
+        "category": "FAILURES",
+        "severity": "HIGH",
+        "line_start": 35,
+        "line_end": 57,
+        "code_snippet": "        parts = command.split()\n        if parts[0] == 'set_layout':\n            lang = parts[1]\n            await self.set_keyboard_layout(lang)\n            return f\"Keyboard layout set to {lang}\"\n        elif parts[0] == 'get_layout':\n            return f\"Current keyboard layout: {self.keyboard_layout}\"\n        elif parts[0] == 'list_layouts':\n            layouts = ['us', 'de', 'fr']  # Example list of layouts\n            return '\\n'.join(layouts)\n        elif parts[0] == 'set_repeat':\n            delay_ms, rate_hz = map(int, parts[1:])\n            await self.set_keyboard_repeat(delay_ms, rate_hz)\n            return f\"Keyboard repeat set to {delay_ms}ms and {rate_hz}Hz\"\n        elif parts[0] == 'get_active_window':\n            window_title = await self.get_active_window_title()\n            return f\"Active window: {window_title}\"\n        elif parts[0] == 'simulate_key':\n            keycode = int(parts[1])\n            await self.simulate_keyboard_event(keycode)\n            return f\"Keycode {keycode} simulated\"\n        else:\n            return \"Unknown command\"",
+        "problem": "handle_command() indexes split command fields and converts coordinates without validating arity or numeric input.",
+        "failure_scenario": "A malformed socket request such as an empty line or \"CLICK x y\" raises IndexError/ValueError and can kill the client handler.",
+        "fix_instruction": "Parse commands defensively. Check the command name and exact argument count before converting values, and return explicit error responses for malformed requests.",
+        "suggested_code": "parts = command.split()\nif not parts:\n    return 'ERR empty command'\ncmd = parts[0].upper()\nif cmd in {'MOUSE_MOVE', 'MOUSE_CLICK'} and len(parts) != 3:\n    return f'ERR {cmd} requires x y'\ntry:\n    x, y = map(int, parts[1:3])\nexcept ValueError:\n    return 'ERR coordinates must be integers'"
+      },
+      {
+        "id": "ISSUE-013",
+        "category": "BUGS",
+        "severity": "HIGH",
+        "line_start": 65,
+        "line_end": 71,
+        "code_snippet": "    async def set_keyboard_repeat(self, delay_ms, rate_hz):\n        repeat_delay_us = delay_ms * 1000\n        repeat_rate_us = int(1000000 / rate_hz)\n        with open('/proc/sys/vm/drop_caches', 'w') as f:\n            f.write('3')\n        subprocess.run(['xset', 'r', 'delay', str(repeat_delay_us)])\n        subprocess.run(['xset', 'r', 'rate', str(repeat_rate_us), str(repeat_rate_us)])",
+        "problem": "set_keyboard_repeat() divides by rate_hz without checking zero and writes to /proc/sys/vm/drop_caches, which is unrelated and destructive cache flushing.",
+        "failure_scenario": "A rate of 0 crashes the service. A normal keyboard repeat change also drops kernel caches, causing system-wide performance degradation.",
+        "fix_instruction": "Validate delay/rate bounds, remove the drop_caches write entirely, and pass delay/rate to the platform keyboard settings command using the expected units.",
+        "suggested_code": "async def set_keyboard_repeat(self, delay_ms, rate_hz):\n    if delay_ms < 0 or rate_hz <= 0:\n        raise ValueError('delay must be >= 0 and rate must be > 0')\n    proc = await asyncio.create_subprocess_exec('xset', 'r', 'rate', str(delay_ms), str(rate_hz))\n    await proc.wait()"
+      },
+      {
+        "id": "ISSUE-014",
+        "category": "FAILURES",
+        "severity": "HIGH",
+        "line_start": 75,
+        "line_end": 78,
+        "code_snippet": "    async def get_active_window_title(self):\n        focused_pid = os.readlink('/proc/self/fd/25').split('/')[-1]\n        with open(f'/proc/{focused_pid}/comm', 'r') as f:\n            return f.read().strip()",
+        "problem": "get_active_window() assumes file descriptor 25 exists and points to window metadata.",
+        "failure_scenario": "On a normal process there is no fd 25, so every ACTIVE_WINDOW request raises FileNotFoundError.",
+        "fix_instruction": "Replace this with the compositor/window-manager API used by Daisy, or return a structured \"unsupported\" response until that integration exists.",
+        "suggested_code": "async def get_active_window(self):\n    return {'error': 'active window lookup is not implemented for this compositor'}"
+      },
+      {
+        "id": "ISSUE-015",
+        "category": "BUGS",
+        "severity": "CRITICAL",
+        "line_start": 80,
+        "line_end": 96,
+        "code_snippet": "    async def simulate_keyboard_event(self, keycode):\n        event_type = 0x01  # EV_KEY\n        value = 1  # Key press\n        timestamp = 0\n        with open('/dev/input/event0', 'rb+') as f:\n            while True:\n                header = f.read(16)\n                if not header:\n                    break\n                event_time, event_type, event_code, event_value = struct.unpack('IHHI', header)\n                if event_type == 0x03:  # EV_REL\n                    continue\n                if event_type == event_code and event_value == value:\n                    f.seek(-16, os.SEEK_CUR)\n                    new_header = struct.pack('IHHI', timestamp, event_type, keycode, value)\n                    f.write(new_header)\n                    break",
+        "problem": "map_touch_input() opens /dev/input/event0 read-write and rewrites event records in place using the wrong struct size and layout.",
+        "failure_scenario": "A touch event can seek backward and write malformed bytes into an input event device, corrupting input handling or failing with OSError on real evdev devices.",
+        "fix_instruction": "Do not mutate kernel input event streams. Read evdev events with the correct input_event layout and emit transformed events through uinput or compositor APIs.",
+        "suggested_code": "# Use python-evdev/uinput or the compositor API here; never seek/write back\n# into /dev/input/event*. The transformation should create a new event, not\n# overwrite the kernel event stream."
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-native/daisy-layer/daisy-keyring-v2.py",
+    "summary": {
+      "total_issues": 3,
+      "critical": 1,
+      "warnings": 2,
+      "suggestions": 0,
+      "overall_health": "CRITICAL"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-025",
+        "category": "SECURITY",
+        "severity": "HIGH",
+        "line_start": 13,
+        "line_end": 22,
+        "code_snippet": "# Initialize Fernet key and cipher\nif not os.path.exists(KEYRING_KEY_PATH):\n    fernet_key = Fernet.generate_key()\n    with open(KEYRING_KEY_PATH, 'wb') as key_file:\n        key_file.write(fernet_key)\nelse:\n    with open(KEYRING_KEY_PATH, 'rb') as key_file:\n        fernet_key = key_file.read()\n\ncipher_suite = Fernet(fernet_key)",
+        "problem": "The master key is created at module import time without ensuring the parent directory exists or enforcing restrictive permissions.",
+        "failure_scenario": "Depending on umask and directory permissions, the encryption key can be unreadable on startup or exposed to other users.",
+        "fix_instruction": "Move key initialization into a function that creates /var/lib/daisy with 0700 and the key file with 0600.",
+        "suggested_code": "def load_master_key():\n    os.makedirs('/var/lib/daisy', mode=0o700, exist_ok=True)\n    if not os.path.exists(KEY_FILE):\n        key = Fernet.generate_key()\n        fd = os.open(KEY_FILE, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)\n        with os.fdopen(fd, 'wb') as f:\n            f.write(key)\n        return key\n    with open(KEY_FILE, 'rb') as f:\n        return f.read().strip()"
+      },
+      {
+        "id": "ISSUE-026",
+        "category": "FAILURES",
+        "severity": "CRITICAL",
+        "line_start": 44,
+        "line_end": 53,
+        "code_snippet": "    writer.write(f'store {service} {user}\\n{encrypted_password.decode()}\\n')\n    await writer.drain()\n    response = await reader.readline().decode().strip()\n    writer.close()\n    return response\n\n# Retrieve key\nasync def retrieve_key(service, user):\n    reader, writer = await connect_to_socket()\n    writer.write(f'retrieve {service} {user}\\n')",
+        "problem": "Client methods pass str objects to writer.write(), which requires bytes, and await reader.readline().decode() with the wrong precedence.",
+        "failure_scenario": "Every store_password/get_password call raises TypeError or AttributeError before receiving a response.",
+        "fix_instruction": "Encode request lines before writing and decode the awaited bytes result.",
+        "suggested_code": "writer.write(f'STORE {service} {username} {password}\\n'.encode())\nawait writer.drain()\nresponse = (await reader.readline()).decode().strip()"
+      },
+      {
+        "id": "ISSUE-027",
+        "category": "FAILURES",
+        "severity": "HIGH",
+        "line_start": 95,
+        "line_end": 105,
+        "code_snippet": "async def main():\n    # Example usage\n    await store_key('service1', 'user1', 'password1')\n    password = await retrieve_key('service1', 'user1')\n    print(f\"Retrieved password: {password}\")\n    await delete_key('service1', 'user1')\n    keys = await list_keys()\n    print(f\"Keys in keyring: {keys}\")\n\n# Run the main function\nasyncio.run(main())",
+        "problem": "The file runs a client example at import time instead of starting a keyring server or guarding the example.",
+        "failure_scenario": "Any import attempts to connect to /run/daisy/keyring.sock and fails if no server is present.",
+        "fix_instruction": "Delete the import-time example or put it under if __name__ == \"__main__\" and implement a real server entrypoint separately.",
+        "suggested_code": "if __name__ == '__main__':\n    asyncio.run(main())"
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-native/daisy-layer/daisy-keyring.py",
+    "summary": {
+      "total_issues": 2,
+      "critical": 1,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "CRITICAL"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-023",
+        "category": "FAILURES",
+        "severity": "CRITICAL",
+        "line_start": 17,
+        "line_end": 22,
+        "code_snippet": "        if not os.path.exists(self.master_key_path):\n            raise FileNotFoundError(\"Master key file not found\")\n        with open(self.master_key_path, 'rb') as f:\n            self.master_key = Fernet.generate_key()\n            f.write(self.master_key)\n        self.fernet = Fernet(self.master_key)",
+        "problem": "load_master_key() raises when the key file is missing, then opens the file read-only and tries to write a newly generated key.",
+        "failure_scenario": "First launch cannot create a key. Existing launch never reads the key because write() on a read-only file raises UnsupportedOperation.",
+        "fix_instruction": "Create the key file with 0600 permissions when absent; otherwise read and validate the existing key.",
+        "suggested_code": "def load_master_key(self):\n    os.makedirs(os.path.dirname(self.key_path), mode=0o700, exist_ok=True)\n    if not os.path.exists(self.key_path):\n        key = Fernet.generate_key()\n        fd = os.open(self.key_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)\n        with os.fdopen(fd, 'wb') as f:\n            f.write(key)\n        return key\n    with open(self.key_path, 'rb') as f:\n        return f.read().strip()"
+      },
+      {
+        "id": "ISSUE-024",
+        "category": "SECURITY",
+        "severity": "HIGH",
+        "line_start": 51,
+        "line_end": 60,
+        "code_snippet": "# Example usage:\nasync def main():\n    manager = KeyringManager()\n    await manager.connect()\n    await manager.store_password('example_service', 'user1', 'password123')\n    password = await manager.retrieve_password('example_service', 'user1')\n    print(f\"Retrieved password: {password}\")\n    await manager.delete_password('example_service', 'user1')\n\nasyncio.run(main())",
+        "problem": "The module runs an example at import time and prints a retrieved password. There is no if __name__ == \"__main__\" guard.",
+        "failure_scenario": "Importing this module from another service can execute keyring operations and leak a secret to logs/stdout.",
+        "fix_instruction": "Move example code behind a main guard or delete it from the production module. Never print retrieved secrets.",
+        "suggested_code": "if __name__ == '__main__':\n    asyncio.run(main())"
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-native/daisy-layer/daisy-network.py",
+    "summary": {
+      "total_issues": 2,
+      "critical": 1,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "CRITICAL"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-036",
+        "category": "FAILURES",
+        "severity": "CRITICAL",
+        "line_start": 108,
+        "line_end": 116,
+        "code_snippet": "    async def scan_wifi(self) -> list:\n        return await wifi_scan()\n\n    async def connect_wifi(self, ssid: str, password: str = None) -> bool:\n        return bool(wifi_connect(ssid, password))\n\n    async def disconnect(self):\n        \"\"\"Disconnect from current WiFi.\"\"\"\n        wifi_disconnect()",
+        "problem": "The network daemon imports and calls client helper functions that connect back to /run/daisy/network.sock, causing self-recursion/deadlock inside the daemon.",
+        "failure_scenario": "A SCAN request enters handle_client(), calls wifi_scan(), opens a client connection to the same service, and waits forever because the daemon is blocked handling the first request.",
+        "fix_instruction": "Remove lib.daisy_wifi usage from the daemon. Implement daemon-side scan/connect/disconnect using iwd/nmcli/wpa_supplicant subprocess calls or direct DBus APIs.",
+        "suggested_code": "# In the daemon, call implementation methods directly.\nif cmd == 'SCAN':\n    result = await self.scan_wifi_devices()\nelif cmd == 'CONNECT':\n    result = await self.connect_wifi(ssid, password)"
+      },
+      {
+        "id": "ISSUE-037",
+        "category": "RELIABILITY",
+        "severity": "HIGH",
+        "line_start": 82,
+        "line_end": 88,
+        "code_snippet": "    def _save_profile(self, ssid: str, password: str = None):\n        \"\"\"Save a WiFi profile with restricted permissions.\"\"\"\n        profile = {\"ssid\": ssid, \"password\": password}\n        ppath = Path(PROFILES_DIR) / f\"{ssid.replace('/', '_')}.json\"\n        fd = os.open(str(ppath), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)\n        with os.fdopen(fd, 'w') as f:\n            json.dump(profile, f)",
+        "problem": "Wi-Fi profile filenames are derived from SSIDs with only slash replacement.",
+        "failure_scenario": "An SSID with control characters, very long text, or path-like content can create confusing or invalid profile paths.",
+        "fix_instruction": "Use a stable hash or strict slug for the filename and store the original SSID inside the JSON file.",
+        "suggested_code": "profile_name = hashlib.sha256(ssid.encode('utf-8')).hexdigest() + '.json'\npath = os.path.join(PROFILES_DIR, profile_name)"
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-native/daisy-layer/daisy-opener.py",
+    "summary": {
+      "total_issues": 3,
+      "critical": 1,
+      "warnings": 2,
+      "suggestions": 0,
+      "overall_health": "CRITICAL"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-058",
+        "category": "BUGS",
+        "severity": "CRITICAL",
+        "line_start": 13,
+        "line_end": 17,
+        "code_snippet": "        self.load_mime_handlers()\n\n    async def open(self, path):\n        mime_type = await self.detect_type(path)\n        app = self.get_handler(mime_type)",
+        "problem": "Async methods are called without await in __init__ and open(); get_handler() returns a coroutine object that is always truthy.",
+        "failure_scenario": "Opening any file tries to launch a coroutine object as the app name and the MIME handler table is never loaded.",
+        "fix_instruction": "Make load_mime_handlers/get_handler synchronous or await them from async initialization/open paths.",
+        "suggested_code": "async def open(self, file_path):\n    app = await self.get_handler(mime_type)\n    if app:\n        await self.open_with(app, file_path)"
+      },
+      {
+        "id": "ISSUE-059",
+        "category": "BUGS",
+        "severity": "HIGH",
+        "line_start": 42,
+        "line_end": 42,
+        "code_snippet": "            return 'image/png'  # Note: JPEG is handled as image/png",
+        "problem": "get_mime_type() returns image/png for .jpg files.",
+        "failure_scenario": "JPEG files are routed to PNG handlers and may fail to open in the expected application.",
+        "fix_instruction": "Return image/jpeg for .jpg/.jpeg or use the mimetypes module.",
+        "suggested_code": "return mimetypes.guess_type(file_path)[0] or 'application/octet-stream'"
+      },
+      {
+        "id": "ISSUE-060",
+        "category": "FAILURES",
+        "severity": "HIGH",
+        "line_start": 75,
+        "line_end": 80,
+        "code_snippet": "# Example usage\nasync def main():\n    service = DaisyOpenerService()\n    await service.open('/path/to/file.pdf')\n\nasyncio.run(main())",
+        "problem": "The module runs a hard-coded example at import time and does not implement the socket service implied by SOCKET_PATH.",
+        "failure_scenario": "Importing the module tries to open /path/to/file.pdf and fails; no Daisy opener daemon is available.",
+        "fix_instruction": "Move examples under a main guard and implement a server entrypoint if this is intended to be a service.",
+        "suggested_code": "if __name__ == '__main__':\n    asyncio.run(main())"
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-native/daisy-layer/daisy-packages.py",
+    "summary": {
+      "total_issues": 2,
+      "critical": 1,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "CRITICAL"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-040",
+        "category": "SECURITY",
+        "severity": "CRITICAL",
+        "line_start": 94,
+        "line_end": 111,
+        "code_snippet": "                name = manifest.get(\"name\")\n                version = manifest.get(\"version\")\n                if not name or not version:\n                    return {\"ok\": False, \"error\": \"Manifest missing name or version\"}\n\n                # Check dependencies\n                deps = manifest.get(\"dependencies\", [])\n                missing = [d for d in deps if d not in self.installed]\n                if missing:\n                    return {\"ok\": False, \"error\": f\"Missing dependencies: {', '.join(missing)}\"}\n\n                # Install to apps dir\n                app_dir = os.path.join(APPS_DIR, name)\n                if os.path.exists(app_dir):\n                    shutil.rmtree(app_dir)\n                os.makedirs(app_dir)\n\n                tar.extractall(app_dir)",
+        "problem": "Package names from the manifest are used directly to build install paths, then shutil.rmtree() and tar.extractall() operate on that path.",
+        "failure_scenario": "A malicious package name such as ../../usr/local can delete or overwrite files outside /opt/daisy-apps.",
+        "fix_instruction": "Validate package names with a strict pattern, resolve the install path under APPS_DIR, and use safe tar extraction with data filtering.",
+        "suggested_code": "if not re.fullmatch(r'[A-Za-z0-9._-]+', name):\n    return {'error': 'invalid package name'}\nbase = Path(APPS_DIR).resolve()\napp_dir = (base / name).resolve()\nif base not in app_dir.parents:\n    return {'error': 'invalid package path'}\nwith tarfile.open(package_path) as tar:\n    tar.extractall(app_dir, filter='data')"
+      },
+      {
+        "id": "ISSUE-041",
+        "category": "SECURITY",
+        "severity": "HIGH",
+        "line_start": 128,
+        "line_end": 139,
+        "code_snippet": "        # Link binaries to PATH\n        bin_dir = os.path.join(app_dir, \"bin\")\n        if os.path.isdir(bin_dir):\n            for f in os.listdir(bin_dir):\n                src = os.path.join(bin_dir, f)\n                dst = f\"/usr/local/bin/{f}\"\n                try:\n                    if os.path.exists(dst):\n                        os.remove(dst)\n                    os.symlink(src, dst)\n                except Exception:\n                    pass",
+        "problem": "Executable symlinks are installed into /usr/local/bin without checking for existing real files or namespace conflicts.",
+        "failure_scenario": "Installing one package can overwrite or shadow another package/system command.",
+        "fix_instruction": "Require package-owned command names, refuse to replace non-package symlinks/files, and keep ownership metadata for uninstall.",
+        "suggested_code": "if os.path.exists(target) and not os.path.islink(target):\n    raise FileExistsError(f'{target} already exists and is not package-owned')"
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-native/daisy-layer/daisy-sandbox.py",
+    "summary": {
+      "total_issues": 2,
+      "critical": 1,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "CRITICAL"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-028",
+        "category": "SECURITY",
+        "severity": "CRITICAL",
+        "line_start": 55,
+        "line_end": 79,
+        "code_snippet": "    def get_permissions(self, app):\n        if not os.path.exists(f\"{self.permissions_db}{app}.json\"):\n            return {}\n        with open(f\"{self.permissions_db}{app}.json\", 'r') as f:\n            return json.load(f)\n\n    def set_permission(self, app, perm, value):\n        permissions = self.get_permissions(app)\n        permissions[perm] = value\n        with open(f\"{self.permissions_db}{app}.json\", 'w') as f:\n            json.dump(permissions, f)\n\n    def check_permission(self, app, perm):\n        permissions = self.get_permissions(app)\n        return permissions.get(perm, False)\n\n    def create_profile(self, app):\n        if not os.path.exists(f\"{self.permissions_db}{app}.json\"):\n            with open(f\"{self.permissions_db}{app}.json\", 'w') as f:\n                json.dump({}, f)\n            self.apps.add(app)\n\n    def delete_profile(self):\n        for app in list(self.apps):\n            os.remove(f\"{self.permissions_db}{app}.json\")",
+        "problem": "Permission database paths are built by concatenating the untrusted app name into a filesystem path.",
+        "failure_scenario": "A socket client can use ../ path traversal to read, create, or remove JSON files outside /var/lib/daisy/sandbox.",
+        "fix_instruction": "Validate app IDs against a strict allowlist pattern and resolve the path under the sandbox directory before opening/removing it.",
+        "suggested_code": "APP_ID_RE = re.compile(r'^[A-Za-z0-9._-]+$')\ndef permission_path(self, app):\n    if not APP_ID_RE.fullmatch(app):\n        raise ValueError('invalid app id')\n    base = Path(self.permissions_db).resolve()\n    path = (base / f'{app}.json').resolve()\n    if base not in path.parents:\n        raise ValueError('invalid app path')\n    return path"
+      },
+      {
+        "id": "ISSUE-029",
+        "category": "FAILURES",
+        "severity": "HIGH",
+        "line_start": 36,
+        "line_end": 48,
+        "code_snippet": "        elif command == 'set_permission':\n            app, perm, value = args\n            self.set_permission(app, perm, value)\n            return f\"Permission {perm} set to {value}\"\n        elif command == 'check_permission':\n            app, perm = args\n            return str(self.check_permission(app, perm))\n        elif command == 'create_profile':\n            app = args[0]\n            self.create_profile(app)\n            return f\"Profile for {app} created\"\n        elif command == 'delete_profile':\n            self.delete_profile()",
+        "problem": "handle_command() destructures command arguments without checking count.",
+        "failure_scenario": "A malformed socket request such as \"GRANT app\" raises ValueError and terminates the handler.",
+        "fix_instruction": "Check argument count for each command and return a structured error when malformed.",
+        "suggested_code": "parts = command.split()\nif not parts:\n    return {'error': 'empty command'}\nif parts[0] in {'GRANT', 'REVOKE'} and len(parts) != 4:\n    return {'error': f'{parts[0]} requires app resource permission'}"
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-native/daisy-layer/daisy-service-manager.py",
+    "summary": {
+      "total_issues": 2,
+      "critical": 0,
+      "warnings": 2,
+      "suggestions": 0,
+      "overall_health": "FAIR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-066",
+        "category": "SECURITY",
+        "severity": "HIGH",
+        "line_start": 63,
+        "line_end": 109,
+        "code_snippet": "SERVICES = [\n    # Core\n    Service(\"daisyd\", f\"python3 {DAISY_HOME}/daemons/daisyd.py\", critical=True),\n    Service(\"ollama\", \"ollama serve\", policy=RestartPolicy.ALWAYS),\n\n    # System services\n    Service(\"daisy-network\", f\"python3 {DAISY_LAYER}/daisy-network.py\", dependencies=[\"daisyd\"], policy=RestartPolicy.ALWAYS),\n    Service(\"daisy-power\", f\"python3 {DAISY_LAYER}/daisy-power.py\", dependencies=[\"daisyd\"], policy=RestartPolicy.ALWAYS),\n    Service(\"daisy-audio\", f\"python3 {DAISY_LAYER}/daisy-audio.py\", dependencies=[\"daisyd\"]),\n    Service(\"daisy-bluetooth\", f\"python3 {DAISY_LAYER}/daisy-bluetooth.py\", dependencies=[\"daisyd\"]),\n    Service(\"daisy-storage\", f\"python3 {DAISY_LAYER}/daisy-storage.py\", dependencies=[\"daisyd\"], policy=RestartPolicy.ALWAYS),\n    Service(\"daisy-update\", f\"python3 {DAISY_LAYER}/daisy-update.py\", dependencies=[\"daisyd\"]),\n    Service(\"daisy-packages\", f\"python3 {DAISY_LAYER}/daisy-packages.py\", dependencies=[\"daisyd\"]),\n\n    # AI services\n    Service(\"daisy-mind\", f\"python3 {DAISY_HOME}/daemons/daisy-mind.py\", dependencies=[\"daisyd\", \"ollama\"]),\n    Service(\"daisy-voice\", f\"python3 {DAISY_HOME}/daemons/daisy-voice.py\", dependencies=[\"daisyd\"]),\n    Service(\"daisy-context\", f\"python3 {DAISY_HOME}/daemons/daisy-chaind.py\", dependencies=[\"daisyd\"]),\n\n    # Desktop\n    Service(\"desktop\", f\"python3 {DAISY_HOME}/desktop/session.py\", dependencies=[\"daisyd\", \"daisy-network\"], policy=RestartPolicy.ALWAYS),\n]\n\nclass ServiceManager:\n    def __init__(self):\n        self.services: Dict[str, Service] = {s.name: s for s in SERVICES}\n        self.running = False\n\n    async def start_service(self, name: str):\n        svc = self.services[name]\n        if svc.status == \"running\": return\n\n        # Check dependencies\n        for dep in svc.dependencies:\n            if dep in self.services and self.services[dep].status != \"running\":\n                logger.info(f\"Starting dependency {dep} for {name}\")\n                await self.start_service(dep)\n\n        logger.info(f\"Starting service: {name}\")\n        try:\n            log_file = open(f\"{LOG_DIR}/{name}.log\", \"a\")\n            svc.proc = await asyncio.create_subprocess_shell(\n                svc.cmd,\n                stdout=log_file,\n                stderr=log_file,\n                preexec_fn=os.setsid\n            )",
+        "problem": "ServiceManager stores command strings and launches them with create_subprocess_shell().",
+        "failure_scenario": "A malformed service command or environment-derived path can execute through the shell with service-manager privileges.",
+        "fix_instruction": "Store argv arrays for each service and launch with create_subprocess_exec.",
+        "suggested_code": "cmd = self.services[name]['cmd']\nproc = await asyncio.create_subprocess_exec(*cmd, stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.PIPE)"
+      },
+      {
+        "id": "ISSUE-067",
+        "category": "BUGS",
+        "severity": "HIGH",
+        "line_start": 141,
+        "line_end": 163,
+        "code_snippet": "    async def handle_client(self, reader, writer):\n        data = await reader.read(1024)\n        try:\n            req = json.loads(data.decode())\n            action = req.get(\"action\")\n            if action == \"status\":\n                resp = {name: s.status for name, s in self.services.items()}\n            elif action == \"restart\":\n                svc_name = req.get(\"service\")\n                if svc_name in self.services:\n                    svc = self.services[svc_name]\n                    if svc.proc: svc.proc.terminate()\n                    resp = {\"ok\": True}\n                else:\n                    resp = {\"error\": \"not found\"}\n            else:\n                resp = {\"error\": \"unknown action\"}\n        except Exception as e:\n            resp = {\"error\": str(e)}\n        \n        writer.write(json.dumps(resp).encode())\n        await writer.drain()\n        writer.close()",
+        "problem": "The service-manager API only handles status and restart, while Daisy client helpers expect start, stop, restart, status, and list actions.",
+        "failure_scenario": "Calls from lib/daisy_systemctl.py for start/stop/list return unknown command or silently fail higher-level workflows.",
+        "fix_instruction": "Implement the same action names and request fields that the client library sends, or update the client and server together.",
+        "suggested_code": "if action == 'start':\n    await self.start_service(service)\nelif action == 'stop':\n    await self.stop_service(service)\nelif action == 'list':\n    response = {'services': list(self.services)}"
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-native/daisy-layer/daisy-storage.py",
+    "summary": {
+      "total_issues": 2,
+      "critical": 1,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "CRITICAL"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-038",
+        "category": "SECURITY",
+        "severity": "CRITICAL",
+        "line_start": 93,
+        "line_end": 103,
+        "code_snippet": "    async def mount_device(self, device: str, mountpoint: str = None) -> dict:\n        \"\"\"Mount a block device.\"\"\"\n        if not device.startswith(\"/dev/\"):\n            device = f\"/dev/{device}\"\n\n        if mountpoint is None:\n            label = os.path.basename(device)\n            mountpoint = os.path.join(MOUNT_BASE, label)\n\n        os.makedirs(mountpoint, exist_ok=True)\n        code, _, stderr = await self._run(\"mount\", device, mountpoint)",
+        "problem": "mount_device() accepts arbitrary device and mountpoint strings from socket clients and creates/mounts that path.",
+        "failure_scenario": "A local client can mount a filesystem over a sensitive directory such as /etc or /var/lib/daisy and change system behavior.",
+        "fix_instruction": "Validate the device is an expected block device and require the mountpoint to resolve under a dedicated base such as /media/daisy.",
+        "suggested_code": "base = Path('/media/daisy').resolve()\ntarget = Path(mountpoint).resolve()\nif base != target and base not in target.parents:\n    return {'error': 'mountpoint must be under /media/daisy'}\nif not Path(device).resolve().is_block_device():\n    return {'error': 'device must be a block device'}"
+      },
+      {
+        "id": "ISSUE-039",
+        "category": "SECURITY",
+        "severity": "HIGH",
+        "line_start": 203,
+        "line_end": 237,
+        "code_snippet": "    async def handle_client(self, reader, writer):\n        try:\n            data = await asyncio.wait_for(reader.read(4096), timeout=5)\n            req = json.loads(data.decode())\n            action = req.get(\"action\", \"\")\n\n            if action == \"status\":\n                resp = {\n                    \"disks\": await self.list_block_devices(),\n                    \"usage\": await self.get_disk_usage(),\n                    \"mounted\": self.mounted,\n                    \"auto_mount\": self.auto_mount,\n                }\n            elif action == \"mount\":\n                resp = await self.mount_device(\n                    req.get(\"device\", \"\"),\n                    req.get(\"mountpoint\"),\n                )\n            elif action == \"unmount\":\n                resp = await self.unmount_device(req.get(\"target\", \"\"))\n            elif action == \"eject\":\n                resp = await self.eject_device(req.get(\"device\", \"\"))\n            elif action == \"smart\":\n                resp = await self.get_smart_health(req.get(\"device\", \"\"))\n            elif action == \"set_auto_mount\":\n                self.auto_mount = req.get(\"enabled\", True)\n                resp = {\"ok\": True, \"auto_mount\": self.auto_mount}\n            else:\n                resp = {\"error\": f\"unknown action: {action}\"}\n        except Exception as e:\n            resp = {\"error\": str(e)}\n\n        writer.write(json.dumps(resp).encode())\n        await writer.drain()\n        writer.close()",
+        "problem": "The storage service trusts any process that can reach the Unix socket and performs privileged mount/eject operations.",
+        "failure_scenario": "A process in the wrong group or with access to the socket can mount/eject arbitrary devices.",
+        "fix_instruction": "After accepting a Unix socket connection, verify peer credentials with SO_PEERCRED (or platform equivalent) and enforce an allowed uid/gid policy before privileged operations.",
+        "suggested_code": "# On Linux, use getsockopt(SOL_SOCKET, SO_PEERCRED) on the accepted socket\n# and reject callers outside the configured storage-admin group before parsing commands."
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-native/daisy-layer/daisy-time-service.py",
+    "summary": {
+      "total_issues": 4,
+      "critical": 1,
+      "warnings": 3,
+      "suggestions": 0,
+      "overall_health": "CRITICAL"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-032",
+        "category": "FAILURES",
+        "severity": "CRITICAL",
+        "line_start": 44,
+        "line_end": 46,
+        "code_snippet": "    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:\n        s.sendto(ntp_data, (server, NTP_PORT))\n        data, _ = await asyncio.get_event_loop().sock_recvfrom(s.fileno(), 1024)",
+        "problem": "sync_time() passes s.fileno() to loop.sock_recvfrom(), but asyncio expects a socket object. The socket is also blocking.",
+        "failure_scenario": "Time synchronization fails or hangs on the first NTP request.",
+        "fix_instruction": "Set the socket nonblocking, pass the socket object to sock_recvfrom(), and wrap the operation in wait_for timeout handling.",
+        "suggested_code": "s.setblocking(False)\nloop = asyncio.get_running_loop()\ns.sendto(msg, (server, 123))\ndata, _ = await asyncio.wait_for(loop.sock_recvfrom(s, 1024), timeout=5)"
+      },
+      {
+        "id": "ISSUE-033",
+        "category": "SECURITY",
+        "severity": "HIGH",
+        "line_start": 53,
+        "line_end": 53,
+        "code_snippet": "    os.system(f'date -s @{ts}')",
+        "problem": "set_system_time() uses os.system with shell interpolation.",
+        "failure_scenario": "Even if the current timestamp source is numeric, future changes can turn this into shell injection; failures are also not checked reliably.",
+        "fix_instruction": "Use subprocess.run with an argv list and check=True.",
+        "suggested_code": "subprocess.run(['date', '-s', f'@{int(ts)}'], check=True)"
+      },
+      {
+        "id": "ISSUE-034",
+        "category": "SECURITY",
+        "severity": "HIGH",
+        "line_start": 66,
+        "line_end": 66,
+        "code_snippet": "        response = urlopen(AUTO_TZ_URL).read().decode('utf-8')",
+        "problem": "Auto timezone detection uses unauthenticated HTTP and no timeout.",
+        "failure_scenario": "A network attacker can change the timezone response or the request can hang the service indefinitely.",
+        "fix_instruction": "Use HTTPS with a short timeout and handle network/JSON errors explicitly.",
+        "suggested_code": "with urllib.request.urlopen('https://worldtimeapi.org/api/ip', timeout=5) as response:\n    data = json.loads(response.read().decode('utf-8'))"
+      },
+      {
+        "id": "ISSUE-035",
+        "category": "FAILURES",
+        "severity": "MEDIUM",
+        "line_start": 96,
+        "line_end": 98,
+        "code_snippet": "            elif message.startswith('set_timezone'):\n                tz = message.split()[1]\n                set_timezone(tz)",
+        "problem": "handle_client() indexes message.split()[1] for SET_TIMEZONE without verifying that the argument exists.",
+        "failure_scenario": "A client sending \"SET_TIMEZONE\" crashes that request handler with IndexError.",
+        "fix_instruction": "Validate command arity before indexing split fields.",
+        "suggested_code": ""
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-native/daisy-layer/daisy-update.py",
+    "summary": {
+      "total_issues": 4,
+      "critical": 2,
+      "warnings": 2,
+      "suggestions": 0,
+      "overall_health": "CRITICAL"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-042",
+        "category": "SECURITY",
+        "severity": "CRITICAL",
+        "line_start": 137,
+        "line_end": 166,
+        "code_snippet": "    async def download_update(self, url: str, expected_hash: str = None) -> str:\n        \"\"\"Download an update image to cache.\"\"\"\n        filename = os.path.basename(url)\n        dest = os.path.join(UPDATE_CACHE, filename)\n\n        logger.info(f\"Downloading update from {url}...\")\n        proc = await asyncio.create_subprocess_exec(\n            \"curl\", \"-fSL\", \"-o\", dest, url,\n            stdout=asyncio.subprocess.PIPE,\n            stderr=asyncio.subprocess.PIPE,\n        )\n        _, stderr = await proc.communicate()\n\n        if proc.returncode != 0:\n            logger.error(f\"Download failed: {stderr.decode()}\")\n            return None\n\n        # Verify hash\n        if expected_hash:\n            sha = hashlib.sha256()\n            with open(dest, \"rb\") as f:\n                while chunk := f.read(65536):\n                    sha.update(chunk)\n            if sha.hexdigest() != expected_hash:\n                logger.error(f\"Hash mismatch! Expected {expected_hash}, got {sha.hexdigest()}\")\n                os.remove(dest)\n                return None\n\n        logger.info(f\"Update downloaded to {dest}\")\n        return dest",
+        "problem": "Updates are downloaded from a caller-provided URL and expected_hash is optional.",
+        "failure_scenario": "A compromised local caller or network path can install arbitrary OS images when no hash is provided.",
+        "fix_instruction": "Require signed update metadata from a trusted source. Reject downloads without a verified signature and hash before applying them.",
+        "suggested_code": "if not expected_hash:\n    return {'success': False, 'error': 'signed update hash is required'}\n# Verify metadata signature first, then compare the SHA-256 digest before apply_update()."
+      },
+      {
+        "id": "ISSUE-043",
+        "category": "SECURITY",
+        "severity": "CRITICAL",
+        "line_start": 180,
+        "line_end": 191,
+        "code_snippet": "        # Write the image\n        if image_path.endswith(\".ext4\") or image_path.endswith(\".img\"):\n            # Raw image \u2014 dd it\n            proc = await asyncio.create_subprocess_exec(\n                \"dd\", f\"if={image_path}\", f\"of={device}\", \"bs=4M\", \"status=progress\",\n                stdout=asyncio.subprocess.PIPE,\n                stderr=asyncio.subprocess.PIPE,\n            )\n            _, stderr = await proc.communicate()\n            if proc.returncode != 0:\n                logger.error(f\"dd failed: {stderr.decode()}\")\n                return False",
+        "problem": "apply_update() writes an arbitrary image path to the inactive boot slot with dd based on socket-controlled input.",
+        "failure_scenario": "A caller can make the updater write any readable file to a block device, corrupting the OS slot.",
+        "fix_instruction": "Accept only update artifacts in a controlled staging directory after signature verification, and never expose raw image_path writes to unauthenticated callers.",
+        "suggested_code": "image = Path(image_path).resolve()\nstaging = Path('/var/lib/daisy/updates').resolve()\nif staging not in image.parents:\n    return {'success': False, 'error': 'update image must be staged'}"
+      },
+      {
+        "id": "ISSUE-044",
+        "category": "FAILURES",
+        "severity": "HIGH",
+        "line_start": 192,
+        "line_end": 205,
+        "code_snippet": "        elif image_path.endswith(\".tar.gz\") or image_path.endswith(\".tgz\"):\n            # Tarball \u2014 mount slot, extract\n            os.makedirs(mount, exist_ok=True)\n            subprocess.run([\"mount\", device, mount], check=True)\n            try:\n                proc = await asyncio.create_subprocess_exec(\n                    \"tar\", \"xzf\", image_path, \"-C\", mount,\n                    stdout=asyncio.subprocess.PIPE,\n                    stderr=asyncio.subprocess.PIPE,\n                )\n                await proc.communicate()\n            finally:\n                subprocess.run([\"umount\", mount])\n",
+        "problem": "The tar update path ignores the tar command result and may still mark an update pending after extraction failure; cleanup umount also ignores errors.",
+        "failure_scenario": "A corrupt tarball can leave a half-written inactive slot and still be selected for boot.",
+        "fix_instruction": "Use subprocess.run(..., check=True) for mount and tar, catch failures, unmount in finally, and only save pending state after successful extraction and verification.",
+        "suggested_code": "try:\n    subprocess.run(['mount', partition, mount_point], check=True)\n    subprocess.run(['tar', 'xzf', image_path, '-C', mount_point], check=True)\nfinally:\n    subprocess.run(['umount', mount_point], check=False)"
+      },
+      {
+        "id": "ISSUE-045",
+        "category": "RELIABILITY",
+        "severity": "HIGH",
+        "line_start": 217,
+        "line_end": 229,
+        "code_snippet": "    async def activate_update(self) -> bool:\n        \"\"\"Switch active slot to the pending update slot.\"\"\"\n        pending = self.state.get(\"pending_update\")\n        if not pending:\n            logger.error(\"No pending update to activate\")\n            return False\n\n        new_slot = pending[\"slot\"]\n        self.state[\"active_slot\"] = new_slot\n        self.state[\"pending_update\"] = None\n        self._save_state()\n        self._update_bootloader(new_slot)\n",
+        "problem": "activate_update() writes active-slot state before updating the bootloader, and _update_bootloader() swallows all errors.",
+        "failure_scenario": "State can say slot B is active while firmware still boots slot A, breaking rollback and health checks.",
+        "fix_instruction": "Make bootloader update return success/failure or raise. Only persist active_slot/current_version after the bootloader has been updated successfully.",
+        "suggested_code": "if not self._update_bootloader(slot):\n    return {'success': False, 'error': 'bootloader update failed'}\nself.state['active_slot'] = slot\nself.state['current_version'] = self.state['pending_update']['version']\nself._save_state()"
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-native/daisy-layer/desktop/daisy-app-launcher.py",
+    "summary": {
+      "total_issues": 2,
+      "critical": 0,
+      "warnings": 2,
+      "suggestions": 0,
+      "overall_health": "FAIR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-063",
+        "category": "BUGS",
+        "severity": "MEDIUM",
+        "line_start": 70,
+        "line_end": 76,
+        "code_snippet": "        for line in lines:\n            if line.startswith(\"Icon=\"):\n                icon = line.split(\"=\")[1].strip().strip('\"')\n            elif line.startswith(\"Name=\"):\n                name = line.split(\"=\")[1].strip().strip('\"')\n            elif line.startswith(\"Exec=\"):\n                exec_path = line.split(\"=\")[1].strip()",
+        "problem": "Desktop file parsing splits each line on every = and takes index 1, truncating values containing = and ignoring escaping/localization.",
+        "failure_scenario": "Applications with Exec or Name values containing = are parsed incorrectly and may not launch.",
+        "fix_instruction": "Use configparser for .desktop files or Gio.DesktopAppInfo instead of ad hoc line splitting.",
+        "suggested_code": ""
+      },
+      {
+        "id": "ISSUE-064",
+        "category": "BUGS",
+        "severity": "HIGH",
+        "line_start": 104,
+        "line_end": 104,
+        "code_snippet": "        subprocess.Popen(app_info[\"exec\"].split())",
+        "problem": "launch_app() runs Exec with simple .split(), which breaks quoted arguments and leaves desktop field codes such as %U intact.",
+        "failure_scenario": "Apps with quoted paths or field codes fail to launch or receive bogus arguments.",
+        "fix_instruction": "Use Gio.DesktopAppInfo.launch() or parse with shlex after removing desktop entry field codes.",
+        "suggested_code": "desktop_info = Gio.DesktopAppInfo.new_from_filename(app_info['desktop_file'])\ndesktop_info.launch([], None)"
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-native/daisy-layer/desktop/daisy-archive-manager.py",
+    "summary": {
+      "total_issues": 4,
+      "critical": 0,
+      "warnings": 4,
+      "suggestions": 0,
+      "overall_health": "POOR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-054",
+        "category": "BUGS",
+        "severity": "HIGH",
+        "line_start": 170,
+        "line_end": 170,
+        "code_snippet": "        model, tree_iter = self.tree_view.get_selection().get_selected()",
+        "problem": "remove_files() references self.tree_view, but create_ui() only creates a local tree_view variable.",
+        "failure_scenario": "Clicking Remove raises AttributeError and cannot remove archive entries.",
+        "fix_instruction": "Assign the tree view to self.tree_view in create_ui() before using it elsewhere.",
+        "suggested_code": "self.tree_view = Gtk.TreeView(model=self.file_list)"
+      },
+      {
+        "id": "ISSUE-055",
+        "category": "BUGS",
+        "severity": "HIGH",
+        "line_start": 191,
+        "line_end": 191,
+        "code_snippet": "        extension = os.path.splitext(self.archive_path)[1].lower()",
+        "problem": "Archive type detection uses os.path.splitext(), so file.tar.gz is classified as .gz and the .tar.gz branches never run.",
+        "failure_scenario": "Creating, adding to, extracting, or listing tar.gz archives follows the wrong code path and fails.",
+        "fix_instruction": "Detect compound extensions with endswith(\".tar.gz\") before using splitext.",
+        "suggested_code": "archive_lower = self.archive_path.lower()\nif archive_lower.endswith('.tar.gz'):\n    archive_type = '.tar.gz'\nelse:\n    archive_type = os.path.splitext(self.archive_path)[1].lower()"
+      },
+      {
+        "id": "ISSUE-056",
+        "category": "SECURITY",
+        "severity": "HIGH",
+        "line_start": 254,
+        "line_end": 270,
+        "code_snippet": "        if extension == \".tar.gz\":\n            command_extract = [\"tar\", \"-xzf\", self.archive_path]\n            command_create = [\"tar\", \"-czf\", temp_archive]\n        elif extension == \".zip\":\n            command_extract = [\"unzip\", \"-q\", self.archive_path, \"-d\", self.temp_dir]\n            command_create = [\"zip\", \"-r\", temp_archive, \".\"]\n        elif extension == \".7z\":\n            command_extract = [\"7z\", \"x\", self.archive_path, f\"-o{self.temp_dir}\", \"-y\"]\n            command_create = [\"7z\", \"a\", temp_archive, \".\"]\n        else:\n            return\n\n        # Extract all files\n        subprocess.run(command_extract, cwd=self.temp_dir)\n\n        # Remove the file to be deleted\n        os.remove(os.path.join(self.temp_dir, file_name))",
+        "problem": "remove_from_archive() extracts archive contents into a shared temp directory and removes a requested filename without normalizing or validating paths.",
+        "failure_scenario": "An archive entry or selected name with traversal can affect files outside the temp tree during extraction/removal.",
+        "fix_instruction": "Use tempfile.TemporaryDirectory per operation, safe extraction, and ensure every extracted/removed path resolves under that temporary directory.",
+        "suggested_code": "with tempfile.TemporaryDirectory() as tmp:\n    tmp_path = Path(tmp).resolve()\n    # safe_extract archive into tmp_path\n    target = (tmp_path / file_name).resolve()\n    if tmp_path not in target.parents:\n        raise ValueError('invalid archive member path')"
+      },
+      {
+        "id": "ISSUE-057",
+        "category": "FAILURES",
+        "severity": "HIGH",
+        "line_start": 289,
+        "line_end": 290,
+        "code_snippet": "        thread = GObject.Thread(update_progress)\n        thread.start()",
+        "problem": "GObject.Thread does not exist in PyGObject.",
+        "failure_scenario": "Starting a long archive operation raises AttributeError instead of running in the background.",
+        "fix_instruction": "Use threading.Thread for worker execution and GLib.idle_add for UI updates.",
+        "suggested_code": "threading.Thread(target=update_progress, daemon=True).start()"
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-native/daisy-layer/desktop/daisy-calculator.py",
+    "summary": {
+      "total_issues": 3,
+      "critical": 0,
+      "warnings": 3,
+      "suggestions": 0,
+      "overall_health": "POOR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-051",
+        "category": "FAILURES",
+        "severity": "HIGH",
+        "line_start": 5,
+        "line_end": 5,
+        "code_snippet": "class Calculator(Gtk.Window):",
+        "problem": "The module imports Gtk and GdkPixbuf but later uses Gdk.RGBA.",
+        "failure_scenario": "Launching the calculator raises NameError when styles are applied.",
+        "fix_instruction": "Import Gdk from gi.repository.",
+        "suggested_code": "from gi.repository import Gtk, Gdk, GdkPixbuf"
+      },
+      {
+        "id": "ISSUE-052",
+        "category": "FAILURES",
+        "severity": "HIGH",
+        "line_start": 89,
+        "line_end": 89,
+        "code_snippet": "                    result = eval(f\"math.{label}({self.display.get_text()})\")",
+        "problem": "handle_function() calls math.log(), math.sqrt(), and other math functions without importing math.",
+        "failure_scenario": "Pressing any scientific function button raises NameError.",
+        "fix_instruction": "Add import math at the top of the file.",
+        "suggested_code": "import math"
+      },
+      {
+        "id": "ISSUE-053",
+        "category": "SECURITY",
+        "severity": "HIGH",
+        "line_start": 77,
+        "line_end": 77,
+        "code_snippet": "                result = eval(self.display.get_text())",
+        "problem": "calculate() evaluates the display string with eval().",
+        "failure_scenario": "Any path that puts arbitrary text in the display can execute Python expressions in the calculator process.",
+        "fix_instruction": "Replace eval with a safe arithmetic parser or a small expression evaluator that only supports calculator operators.",
+        "suggested_code": "# Replace eval(expression) with safe_eval(expression) implemented via AST\n# and an allowlist of numeric constants and arithmetic operators."
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-native/daisy-layer/desktop/daisy-greeter.py",
+    "summary": {
+      "total_issues": 3,
+      "critical": 1,
+      "warnings": 2,
+      "suggestions": 0,
+      "overall_health": "CRITICAL"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-019",
+        "category": "SECURITY",
+        "severity": "CRITICAL",
+        "line_start": 43,
+        "line_end": 55,
+        "code_snippet": "    def authenticate(self, username: str, password: str) -> bool:\n        \"\"\"Authenticate a user via PAM. Falls back to PIN check.\"\"\"\n        # Try PIN first (simpler, no PAM needed)\n        if os.path.exists(PIN_FILE):\n            try:\n                stored_pin = open(PIN_FILE).read().strip()\n                if password == stored_pin:\n                    return True\n            except Exception:\n                pass\n\n        return True\n",
+        "problem": "PAMAuth.authenticate() always returns True after optional placeholder PIN logic; password authentication is completely bypassed.",
+        "failure_scenario": "Any user can log into the desktop with any password if the greeter calls this method.",
+        "fix_instruction": "Implement real PAM or account-service authentication and return False on failure. Do not default to success for unimplemented modes.",
+        "suggested_code": "def authenticate(self, username, password):\n    if not username or not password:\n        return False\n    try:\n        import pam\n        return bool(pam.pam().authenticate(username, password))\n    except Exception as exc:\n        print(f'Authentication failed: {exc}')\n        return False"
+      },
+      {
+        "id": "ISSUE-020",
+        "category": "SECURITY",
+        "severity": "HIGH",
+        "line_start": 223,
+        "line_end": 227,
+        "code_snippet": "        # Check auto-login\n        if os.path.exists(AUTO_LOGIN_FILE):\n            auto_user = open(AUTO_LOGIN_FILE).read().strip()\n            if auto_user:\n                GLib.timeout_add(500, lambda: self._start_session(auto_user))",
+        "problem": "Auto-login trusts /var/lib/daisy/autologin without validating ownership, permissions, or file type.",
+        "failure_scenario": "If an unprivileged user can replace or edit that file, they can force the greeter to start a session without credentials.",
+        "fix_instruction": "Before reading autologin, stat the file, require root ownership, regular file type, and mode no broader than 0600.",
+        "suggested_code": "st = os.stat('/var/lib/daisy/autologin')\nif st.st_uid != 0 or not stat.S_ISREG(st.st_mode) or (st.st_mode & 0o077):\n    return None\nwith open('/var/lib/daisy/autologin') as f:\n    username = f.read().strip()"
+      },
+      {
+        "id": "ISSUE-021",
+        "category": "SECURITY",
+        "severity": "HIGH",
+        "line_start": 264,
+        "line_end": 289,
+        "code_snippet": "    def _start_session(self, username: str):\n        \"\"\"Launch the desktop session for the authenticated user.\"\"\"\n        self.hide()\n\n        # Set environment\n        try:\n            pw = pwd.getpwnam(username)\n            os.environ[\"HOME\"] = pw.pw_dir\n            os.environ[\"USER\"] = username\n            os.environ[\"LOGNAME\"] = username\n            os.environ[\"SHELL\"] = pw.pw_shell\n        except KeyError:\n            pass\n\n        os.environ[\"DAISY_HOME\"] = DAISY_HOME\n\n        # Signal sessiond to start the desktop\n        # Write a flag file that sessiond watches\n        flag = \"/run/daisy/session-authenticated\"\n        try:\n            with open(flag, \"w\") as f:\n                f.write(f\"{username}\\n\")\n        except Exception:\n            pass\n\n        Gtk.main_quit()",
+        "problem": "start_session() writes a marker file and launches sessiond without establishing a real authenticated per-user session or dropping privileges.",
+        "failure_scenario": "The desktop can start with root privileges or a spoofed USER/HOME environment, giving applications the wrong authority boundary.",
+        "fix_instruction": "Use PAM session setup or a privileged login helper that sets uid/gid/groups, creates the runtime directory, and execs sessiond as the authenticated user.",
+        "suggested_code": "# Replace this marker-file approach with a privileged helper:\n# 1. pam_open_session(username)\n# 2. initgroups/setgid/setuid for username\n# 3. exec daisy-sessiond with a sanitized environment"
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-native/daisy-layer/desktop/daisy-login-manager.py",
+    "summary": {
+      "total_issues": 1,
+      "critical": 1,
+      "warnings": 0,
+      "suggestions": 0,
+      "overall_health": "CRITICAL"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-022",
+        "category": "SECURITY",
+        "severity": "CRITICAL",
+        "line_start": 97,
+        "line_end": 103,
+        "code_snippet": "        # Authenticate via PAM\n        auth = pam.pam()\n        try:\n            auth.authenticate(username, password)\n            _daisy_req_sync(\"/run/daisy/accounts.sock\", {\"action\": \"authenticate\", \"username\": username, \"password\": password})\n            self.login_successful(username)\n        except pam.error as e:",
+        "problem": "do_login() ignores the boolean result of pam.authenticate(). Invalid credentials still continue to login_successful() when no exception is raised.",
+        "failure_scenario": "A failed PAM authentication returns False, but the code proceeds as if login succeeded.",
+        "fix_instruction": "Check the return value immediately. On False, show the error, clear the password, and return before contacting any session service.",
+        "suggested_code": "ok = auth.authenticate(username, password)\nif not ok:\n    self.show_error('Invalid username or password')\n    self.password_entry.set_text('')\n    return"
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-native/daisy-layer/desktop/daisy-run-dialog.py",
+    "summary": {
+      "total_issues": 2,
+      "critical": 0,
+      "warnings": 2,
+      "suggestions": 0,
+      "overall_health": "FAIR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-061",
+        "category": "FAILURES",
+        "severity": "HIGH",
+        "line_start": 61,
+        "line_end": 61,
+        "code_snippet": "        self.entry.get_completion().set_model(Gtk.ListStore(str))",
+        "problem": "populate_completions() calls self.entry.get_completion().set_model(...) before any Gtk.EntryCompletion has been created.",
+        "failure_scenario": "Opening the run dialog raises AttributeError because get_completion() returns None.",
+        "fix_instruction": "Create a Gtk.EntryCompletion, configure its text column, assign it to the entry, then set the model.",
+        "suggested_code": "completion = Gtk.EntryCompletion()\ncompletion.set_text_column(0)\ncompletion.set_model(completion_model)\nself.entry.set_completion(completion)"
+      },
+      {
+        "id": "ISSUE-062",
+        "category": "RELIABILITY",
+        "severity": "MEDIUM",
+        "line_start": 54,
+        "line_end": 54,
+        "code_snippet": "        paths = os.environ['PATH'].split(os.pathsep)",
+        "problem": "The code indexes os.environ[\"PATH\"] directly.",
+        "failure_scenario": "A minimal session environment without PATH crashes the run dialog at startup.",
+        "fix_instruction": "Use os.environ.get(\"PATH\", \"\") and ignore empty path entries.",
+        "suggested_code": ""
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-native/daisy-layer/desktop/daisy-sessiond.py",
+    "summary": {
+      "total_issues": 1,
+      "critical": 0,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "FAIR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-068",
+        "category": "SECURITY",
+        "severity": "HIGH",
+        "line_start": 33,
+        "line_end": 57,
+        "code_snippet": "SESSION_CMD = os.environ.get(\n    \"DAISY_SESSION_CMD\",\n    f\"python3 {DAISY_HOME}/desktop/session.py\",\n)\n\nproc: subprocess.Popen[str] | None = None\nrunning = True\n\n\ndef start_session() -> subprocess.Popen[str]:\n    env = os.environ.copy()\n    env.setdefault(\"DISPLAY\", \":0\")\n    env.setdefault(\"XDG_SESSION_TYPE\", \"wayland\")\n    env.setdefault(\"XDG_CURRENT_DESKTOP\", \"Daisy\")\n    env.setdefault(\"DAISY_SESSIOND\", \"1\")\n\n    log.info(\"starting session: %s\", SESSION_CMD)\n    return subprocess.Popen(\n        SESSION_CMD,\n        shell=True,\n        start_new_session=True,\n        env=env,\n        stdout=subprocess.DEVNULL,\n        stderr=open(LOG_DIR / \"session.log\", \"a\"),\n    )",
+        "problem": "The session command can come from DAISY_SESSION_CMD and is launched with shell=True.",
+        "failure_scenario": "A compromised greeter/session environment can run arbitrary shell code as the session user, or as root if privilege dropping was missed.",
+        "fix_instruction": "Use a fixed argv list or shlex.split on a trusted config value, and launch with shell=False after sanitizing environment.",
+        "suggested_code": "cmd = shlex.split(os.environ.get('DAISY_SESSION_CMD', '/usr/bin/daisy-desktop-session'))\nself.session = subprocess.Popen(cmd, env=safe_env)"
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-native/daisy-layer/desktop/daisy-spotlight.py",
+    "summary": {
+      "total_issues": 3,
+      "critical": 0,
+      "warnings": 3,
+      "suggestions": 0,
+      "overall_health": "POOR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-048",
+        "category": "FAILURES",
+        "severity": "HIGH",
+        "line_start": 138,
+        "line_end": 138,
+        "code_snippet": "        self.search_entry.modify_font(Pango.FontDescription.from_string(\"Sans 18\"))",
+        "problem": "The file uses Pango.FontDescription but does not import Pango.",
+        "failure_scenario": "Opening Spotlight raises NameError during UI construction.",
+        "fix_instruction": "Import Pango from gi.repository together with Gtk/Gdk/GObject/GLib.",
+        "suggested_code": "from gi.repository import Gtk, Gdk, GObject, GLib, Pango"
+      },
+      {
+        "id": "ISSUE-049",
+        "category": "SECURITY",
+        "severity": "HIGH",
+        "line_start": 63,
+        "line_end": 63,
+        "code_snippet": "            result = eval(expr, {\"__builtins__\": None}, {",
+        "problem": "CalculatorProvider evaluates user text with eval(). The regex reduces input but still leaves expression execution as the mechanism.",
+        "failure_scenario": "A future regex change or missed token can turn search input into Python code execution inside the desktop shell.",
+        "fix_instruction": "Replace eval() with an AST-based arithmetic evaluator that allows only numeric literals and arithmetic operators.",
+        "suggested_code": "# Parse with ast.parse(expr, mode='eval') and recursively allow only\n# ast.Expression, ast.BinOp, ast.UnaryOp, ast.Constant, and approved math ops."
+      },
+      {
+        "id": "ISSUE-050",
+        "category": "BUGS",
+        "severity": "HIGH",
+        "line_start": 181,
+        "line_end": 184,
+        "code_snippet": "        categories = {}\n        for result in results:\n            category = next((cat for cat, prov in zip([\"Applications\", \"Files\", \"Calculator\", \"System Commands\", \"Web Search\", \"Recent Files\"], self.providers) if isinstance(result[\"provider\"], type(prov))), \"Other\")\n            if category not in categories:",
+        "problem": "update_results() expects each result to contain a provider key, but provider results do not include it; it also never assigns self.search_results.",
+        "failure_scenario": "Typing a query raises KeyError, and pressing Enter later cannot launch the selected current result.",
+        "fix_instruction": "Attach provider metadata when collecting results and store the flattened result list before rendering.",
+        "suggested_code": "self.search_results = results\n# When appending results, include {'provider': provider_name, **result}\nprovider = self.providers[result.get('provider', 'applications')]"
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-native/daisy-layer/lib/daisy_audio.py",
+    "summary": {
+      "total_issues": 1,
+      "critical": 0,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "FAIR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-070",
+        "category": "RELIABILITY",
+        "severity": "HIGH",
+        "line_start": 3,
+        "line_end": 23,
+        "code_snippet": "async def _daisy_req(sock_path, req):\n    try:\n        reader, writer = await asyncio.open_unix_connection(sock_path)\n        writer.write(json.dumps(req).encode())\n        await writer.drain()\n        data = await reader.read(65536)\n        writer.close()\n        return json.loads(data.decode()) if data else {}\n    except Exception:\n        return {\"error\": \"service unavailable\"}\n\ndef _daisy_req_sync(sock_path, req):\n    try:\n        s = sock_mod.socket(sock_mod.AF_UNIX, sock_mod.SOCK_STREAM)\n        s.connect(sock_path)\n        s.sendall(json.dumps(req).encode())\n        data = s.recv(65536)\n        s.close()\n        return json.loads(data.decode()) if data else {}\n    except Exception:\n        return {\"error\": \"service unavailable\"}",
+        "problem": "The shared Daisy socket client helper has no connect/read timeout, does not wait for async writer close, and the sync helper can leave sockets open on JSON/decode exceptions.",
+        "failure_scenario": "If a service is hung or never sends a newline, desktop apps and command clients block indefinitely.",
+        "fix_instruction": "Move this duplicated helper into one shared module. Wrap connect/read calls in timeouts, close sockets in finally, and await writer.wait_closed() in async code.",
+        "suggested_code": "async def _daisy_req(socket_path, payload, timeout=3):\n    reader, writer = await asyncio.wait_for(asyncio.open_unix_connection(socket_path), timeout)\n    try:\n        writer.write((json.dumps(payload) + '\\n').encode())\n        await asyncio.wait_for(writer.drain(), timeout)\n        data = await asyncio.wait_for(reader.readline(), timeout)\n        return json.loads(data.decode())\n    finally:\n        writer.close()\n        await writer.wait_closed()"
+      }
+    ],
+    "global_notes": [
+      "This helper implementation is duplicated across Daisy client libraries; fix should be centralized rather than patched one file at a time."
+    ]
+  },
+  {
+    "file": "daisy-native/daisy-layer/lib/daisy_clipboard.py",
+    "summary": {
+      "total_issues": 1,
+      "critical": 0,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "FAIR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-071",
+        "category": "RELIABILITY",
+        "severity": "HIGH",
+        "line_start": 3,
+        "line_end": 23,
+        "code_snippet": "async def _daisy_req(sock_path, req):\n    try:\n        reader, writer = await asyncio.open_unix_connection(sock_path)\n        writer.write(json.dumps(req).encode())\n        await writer.drain()\n        data = await reader.read(65536)\n        writer.close()\n        return json.loads(data.decode()) if data else {}\n    except Exception:\n        return {\"error\": \"service unavailable\"}\n\ndef _daisy_req_sync(sock_path, req):\n    try:\n        s = sock_mod.socket(sock_mod.AF_UNIX, sock_mod.SOCK_STREAM)\n        s.connect(sock_path)\n        s.sendall(json.dumps(req).encode())\n        data = s.recv(65536)\n        s.close()\n        return json.loads(data.decode()) if data else {}\n    except Exception:\n        return {\"error\": \"service unavailable\"}",
+        "problem": "The shared Daisy socket client helper has no connect/read timeout, does not wait for async writer close, and the sync helper can leave sockets open on JSON/decode exceptions.",
+        "failure_scenario": "If a service is hung or never sends a newline, desktop apps and command clients block indefinitely.",
+        "fix_instruction": "Move this duplicated helper into one shared module. Wrap connect/read calls in timeouts, close sockets in finally, and await writer.wait_closed() in async code.",
+        "suggested_code": "async def _daisy_req(socket_path, payload, timeout=3):\n    reader, writer = await asyncio.wait_for(asyncio.open_unix_connection(socket_path), timeout)\n    try:\n        writer.write((json.dumps(payload) + '\\n').encode())\n        await asyncio.wait_for(writer.drain(), timeout)\n        data = await asyncio.wait_for(reader.readline(), timeout)\n        return json.loads(data.decode())\n    finally:\n        writer.close()\n        await writer.wait_closed()"
+      }
+    ],
+    "global_notes": [
+      "This helper implementation is duplicated across Daisy client libraries; fix should be centralized rather than patched one file at a time."
+    ]
+  },
+  {
+    "file": "daisy-native/daisy-layer/lib/daisy_display.py",
+    "summary": {
+      "total_issues": 1,
+      "critical": 0,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "FAIR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-072",
+        "category": "RELIABILITY",
+        "severity": "HIGH",
+        "line_start": 3,
+        "line_end": 23,
+        "code_snippet": "async def _daisy_req(sock_path, req):\n    try:\n        reader, writer = await asyncio.open_unix_connection(sock_path)\n        writer.write(json.dumps(req).encode())\n        await writer.drain()\n        data = await reader.read(65536)\n        writer.close()\n        return json.loads(data.decode()) if data else {}\n    except Exception:\n        return {\"error\": \"service unavailable\"}\n\ndef _daisy_req_sync(sock_path, req):\n    try:\n        s = sock_mod.socket(sock_mod.AF_UNIX, sock_mod.SOCK_STREAM)\n        s.connect(sock_path)\n        s.sendall(json.dumps(req).encode())\n        data = s.recv(65536)\n        s.close()\n        return json.loads(data.decode()) if data else {}\n    except Exception:\n        return {\"error\": \"service unavailable\"}",
+        "problem": "The shared Daisy socket client helper has no connect/read timeout, does not wait for async writer close, and the sync helper can leave sockets open on JSON/decode exceptions.",
+        "failure_scenario": "If a service is hung or never sends a newline, desktop apps and command clients block indefinitely.",
+        "fix_instruction": "Move this duplicated helper into one shared module. Wrap connect/read calls in timeouts, close sockets in finally, and await writer.wait_closed() in async code.",
+        "suggested_code": "async def _daisy_req(socket_path, payload, timeout=3):\n    reader, writer = await asyncio.wait_for(asyncio.open_unix_connection(socket_path), timeout)\n    try:\n        writer.write((json.dumps(payload) + '\\n').encode())\n        await asyncio.wait_for(writer.drain(), timeout)\n        data = await asyncio.wait_for(reader.readline(), timeout)\n        return json.loads(data.decode())\n    finally:\n        writer.close()\n        await writer.wait_closed()"
+      }
+    ],
+    "global_notes": [
+      "This helper implementation is duplicated across Daisy client libraries; fix should be centralized rather than patched one file at a time."
+    ]
+  },
+  {
+    "file": "daisy-native/daisy-layer/lib/daisy_fonts.py",
+    "summary": {
+      "total_issues": 1,
+      "critical": 0,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "FAIR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-073",
+        "category": "RELIABILITY",
+        "severity": "HIGH",
+        "line_start": 3,
+        "line_end": 23,
+        "code_snippet": "async def _daisy_req(sock_path, req):\n    try:\n        reader, writer = await asyncio.open_unix_connection(sock_path)\n        writer.write(json.dumps(req).encode())\n        await writer.drain()\n        data = await reader.read(65536)\n        writer.close()\n        return json.loads(data.decode()) if data else {}\n    except Exception:\n        return {\"error\": \"service unavailable\"}\n\ndef _daisy_req_sync(sock_path, req):\n    try:\n        s = sock_mod.socket(sock_mod.AF_UNIX, sock_mod.SOCK_STREAM)\n        s.connect(sock_path)\n        s.sendall(json.dumps(req).encode())\n        data = s.recv(65536)\n        s.close()\n        return json.loads(data.decode()) if data else {}\n    except Exception:\n        return {\"error\": \"service unavailable\"}",
+        "problem": "The shared Daisy socket client helper has no connect/read timeout, does not wait for async writer close, and the sync helper can leave sockets open on JSON/decode exceptions.",
+        "failure_scenario": "If a service is hung or never sends a newline, desktop apps and command clients block indefinitely.",
+        "fix_instruction": "Move this duplicated helper into one shared module. Wrap connect/read calls in timeouts, close sockets in finally, and await writer.wait_closed() in async code.",
+        "suggested_code": "async def _daisy_req(socket_path, payload, timeout=3):\n    reader, writer = await asyncio.wait_for(asyncio.open_unix_connection(socket_path), timeout)\n    try:\n        writer.write((json.dumps(payload) + '\\n').encode())\n        await asyncio.wait_for(writer.drain(), timeout)\n        data = await asyncio.wait_for(reader.readline(), timeout)\n        return json.loads(data.decode())\n    finally:\n        writer.close()\n        await writer.wait_closed()"
+      }
+    ],
+    "global_notes": [
+      "This helper implementation is duplicated across Daisy client libraries; fix should be centralized rather than patched one file at a time."
+    ]
+  },
+  {
+    "file": "daisy-native/daisy-layer/lib/daisy_power.py",
+    "summary": {
+      "total_issues": 1,
+      "critical": 0,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "FAIR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-074",
+        "category": "RELIABILITY",
+        "severity": "HIGH",
+        "line_start": 3,
+        "line_end": 23,
+        "code_snippet": "async def _daisy_req(sock_path, req):\n    try:\n        reader, writer = await asyncio.open_unix_connection(sock_path)\n        writer.write(json.dumps(req).encode())\n        await writer.drain()\n        data = await reader.read(65536)\n        writer.close()\n        return json.loads(data.decode()) if data else {}\n    except Exception:\n        return {\"error\": \"service unavailable\"}\n\ndef _daisy_req_sync(sock_path, req):\n    try:\n        s = sock_mod.socket(sock_mod.AF_UNIX, sock_mod.SOCK_STREAM)\n        s.connect(sock_path)\n        s.sendall(json.dumps(req).encode())\n        data = s.recv(65536)\n        s.close()\n        return json.loads(data.decode()) if data else {}\n    except Exception:\n        return {\"error\": \"service unavailable\"}",
+        "problem": "The shared Daisy socket client helper has no connect/read timeout, does not wait for async writer close, and the sync helper can leave sockets open on JSON/decode exceptions.",
+        "failure_scenario": "If a service is hung or never sends a newline, desktop apps and command clients block indefinitely.",
+        "fix_instruction": "Move this duplicated helper into one shared module. Wrap connect/read calls in timeouts, close sockets in finally, and await writer.wait_closed() in async code.",
+        "suggested_code": "async def _daisy_req(socket_path, payload, timeout=3):\n    reader, writer = await asyncio.wait_for(asyncio.open_unix_connection(socket_path), timeout)\n    try:\n        writer.write((json.dumps(payload) + '\\n').encode())\n        await asyncio.wait_for(writer.drain(), timeout)\n        data = await asyncio.wait_for(reader.readline(), timeout)\n        return json.loads(data.decode())\n    finally:\n        writer.close()\n        await writer.wait_closed()"
+      }
+    ],
+    "global_notes": [
+      "This helper implementation is duplicated across Daisy client libraries; fix should be centralized rather than patched one file at a time."
+    ]
+  },
+  {
+    "file": "daisy-native/daisy-layer/lib/daisy_print.py",
+    "summary": {
+      "total_issues": 1,
+      "critical": 0,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "FAIR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-075",
+        "category": "RELIABILITY",
+        "severity": "HIGH",
+        "line_start": 3,
+        "line_end": 23,
+        "code_snippet": "async def _daisy_req(sock_path, req):\n    try:\n        reader, writer = await asyncio.open_unix_connection(sock_path)\n        writer.write(json.dumps(req).encode())\n        await writer.drain()\n        data = await reader.read(65536)\n        writer.close()\n        return json.loads(data.decode()) if data else {}\n    except Exception:\n        return {\"error\": \"service unavailable\"}\n\ndef _daisy_req_sync(sock_path, req):\n    try:\n        s = sock_mod.socket(sock_mod.AF_UNIX, sock_mod.SOCK_STREAM)\n        s.connect(sock_path)\n        s.sendall(json.dumps(req).encode())\n        data = s.recv(65536)\n        s.close()\n        return json.loads(data.decode()) if data else {}\n    except Exception:\n        return {\"error\": \"service unavailable\"}",
+        "problem": "The shared Daisy socket client helper has no connect/read timeout, does not wait for async writer close, and the sync helper can leave sockets open on JSON/decode exceptions.",
+        "failure_scenario": "If a service is hung or never sends a newline, desktop apps and command clients block indefinitely.",
+        "fix_instruction": "Move this duplicated helper into one shared module. Wrap connect/read calls in timeouts, close sockets in finally, and await writer.wait_closed() in async code.",
+        "suggested_code": "async def _daisy_req(socket_path, payload, timeout=3):\n    reader, writer = await asyncio.wait_for(asyncio.open_unix_connection(socket_path), timeout)\n    try:\n        writer.write((json.dumps(payload) + '\\n').encode())\n        await asyncio.wait_for(writer.drain(), timeout)\n        data = await asyncio.wait_for(reader.readline(), timeout)\n        return json.loads(data.decode())\n    finally:\n        writer.close()\n        await writer.wait_closed()"
+      }
+    ],
+    "global_notes": [
+      "This helper implementation is duplicated across Daisy client libraries; fix should be centralized rather than patched one file at a time."
+    ]
+  },
+  {
+    "file": "daisy-native/daisy-layer/lib/daisy_screenshot.py",
+    "summary": {
+      "total_issues": 1,
+      "critical": 0,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "FAIR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-076",
+        "category": "RELIABILITY",
+        "severity": "HIGH",
+        "line_start": 3,
+        "line_end": 23,
+        "code_snippet": "async def _daisy_req(sock_path, req):\n    try:\n        reader, writer = await asyncio.open_unix_connection(sock_path)\n        writer.write(json.dumps(req).encode())\n        await writer.drain()\n        data = await reader.read(65536)\n        writer.close()\n        return json.loads(data.decode()) if data else {}\n    except Exception:\n        return {\"error\": \"service unavailable\"}\n\ndef _daisy_req_sync(sock_path, req):\n    try:\n        s = sock_mod.socket(sock_mod.AF_UNIX, sock_mod.SOCK_STREAM)\n        s.connect(sock_path)\n        s.sendall(json.dumps(req).encode())\n        data = s.recv(65536)\n        s.close()\n        return json.loads(data.decode()) if data else {}\n    except Exception:\n        return {\"error\": \"service unavailable\"}",
+        "problem": "The shared Daisy socket client helper has no connect/read timeout, does not wait for async writer close, and the sync helper can leave sockets open on JSON/decode exceptions.",
+        "failure_scenario": "If a service is hung or never sends a newline, desktop apps and command clients block indefinitely.",
+        "fix_instruction": "Move this duplicated helper into one shared module. Wrap connect/read calls in timeouts, close sockets in finally, and await writer.wait_closed() in async code.",
+        "suggested_code": "async def _daisy_req(socket_path, payload, timeout=3):\n    reader, writer = await asyncio.wait_for(asyncio.open_unix_connection(socket_path), timeout)\n    try:\n        writer.write((json.dumps(payload) + '\\n').encode())\n        await asyncio.wait_for(writer.drain(), timeout)\n        data = await asyncio.wait_for(reader.readline(), timeout)\n        return json.loads(data.decode())\n    finally:\n        writer.close()\n        await writer.wait_closed()"
+      }
+    ],
+    "global_notes": [
+      "This helper implementation is duplicated across Daisy client libraries; fix should be centralized rather than patched one file at a time."
+    ]
+  },
+  {
+    "file": "daisy-native/daisy-layer/lib/daisy_session.py",
+    "summary": {
+      "total_issues": 1,
+      "critical": 0,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "FAIR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-077",
+        "category": "RELIABILITY",
+        "severity": "HIGH",
+        "line_start": 3,
+        "line_end": 23,
+        "code_snippet": "async def _daisy_req(sock_path, req):\n    try:\n        reader, writer = await asyncio.open_unix_connection(sock_path)\n        writer.write(json.dumps(req).encode())\n        await writer.drain()\n        data = await reader.read(65536)\n        writer.close()\n        return json.loads(data.decode()) if data else {}\n    except Exception:\n        return {\"error\": \"service unavailable\"}\n\ndef _daisy_req_sync(sock_path, req):\n    try:\n        s = sock_mod.socket(sock_mod.AF_UNIX, sock_mod.SOCK_STREAM)\n        s.connect(sock_path)\n        s.sendall(json.dumps(req).encode())\n        data = s.recv(65536)\n        s.close()\n        return json.loads(data.decode()) if data else {}\n    except Exception:\n        return {\"error\": \"service unavailable\"}",
+        "problem": "The shared Daisy socket client helper has no connect/read timeout, does not wait for async writer close, and the sync helper can leave sockets open on JSON/decode exceptions.",
+        "failure_scenario": "If a service is hung or never sends a newline, desktop apps and command clients block indefinitely.",
+        "fix_instruction": "Move this duplicated helper into one shared module. Wrap connect/read calls in timeouts, close sockets in finally, and await writer.wait_closed() in async code.",
+        "suggested_code": "async def _daisy_req(socket_path, payload, timeout=3):\n    reader, writer = await asyncio.wait_for(asyncio.open_unix_connection(socket_path), timeout)\n    try:\n        writer.write((json.dumps(payload) + '\\n').encode())\n        await asyncio.wait_for(writer.drain(), timeout)\n        data = await asyncio.wait_for(reader.readline(), timeout)\n        return json.loads(data.decode())\n    finally:\n        writer.close()\n        await writer.wait_closed()"
+      }
+    ],
+    "global_notes": [
+      "This helper implementation is duplicated across Daisy client libraries; fix should be centralized rather than patched one file at a time."
+    ]
+  },
+  {
+    "file": "daisy-native/daisy-layer/lib/daisy_systemctl.py",
+    "summary": {
+      "total_issues": 1,
+      "critical": 0,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "FAIR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-078",
+        "category": "RELIABILITY",
+        "severity": "HIGH",
+        "line_start": 3,
+        "line_end": 23,
+        "code_snippet": "async def _daisy_req(sock_path, req):\n    try:\n        reader, writer = await asyncio.open_unix_connection(sock_path)\n        writer.write(json.dumps(req).encode())\n        await writer.drain()\n        data = await reader.read(65536)\n        writer.close()\n        return json.loads(data.decode()) if data else {}\n    except Exception:\n        return {\"error\": \"service unavailable\"}\n\ndef _daisy_req_sync(sock_path, req):\n    try:\n        s = sock_mod.socket(sock_mod.AF_UNIX, sock_mod.SOCK_STREAM)\n        s.connect(sock_path)\n        s.sendall(json.dumps(req).encode())\n        data = s.recv(65536)\n        s.close()\n        return json.loads(data.decode()) if data else {}\n    except Exception:\n        return {\"error\": \"service unavailable\"}",
+        "problem": "The shared Daisy socket client helper has no connect/read timeout, does not wait for async writer close, and the sync helper can leave sockets open on JSON/decode exceptions.",
+        "failure_scenario": "If a service is hung or never sends a newline, desktop apps and command clients block indefinitely.",
+        "fix_instruction": "Move this duplicated helper into one shared module. Wrap connect/read calls in timeouts, close sockets in finally, and await writer.wait_closed() in async code.",
+        "suggested_code": "async def _daisy_req(socket_path, payload, timeout=3):\n    reader, writer = await asyncio.wait_for(asyncio.open_unix_connection(socket_path), timeout)\n    try:\n        writer.write((json.dumps(payload) + '\\n').encode())\n        await asyncio.wait_for(writer.drain(), timeout)\n        data = await asyncio.wait_for(reader.readline(), timeout)\n        return json.loads(data.decode())\n    finally:\n        writer.close()\n        await writer.wait_closed()"
+      }
+    ],
+    "global_notes": [
+      "This helper implementation is duplicated across Daisy client libraries; fix should be centralized rather than patched one file at a time."
+    ]
+  },
+  {
+    "file": "daisy-native/daisy-layer/lib/daisy_timedatectl.py",
+    "summary": {
+      "total_issues": 1,
+      "critical": 0,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "FAIR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-079",
+        "category": "RELIABILITY",
+        "severity": "HIGH",
+        "line_start": 3,
+        "line_end": 23,
+        "code_snippet": "async def _daisy_req(sock_path, req):\n    try:\n        reader, writer = await asyncio.open_unix_connection(sock_path)\n        writer.write(json.dumps(req).encode())\n        await writer.drain()\n        data = await reader.read(65536)\n        writer.close()\n        return json.loads(data.decode()) if data else {}\n    except Exception:\n        return {\"error\": \"service unavailable\"}\n\ndef _daisy_req_sync(sock_path, req):\n    try:\n        s = sock_mod.socket(sock_mod.AF_UNIX, sock_mod.SOCK_STREAM)\n        s.connect(sock_path)\n        s.sendall(json.dumps(req).encode())\n        data = s.recv(65536)\n        s.close()\n        return json.loads(data.decode()) if data else {}\n    except Exception:\n        return {\"error\": \"service unavailable\"}",
+        "problem": "The shared Daisy socket client helper has no connect/read timeout, does not wait for async writer close, and the sync helper can leave sockets open on JSON/decode exceptions.",
+        "failure_scenario": "If a service is hung or never sends a newline, desktop apps and command clients block indefinitely.",
+        "fix_instruction": "Move this duplicated helper into one shared module. Wrap connect/read calls in timeouts, close sockets in finally, and await writer.wait_closed() in async code.",
+        "suggested_code": "async def _daisy_req(socket_path, payload, timeout=3):\n    reader, writer = await asyncio.wait_for(asyncio.open_unix_connection(socket_path), timeout)\n    try:\n        writer.write((json.dumps(payload) + '\\n').encode())\n        await asyncio.wait_for(writer.drain(), timeout)\n        data = await asyncio.wait_for(reader.readline(), timeout)\n        return json.loads(data.decode())\n    finally:\n        writer.close()\n        await writer.wait_closed()"
+      }
+    ],
+    "global_notes": [
+      "This helper implementation is duplicated across Daisy client libraries; fix should be centralized rather than patched one file at a time."
+    ]
+  },
+  {
+    "file": "daisy-native/daisy-layer/lib/daisy_users.py",
+    "summary": {
+      "total_issues": 1,
+      "critical": 0,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "FAIR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-080",
+        "category": "RELIABILITY",
+        "severity": "HIGH",
+        "line_start": 3,
+        "line_end": 23,
+        "code_snippet": "async def _daisy_req(sock_path, req):\n    try:\n        reader, writer = await asyncio.open_unix_connection(sock_path)\n        writer.write(json.dumps(req).encode())\n        await writer.drain()\n        data = await reader.read(65536)\n        writer.close()\n        return json.loads(data.decode()) if data else {}\n    except Exception:\n        return {\"error\": \"service unavailable\"}\n\ndef _daisy_req_sync(sock_path, req):\n    try:\n        s = sock_mod.socket(sock_mod.AF_UNIX, sock_mod.SOCK_STREAM)\n        s.connect(sock_path)\n        s.sendall(json.dumps(req).encode())\n        data = s.recv(65536)\n        s.close()\n        return json.loads(data.decode()) if data else {}\n    except Exception:\n        return {\"error\": \"service unavailable\"}",
+        "problem": "The shared Daisy socket client helper has no connect/read timeout, does not wait for async writer close, and the sync helper can leave sockets open on JSON/decode exceptions.",
+        "failure_scenario": "If a service is hung or never sends a newline, desktop apps and command clients block indefinitely.",
+        "fix_instruction": "Move this duplicated helper into one shared module. Wrap connect/read calls in timeouts, close sockets in finally, and await writer.wait_closed() in async code.",
+        "suggested_code": "async def _daisy_req(socket_path, payload, timeout=3):\n    reader, writer = await asyncio.wait_for(asyncio.open_unix_connection(socket_path), timeout)\n    try:\n        writer.write((json.dumps(payload) + '\\n').encode())\n        await asyncio.wait_for(writer.drain(), timeout)\n        data = await asyncio.wait_for(reader.readline(), timeout)\n        return json.loads(data.decode())\n    finally:\n        writer.close()\n        await writer.wait_closed()"
+      }
+    ],
+    "global_notes": [
+      "This helper implementation is duplicated across Daisy client libraries; fix should be centralized rather than patched one file at a time."
+    ]
+  },
+  {
+    "file": "daisy-native/daisy-layer/lib/daisy_wifi.py",
+    "summary": {
+      "total_issues": 1,
+      "critical": 0,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "FAIR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-081",
+        "category": "RELIABILITY",
+        "severity": "HIGH",
+        "line_start": 3,
+        "line_end": 23,
+        "code_snippet": "async def _daisy_req(sock_path, req):\n    try:\n        reader, writer = await asyncio.open_unix_connection(sock_path)\n        writer.write(json.dumps(req).encode())\n        await writer.drain()\n        data = await reader.read(65536)\n        writer.close()\n        return json.loads(data.decode()) if data else {}\n    except Exception:\n        return {\"error\": \"service unavailable\"}\n\ndef _daisy_req_sync(sock_path, req):\n    try:\n        s = sock_mod.socket(sock_mod.AF_UNIX, sock_mod.SOCK_STREAM)\n        s.connect(sock_path)\n        s.sendall(json.dumps(req).encode())\n        data = s.recv(65536)\n        s.close()\n        return json.loads(data.decode()) if data else {}\n    except Exception:\n        return {\"error\": \"service unavailable\"}",
+        "problem": "The shared Daisy socket client helper has no connect/read timeout, does not wait for async writer close, and the sync helper can leave sockets open on JSON/decode exceptions.",
+        "failure_scenario": "If a service is hung or never sends a newline, desktop apps and command clients block indefinitely.",
+        "fix_instruction": "Move this duplicated helper into one shared module. Wrap connect/read calls in timeouts, close sockets in finally, and await writer.wait_closed() in async code.",
+        "suggested_code": "async def _daisy_req(socket_path, payload, timeout=3):\n    reader, writer = await asyncio.wait_for(asyncio.open_unix_connection(socket_path), timeout)\n    try:\n        writer.write((json.dumps(payload) + '\\n').encode())\n        await asyncio.wait_for(writer.drain(), timeout)\n        data = await asyncio.wait_for(reader.readline(), timeout)\n        return json.loads(data.decode())\n    finally:\n        writer.close()\n        await writer.wait_closed()"
+      }
+    ],
+    "global_notes": [
+      "This helper implementation is duplicated across Daisy client libraries; fix should be centralized rather than patched one file at a time."
+    ]
+  },
+  {
+    "file": "daisy-native/daisy-layer/lib/daisy_xdg.py",
+    "summary": {
+      "total_issues": 1,
+      "critical": 0,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "FAIR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-082",
+        "category": "RELIABILITY",
+        "severity": "HIGH",
+        "line_start": 3,
+        "line_end": 23,
+        "code_snippet": "async def _daisy_req(sock_path, req):\n    try:\n        reader, writer = await asyncio.open_unix_connection(sock_path)\n        writer.write(json.dumps(req).encode())\n        await writer.drain()\n        data = await reader.read(65536)\n        writer.close()\n        return json.loads(data.decode()) if data else {}\n    except Exception:\n        return {\"error\": \"service unavailable\"}\n\ndef _daisy_req_sync(sock_path, req):\n    try:\n        s = sock_mod.socket(sock_mod.AF_UNIX, sock_mod.SOCK_STREAM)\n        s.connect(sock_path)\n        s.sendall(json.dumps(req).encode())\n        data = s.recv(65536)\n        s.close()\n        return json.loads(data.decode()) if data else {}\n    except Exception:\n        return {\"error\": \"service unavailable\"}",
+        "problem": "The shared Daisy socket client helper has no connect/read timeout, does not wait for async writer close, and the sync helper can leave sockets open on JSON/decode exceptions.",
+        "failure_scenario": "If a service is hung or never sends a newline, desktop apps and command clients block indefinitely.",
+        "fix_instruction": "Move this duplicated helper into one shared module. Wrap connect/read calls in timeouts, close sockets in finally, and await writer.wait_closed() in async code.",
+        "suggested_code": "async def _daisy_req(socket_path, payload, timeout=3):\n    reader, writer = await asyncio.wait_for(asyncio.open_unix_connection(socket_path), timeout)\n    try:\n        writer.write((json.dumps(payload) + '\\n').encode())\n        await asyncio.wait_for(writer.drain(), timeout)\n        data = await asyncio.wait_for(reader.readline(), timeout)\n        return json.loads(data.decode())\n    finally:\n        writer.close()\n        await writer.wait_closed()"
+      }
+    ],
+    "global_notes": [
+      "This helper implementation is duplicated across Daisy client libraries; fix should be centralized rather than patched one file at a time."
+    ]
+  },
+  {
+    "file": "daisy-rust-kernel/Cargo.toml",
+    "summary": {
+      "total_issues": 1,
+      "critical": 0,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "FAIR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-083",
+        "category": "RELIABILITY",
+        "severity": "HIGH",
+        "line_start": 1,
+        "line_end": 19,
+        "code_snippet": "[package]\nname = \"daisy-kernel\"\nversion = \"2.0.0\"\nedition = \"2021\"\n\n[dependencies]\nx86_64 = \"0.15\"\nspin = { version = \"0.10\", features = [\"mutex\", \"once\"] }\nbitflags = \"2.6\"\nlog = \"0.4\"\n\n[dependencies.uefi]\nversion = \"0.33\"\nfeatures = [\"alloc\"]\n\n[profile.release]\npanic = \"abort\"\nopt-level = \"z\"\nlto = true",
+        "problem": "The root kernel crate has no checked-in cargo target configuration, so host cargo commands compile x86 inline assembly for the developer host.",
+        "failure_scenario": "On macOS/ARM, cargo test fails with invalid x86 register errors instead of building the kernel target.",
+        "fix_instruction": "Add a root .cargo/config.toml for x86_64-unknown-none and document a separate host-test command for pure unit tests.",
+        "suggested_code": "[build]\ntarget = 'x86_64-unknown-none'\n\n[unstable]\nbuild-std = ['core', 'alloc', 'compiler_builtins']\nbuild-std-features = ['compiler-builtins-mem']"
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-rust-kernel/bootloader/src/main.rs",
+    "summary": {
+      "total_issues": 2,
+      "critical": 1,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "CRITICAL"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-085",
+        "category": "BUGS",
+        "severity": "CRITICAL",
+        "line_start": 18,
+        "line_end": 20,
+        "code_snippet": "/// Physical address where the kernel is expected to be loaded.\nconst KERNEL_LOAD_ADDR: u64 = 0x100000;\n",
+        "problem": "The bootloader defines a fixed kernel load address but never loads kernel.elf into that address before jumping to it.",
+        "failure_scenario": "UEFI exits boot services and jumps to unmapped or uninitialized memory at 0x100000, causing immediate boot failure.",
+        "fix_instruction": "Before exit_boot_services, open the kernel ELF from the ESP, parse PT_LOAD segments, allocate pages, copy segments to memory, zero BSS, and jump to the ELF entry point.",
+        "suggested_code": "// Pseudocode:\n// let elf = load_file('\\\\EFI\\\\daisy\\\\kernel.elf')?;\n// let entry = load_elf_segments(boot_services, &elf)?;\n// exit_boot_services(...)?;\n// jump_to_kernel(entry, &boot_info);"
+      },
+      {
+        "id": "ISSUE-086",
+        "category": "BUGS",
+        "severity": "HIGH",
+        "line_start": 21,
+        "line_end": 31,
+        "code_snippet": "/// Boot information passed from the bootloader to the kernel.\n/// Layout must match `daisy-kernel/src/boot.rs` exactly.\n#[repr(C)]\n#[derive(Clone, Copy, Debug)]\nstruct BootInfo {\n    memory_map_entries: usize,\n    framebuffer_addr: usize,\n    framebuffer_width: usize,\n    framebuffer_height: usize,\n    framebuffer_stride: usize,\n}",
+        "problem": "BootInfo passed by the bootloader lacks the memory map address, descriptor size, and map key details the kernel needs after ExitBootServices.",
+        "failure_scenario": "The kernel cannot safely initialize physical memory management from the UEFI map.",
+        "fix_instruction": "Extend BootInfo with memory map pointer, byte length, descriptor size, and framebuffer details; keep the struct definition shared with the kernel.",
+        "suggested_code": "#[repr(C)]\npub struct BootInfo {\n    pub memory_map_addr: usize,\n    pub memory_map_len: usize,\n    pub memory_map_desc_size: usize,\n    pub framebuffer_addr: usize,\n    pub framebuffer_width: usize,\n    pub framebuffer_height: usize,\n    pub framebuffer_stride: usize,\n}"
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-rust-kernel/run-qemu.sh",
+    "summary": {
+      "total_issues": 1,
+      "critical": 0,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "FAIR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-109",
+        "category": "FAILURES",
+        "severity": "HIGH",
+        "line_start": 15,
+        "line_end": 18,
+        "code_snippet": "# Build bootloader\necho \"[build] Building bootloader...\"\ncd \"$KERNEL_DIR/bootloader\"\ncargo build --release --target x86_64-unknown-uefi 2>/dev/null || echo \"Bootloader build skipped (needs build-std)\"",
+        "problem": "The QEMU script swallows bootloader build failures and continues.",
+        "failure_scenario": "QEMU can start with no BOOTX64.EFI, producing a confusing non-bootable VM instead of a clear build failure.",
+        "fix_instruction": "Fail fast if the bootloader build fails or the EFI binary is missing.",
+        "suggested_code": "cargo build --release --target x86_64-unknown-uefi --manifest-path bootloader/Cargo.toml\nBOOTLOADER=bootloader/target/x86_64-unknown-uefi/release/daisy_bootloader.efi\n[ -f \"$BOOTLOADER\" ] || { echo 'missing bootloader'; exit 1; }"
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-rust-kernel/src/boot.rs",
+    "summary": {
+      "total_issues": 1,
+      "critical": 0,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "FAIR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-087",
+        "category": "BUGS",
+        "severity": "HIGH",
+        "line_start": 3,
+        "line_end": 11,
+        "code_snippet": "/// Minimal boot information passed from the loader to the kernel.\n#[derive(Clone, Copy, Debug, Default)]\npub struct BootInfo {\n    pub memory_map_entries: usize,\n    pub framebuffer_addr: usize,\n    pub framebuffer_width: usize,\n    pub framebuffer_height: usize,\n    pub framebuffer_stride: usize,\n}",
+        "problem": "Kernel BootInfo has no #[repr(C)] even though the UEFI bootloader passes a C-layout struct pointer across the boot boundary.",
+        "failure_scenario": "Rust may lay out the kernel struct differently than the bootloader struct, so framebuffer and memory fields can be read incorrectly.",
+        "fix_instruction": "Add #[repr(C)] and keep this struct in exact field order with the bootloader, preferably through a shared crate.",
+        "suggested_code": "#[repr(C)]\n#[derive(Clone, Copy, Debug, Default)]\npub struct BootInfo {\n    pub memory_map_addr: usize,\n    pub memory_map_len: usize,\n    pub memory_map_desc_size: usize,\n    pub framebuffer_addr: usize,\n    pub framebuffer_width: usize,\n    pub framebuffer_height: usize,\n    pub framebuffer_stride: usize,\n}"
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-rust-kernel/src/context.rs",
+    "summary": {
+      "total_issues": 2,
+      "critical": 0,
+      "warnings": 2,
+      "suggestions": 0,
+      "overall_health": "FAIR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-088",
+        "category": "BUGS",
+        "severity": "HIGH",
+        "line_start": 216,
+        "line_end": 225,
+        "code_snippet": "/// Timer-driven preemptive switch (called from timer IRQ handler).\npub fn timer_preempt() {\n    let current = CURRENT_TASK.load(Ordering::Relaxed);\n\n    // Ask scheduler for next task\n    if let Some(next) = crate::scheduler::Scheduler::new().next() {\n        if next != current {\n            unsafe { switch(current, next); }\n        }\n    }",
+        "problem": "timer_preempt() creates a new empty Scheduler every tick, so it never selects runnable tasks from the real run queue.",
+        "failure_scenario": "Timer interrupts do not preempt running tasks; multitasking appears initialized but no context switch occurs.",
+        "fix_instruction": "Wire timer_preempt() to the global scheduler/task state and select the next runnable task from the real queue.",
+        "suggested_code": "pub fn timer_preempt() {\n    if let Some((current, next)) = crate::scheduler::with_scheduler(|s| s.next_preemption()) {\n        if next != current {\n            unsafe { switch(current, next); }\n        }\n    }\n}"
+      },
+      {
+        "id": "ISSUE-089",
+        "category": "RELIABILITY",
+        "severity": "HIGH",
+        "line_start": 79,
+        "line_end": 82,
+        "code_snippet": "static mut CONTEXTS: [CpuContext; MAX_TASKS] = [CpuContext::zeroed(); MAX_TASKS];\n\n/// Kernel stacks (statically allocated for simplicity).\nstatic mut STACKS: [[u8; TASK_STACK_SIZE]; MAX_TASKS] = [[0; TASK_STACK_SIZE]; MAX_TASKS];",
+        "problem": "Task contexts and stacks are global mutable statics without synchronization or interrupt discipline.",
+        "failure_scenario": "An interrupt or second CPU can mutate task context state while a switch or spawn operation is in progress, corrupting register state.",
+        "fix_instruction": "Protect task tables with an interrupt-safe lock or enforce single-core/non-preemptible access around all mutations.",
+        "suggested_code": "// Replace static mut arrays with an UnsafeCell-backed table guarded by\n// an interrupt-safe spin::Mutex, and never expose shared references to it."
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-rust-kernel/src/devfs.rs",
+    "summary": {
+      "total_issues": 1,
+      "critical": 0,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "FAIR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-094",
+        "category": "SECURITY",
+        "severity": "HIGH",
+        "line_start": 42,
+        "line_end": 43,
+        "code_snippet": "/// PRNG seed for /dev/random.\nstatic SEED: AtomicU32 = AtomicU32::new(12345);",
+        "problem": "/dev/random uses a fixed-seed linear congruential generator.",
+        "failure_scenario": "Any consumer using /dev/random for secrets receives predictable bytes.",
+        "fix_instruction": "Do not expose deterministic bytes as random. Seed a CSPRNG from hardware/bootloader entropy or rename this device to a clearly non-cryptographic test RNG.",
+        "suggested_code": "// Until real entropy exists, make reads from /dev/random return EAGAIN or\n// expose this only as /dev/pseudorandom-test with clear non-crypto semantics."
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-rust-kernel/src/e1000.rs",
+    "summary": {
+      "total_issues": 1,
+      "critical": 0,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "FAIR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-091",
+        "category": "BUGS",
+        "severity": "HIGH",
+        "line_start": 222,
+        "line_end": 225,
+        "code_snippet": "                // Note: RX/TX descriptor ring setup requires physical memory allocation\n                // which needs the frame allocator to be fully operational\n                crate::serial::print(b\"[e1000] NIC initialized (descriptor rings need allocator)\\n\");\n                NIC.initialized = true;",
+        "problem": "E1000 init logs success and sets initialized=true without descriptor rings or working TX/RX.",
+        "failure_scenario": "The network stack believes a NIC is ready, but send/receive calls fail or drop packets.",
+        "fix_instruction": "Only set initialized after TX/RX descriptor rings, buffers, interrupts, and MAC configuration are complete.",
+        "suggested_code": "// Set initialized only after descriptor setup succeeds:\n// setup_tx_ring()?; setup_rx_ring()?; enable_rx_tx(); NIC.initialized = true;"
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-rust-kernel/src/elf.rs",
+    "summary": {
+      "total_issues": 1,
+      "critical": 1,
+      "warnings": 0,
+      "suggestions": 0,
+      "overall_health": "CRITICAL"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-103",
+        "category": "SECURITY",
+        "severity": "CRITICAL",
+        "line_start": 202,
+        "line_end": 216,
+        "code_snippet": "        let vaddr = phdr.p_vaddr as *mut u8;\n\n        // Copy file contents to virtual address\n        if file_sz > 0 {\n            core::ptr::copy_nonoverlapping(\n                elf_data.as_ptr().add(file_off),\n                vaddr,\n                file_sz,\n            );\n        }\n\n        // Zero BSS (memsz > filesz)\n        if mem_sz > file_sz {\n            core::ptr::write_bytes(vaddr.add(file_sz), 0, mem_sz - file_sz);\n        }",
+        "problem": "ELF segment loading writes directly to p_vaddr from the ELF program header without validating that the virtual range is allowed, mapped, non-overlapping, or that memsz >= filesz.",
+        "failure_scenario": "A malformed or malicious ELF can make the loader overwrite arbitrary kernel memory or copy more initialized bytes than the memory segment declares.",
+        "fix_instruction": "Validate every PT_LOAD segment before copying: memsz >= filesz, address range is user/loadable, pages are allocated/mapped, alignment is valid, and segments do not overlap.",
+        "suggested_code": "if phdr.p_memsz < phdr.p_filesz {\n    return Err(ElfError::InvalidSegment);\n}\nvalidate_load_range(phdr.p_vaddr, phdr.p_memsz, phdr.p_align)?;\nmap_segment_pages(phdr.p_vaddr, phdr.p_memsz, phdr.p_flags)?;"
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-rust-kernel/src/fat32.rs",
+    "summary": {
+      "total_issues": 2,
+      "critical": 0,
+      "warnings": 2,
+      "suggestions": 0,
+      "overall_health": "FAIR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-101",
+        "category": "FAILURES",
+        "severity": "HIGH",
+        "line_start": 190,
+        "line_end": 197,
+        "code_snippet": "/// Convert a cluster number to its LBA on disk.\n/// Cluster numbers start at 2 in FAT32.\npub fn cluster_to_lba(cluster: u32) -> u64 {\n    assert!(cluster >= 2, \"Invalid FAT32 cluster number\");\n    unsafe {\n        FS.data_start_lba + ((cluster - 2) as u64 * FS.sectors_per_cluster as u64)\n    }\n}",
+        "problem": "cluster_to_lba() panics on invalid cluster numbers with assert! instead of returning an error.",
+        "failure_scenario": "A malformed FAT chain can panic the kernel while reading a filesystem.",
+        "fix_instruction": "Return Result<u64, FatError> from cluster_to_lba and propagate invalid-cluster errors to callers.",
+        "suggested_code": "fn cluster_to_lba(&self, cluster: u32) -> Result<u32, FatError> {\n    if cluster < 2 { return Err(FatError::InvalidCluster); }\n    Ok(self.data_start_sector + (cluster - 2) * self.sectors_per_cluster as u32)\n}"
+      },
+      {
+        "id": "ISSUE-102",
+        "category": "BUGS",
+        "severity": "MEDIUM",
+        "line_start": 249,
+        "line_end": 253,
+        "code_snippet": "    // Allocate a cluster-sized buffer on stack (limit 4KB clusters)\n    let mut buf = [0u8; 4096];\n    if cluster_size > buf.len() {\n        return Err(\"Cluster too large for stack buffer\");\n    }",
+        "problem": "Directory reading only supports clusters up to 4096 bytes, but valid FAT32 volumes commonly use larger clusters.",
+        "failure_scenario": "Valid FAT32 filesystems with 8 KiB or larger clusters fail with UnsupportedClusterSize.",
+        "fix_instruction": "Read directory clusters sector-by-sector or allocate a buffer sized to cluster_size from the heap.",
+        "suggested_code": ""
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-rust-kernel/src/heap.rs",
+    "summary": {
+      "total_issues": 1,
+      "critical": 0,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "FAIR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-106",
+        "category": "PERFORMANCE",
+        "severity": "HIGH",
+        "line_start": 45,
+        "line_end": 47,
+        "code_snippet": "    unsafe fn dealloc(&self, _ptr: *mut u8, _layout: Layout) {\n        // Bump allocator doesn't free \u2014 acceptable for early boot\n    }",
+        "problem": "The global allocator never frees memory.",
+        "failure_scenario": "Any subsystem using alloc after boot leaks permanently; repeated allocations can exhaust the kernel heap.",
+        "fix_instruction": "Use the bump allocator only for early boot, then switch to a real free-list/slab allocator before long-lived services allocate.",
+        "suggested_code": "unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {\n    crate::heap2::deallocate(ptr, layout);\n}"
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-rust-kernel/src/main.rs",
+    "summary": {
+      "total_issues": 2,
+      "critical": 0,
+      "warnings": 2,
+      "suggestions": 0,
+      "overall_health": "FAIR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-107",
+        "category": "BUGS",
+        "severity": "HIGH",
+        "line_start": 64,
+        "line_end": 72,
+        "code_snippet": "    // 11. Storage (NVMe + AHCI)\n    nvme::init();\n    ahci::init();\n\n    // 12. Network (e1000)\n    e1000::init();\n\n    // 13. USB (XHCI)\n    xhci::init();",
+        "problem": "Boot initializes multiple drivers that are stubbed or explicitly nonfunctional, but the boot log does not distinguish unavailable features.",
+        "failure_scenario": "The system appears to have storage/network/USB support even though NVMe, E1000, and parts of the stack cannot perform I/O.",
+        "fix_instruction": "Return and log explicit feature status for each driver, and keep unimplemented drivers disabled until the backing operations work.",
+        "suggested_code": "let nvme_available = nvme::init();\nif !nvme_available { vga::print_warning('NVMe disabled: driver incomplete'); }"
+      },
+      {
+        "id": "ISSUE-108",
+        "category": "BUGS",
+        "severity": "HIGH",
+        "line_start": 108,
+        "line_end": 123,
+        "code_snippet": "    // Main kernel loop\n    loop {\n        // Check for keyboard input\n        while let Some(ch) = keyboard::read_key() {\n            serial::write_byte(ch);\n            if ch == b'q' {\n                serial::print(b\"\\n[kernel] Shutdown requested\\n\");\n                acpi::shutdown();\n            }\n        }\n\n        // Yield CPU until next interrupt\n        unsafe {\n            core::arch::asm!(\"hlt\", options(nomem, nostack));\n        }\n    }",
+        "problem": "kernel_main() ends in a keyboard echo/hlt loop with no scheduler start, init process launch, or syscall/user mode transition.",
+        "failure_scenario": "The OS boots but never starts userspace or scheduled kernel tasks.",
+        "fix_instruction": "After hardware init, initialize syscall entry, mount the root filesystem, create/init the first task, and enter the scheduler idle loop.",
+        "suggested_code": "crate::syscall::init();\ncrate::scheduler::spawn_init('/sbin/daisy-init')?;\ncrate::scheduler::run();"
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-rust-kernel/src/netstack.rs",
+    "summary": {
+      "total_issues": 1,
+      "critical": 0,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "FAIR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-100",
+        "category": "BUGS",
+        "severity": "HIGH",
+        "line_start": 183,
+        "line_end": 229,
+        "code_snippet": "    unsafe {\n        if op == 1 && target_ip == NET_CONFIG.ip && NET_CONFIG.configured {\n            // ARP request for us \u2014 send reply\n            crate::serial::print(b\"[net] ARP request from \");\n            print_ip(&sender_ip);\n            crate::serial::print(b\"\\n\");\n            // TODO: send ARP reply via e1000 driver\n        }\n    }\n}\n\nfn process_ipv4(data: &[u8]) {\n    if data.len() < 20 {\n        return;\n    }\n\n    let protocol = data[9];\n    let src_ip: [u8; 4] = data[12..16].try_into().unwrap_or([0; 4]);\n    let dst_ip: [u8; 4] = data[16..20].try_into().unwrap_or([0; 4]);\n    let ihl = (data[0] & 0x0F) as usize * 4;\n\n    if ihl > data.len() {\n        return;\n    }\n\n    let payload = &data[ihl..];\n\n    match protocol {\n        PROTO_ICMP => process_icmp(payload, src_ip),\n        PROTO_UDP => process_udp(payload, src_ip),\n        PROTO_TCP => process_tcp(payload, src_ip),\n        _ => {}\n    }\n}\n\nfn process_icmp(data: &[u8], src_ip: [u8; 4]) {\n    if data.len() < 8 {\n        return;\n    }\n    let icmp_type = data[0];\n    if icmp_type == 8 {\n        // Echo request (ping) \u2014 we should reply\n        crate::serial::print(b\"[net] ICMP echo from \");\n        print_ip(&src_ip);\n        crate::serial::print(b\"\\n\");\n        // TODO: send echo reply\n    }",
+        "problem": "ARP and ICMP receive handlers only log TODO messages and never send replies.",
+        "failure_scenario": "Other hosts cannot resolve Daisy over ARP or receive ping responses, so network connectivity appears dead.",
+        "fix_instruction": "Do not advertise the network stack as functional until ARP reply and ICMP echo response transmission are implemented via the NIC driver.",
+        "suggested_code": "// Implement ARP reply and ICMP echo reply once e1000::send_packet works;\n// otherwise report networking as receive-only/unimplemented."
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-rust-kernel/src/nvme.rs",
+    "summary": {
+      "total_issues": 1,
+      "critical": 0,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "FAIR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-090",
+        "category": "BUGS",
+        "severity": "HIGH",
+        "line_start": 140,
+        "line_end": 145,
+        "code_snippet": "        // For now, log that init would continue here\n        // Full queue allocation requires a physical memory allocator\n        crate::serial::print(b\"[nvme] Waiting for memory allocator to create queues\\n\");\n\n        NVME.initialized = false;\n        false",
+        "problem": "NVMe initialization explicitly does not allocate queues and then sets initialized=false before returning false.",
+        "failure_scenario": "Any boot path expecting NVMe storage will always fail even when an NVMe controller exists.",
+        "fix_instruction": "Either feature-gate NVMe as unimplemented or implement admin and I/O queue allocation before reporting initialization status.",
+        "suggested_code": "// Do not advertise NVMe until queues are live:\n// allocate_admin_queues(...)?; identify_controller(...)?; identify_namespace(...)?; NVME.initialized = true;"
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-rust-kernel/src/syscall.rs",
+    "summary": {
+      "total_issues": 2,
+      "critical": 1,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "CRITICAL"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-095",
+        "category": "BUGS",
+        "severity": "CRITICAL",
+        "line_start": 66,
+        "line_end": 68,
+        "code_snippet": "            \"mov rdi, rax\",    // arg0 = syscall number\n            \"mov rsi, rdi\",    // arg1 = original rdi (first user arg)\n            \"call {dispatch}\",",
+        "problem": "The syscall entry assembly overwrites the original first argument in rdi with the syscall number, then copies that syscall number into rsi.",
+        "failure_scenario": "Every syscall dispatch receives the wrong first user argument and cannot correctly implement Linux-style syscall calling conventions.",
+        "fix_instruction": "Save user argument registers before clobbering them and pass syscall number plus all arguments to one syscall dispatcher.",
+        "suggested_code": "// Preserve user rdi before overwriting it. Dispatch as:\n// dispatch(sysno=rax, arg0=rdi, arg1=rsi, arg2=rdx, arg3=r10, arg4=r8, arg5=r9)"
+      },
+      {
+        "id": "ISSUE-096",
+        "category": "BUGS",
+        "severity": "HIGH",
+        "line_start": 84,
+        "line_end": 116,
+        "code_snippet": "extern \"C\" fn dispatch(num: u64, _arg1: u64) -> u64 {\n    match num {\n        0 => sys_exit(),\n        1 => sys_write(),\n        2 => sys_read(),\n        5 => sys_getpid(),\n        _ => {\n            crate::serial::print(b\"[syscall] unknown: \");\n            crate::serial::write_byte(b'0' + (num % 10) as u8);\n            crate::serial::print(b\"\\n\");\n            u64::MAX // error\n        }\n    }\n}\n\nfn sys_exit() -> u64 {\n    crate::serial::print(b\"[syscall] exit\\n\");\n    0\n}\n\nfn sys_write() -> u64 {\n    crate::serial::print(b\"[syscall] write\\n\");\n    0\n}\n\nfn sys_read() -> u64 {\n    crate::serial::print(b\"[syscall] read\\n\");\n    0\n}\n\nfn sys_getpid() -> u64 {\n    NEXT_PID.fetch_add(1, Ordering::Relaxed)\n}",
+        "problem": "syscall.rs defines a syscall dispatch table that conflicts with syscall_table.rs numbering and behavior.",
+        "failure_scenario": "Userland can receive different behavior depending on which syscall path is wired, making ABI compatibility impossible.",
+        "fix_instruction": "Delete one dispatcher or make syscall.rs forward to syscall_table::dispatch with one canonical syscall number map.",
+        "suggested_code": "pub extern 'C' fn syscall_dispatch(sysno: usize, a0: usize, a1: usize, a2: usize, a3: usize, a4: usize, a5: usize) -> usize {\n    crate::syscall_table::dispatch(sysno, a0, a1, a2, a3, a4, a5) as usize\n}"
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-rust-kernel/src/syscall_table.rs",
+    "summary": {
+      "total_issues": 3,
+      "critical": 1,
+      "warnings": 2,
+      "suggestions": 0,
+      "overall_health": "CRITICAL"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-097",
+        "category": "SECURITY",
+        "severity": "CRITICAL",
+        "line_start": 68,
+        "line_end": 101,
+        "code_snippet": "/// sys_read: fd=a0. For fd 0 (stdin), read one key from keyboard.\nfn sys_read(fd: u64, buf_ptr: u64, count: u64) -> i64 {\n    if fd != 0 || count == 0 {\n        return -9; // EBADF for non-stdin\n    }\n    let key = unsafe { crate::keyboard::read_key() };\n    match key {\n        Some(byte) => {\n            unsafe {\n                let ptr = buf_ptr as *mut u8;\n                *ptr = byte;\n            }\n            1\n        }\n        None => 0, // no key available\n    }\n}\n\n/// sys_write: fd=a0, buf=a1, count=a2. Writes to serial for fd 1 (stdout) or 2 (stderr).\nfn sys_write(fd: u64, buf_ptr: u64, count: u64) -> i64 {\n    match fd {\n        1 | 2 => {\n            let len = count as usize;\n            unsafe {\n                let buf = core::slice::from_raw_parts(buf_ptr as *const u8, len);\n                for &byte in buf {\n                    crate::serial::write_byte(byte);\n                }\n            }\n            count as i64\n        }\n        _ => -9, // EBADF\n    }\n}",
+        "problem": "sys_read() and sys_write() dereference arbitrary user pointers without validating address ranges or mappings.",
+        "failure_scenario": "A user process can pass an invalid pointer and crash the kernel, or pass kernel memory and read/write privileged data.",
+        "fix_instruction": "Introduce copy_to_user/copy_from_user helpers that validate user virtual ranges before any slice or pointer write.",
+        "suggested_code": "// Never use from_raw_parts_mut directly on user pointers.\nlet buf = crate::usercopy::UserSliceMut::new(buf_ptr, count)?;\n// copy data through checked usercopy helpers."
+      },
+      {
+        "id": "ISSUE-098",
+        "category": "BUGS",
+        "severity": "HIGH",
+        "line_start": 103,
+        "line_end": 113,
+        "code_snippet": "/// sys_open: stub, logs and returns 0.\nfn sys_open() -> i64 {\n    crate::serial::print(b\"[syscall] open stub\\n\");\n    0\n}\n\n/// sys_close: stub, logs and returns 0.\nfn sys_close() -> i64 {\n    crate::serial::print(b\"[syscall] close stub\\n\");\n    0\n}",
+        "problem": "sys_open() and sys_close() return success without doing anything.",
+        "failure_scenario": "User programs believe files opened or closed successfully while no descriptor table state changed.",
+        "fix_instruction": "Return -ENOSYS until the operations are implemented, or wire them to VFS file descriptor management.",
+        "suggested_code": "fn sys_open(_path_ptr: usize, _flags: usize) -> isize { -38 }\nfn sys_close(_fd: usize) -> isize { -38 }"
+      },
+      {
+        "id": "ISSUE-099",
+        "category": "RELIABILITY",
+        "severity": "HIGH",
+        "line_start": 120,
+        "line_end": 126,
+        "code_snippet": "/// sys_exit: halts the current task (spins forever for now).\nfn sys_exit() -> i64 {\n    crate::serial::print(b\"[syscall] exit called\\n\");\n    loop {\n        core::hint::spin_loop();\n    }\n}",
+        "problem": "sys_exit() spins forever instead of marking the current task exited and scheduling another task.",
+        "failure_scenario": "A process calling exit consumes CPU forever and never releases resources.",
+        "fix_instruction": "Mark the current task dead, release owned resources, and invoke the scheduler. If no task remains, halt the CPU.",
+        "suggested_code": "fn sys_exit(code: usize) -> isize {\n    crate::task::exit_current(code as i32);\n    crate::scheduler::schedule();\n    0\n}"
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-rust-kernel/src/tmpfs.rs",
+    "summary": {
+      "total_issues": 2,
+      "critical": 1,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "CRITICAL"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-092",
+        "category": "BUGS",
+        "severity": "CRITICAL",
+        "line_start": 378,
+        "line_end": 381,
+        "code_snippet": "        // Allocate data block for regular files.\n        let data_off = if file_type == FileType::Regular {\n            alloc_data(0)? // start with 0; grows on write\n        } else {",
+        "problem": "create() allocates zero bytes for every new regular file. alloc_data(0) returns the same offset repeatedly, so files alias the same backing storage.",
+        "failure_scenario": "Writing to one newly created tmpfs file overwrites data visible through another file.",
+        "fix_instruction": "Track per-file capacity and allocate storage on first write or reserve a nonzero extent for each file.",
+        "suggested_code": "// Minimal direction: add a capacity field to Inode and allocate on write when\n// capacity is insufficient; never call alloc_data(0) as a unique file extent."
+      },
+      {
+        "id": "ISSUE-093",
+        "category": "PERFORMANCE",
+        "severity": "MEDIUM",
+        "line_start": 405,
+        "line_end": 425,
+        "code_snippet": "    fn remove(&self, path: &str) -> VfsResult<()> {\n        let ino = find_inode_by_path(path)?;\n        if ino == 0 {\n            return Err(VfsError::PermissionDenied); // can't remove root\n        }\n        unsafe {\n            if !INODES[ino].active {\n                return Err(VfsError::NotFound);\n            }\n            // If directory, check it's empty.\n            if INODES[ino].file_type == FileType::Directory {\n                let mut i = 0;\n                while i < INODES_COUNT {\n                    if INODES[i].active && INODES[i].parent == ino && i != ino {\n                        return Err(VfsError::NotEmpty);\n                    }\n                    i += 1;\n                }\n            }\n            INODES[ino].active = false;\n        }",
+        "problem": "remove() marks inodes inactive but never releases their data extents.",
+        "failure_scenario": "Long-running systems that create and delete temporary files eventually exhaust tmpfs data space.",
+        "fix_instruction": "Add extent tracking/free-list support or document tmpfs as append-only until reboot.",
+        "suggested_code": ""
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-rust-kernel/src/vfs.rs",
+    "summary": {
+      "total_issues": 2,
+      "critical": 0,
+      "warnings": 2,
+      "suggestions": 0,
+      "overall_health": "FAIR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-104",
+        "category": "RELIABILITY",
+        "severity": "HIGH",
+        "line_start": 215,
+        "line_end": 227,
+        "code_snippet": "/// Global mount table.\nstatic mut MOUNTS: [MountPoint; MAX_MOUNTS] = {\n    const EMPTY: MountPoint = MountPoint {\n        path: [0; MAX_PATH],\n        path_len: 0,\n        fs_index: 0,\n        active: false,\n    };\n    [EMPTY; MAX_MOUNTS]\n};\n\n/// Per-process file descriptor table (for now, global single-process).\nstatic mut FD_TABLE: [FileDescriptor; MAX_FDS] = [FileDescriptor::empty(); MAX_FDS];",
+        "problem": "Global mount and file descriptor tables are mutable statics without synchronization.",
+        "failure_scenario": "Concurrent syscalls or interrupts can mutate VFS state at the same time and corrupt mount or fd table entries.",
+        "fix_instruction": "Replace static mut tables with an interrupt-safe lock around VFS state, and avoid returning references that outlive the lock.",
+        "suggested_code": "static VFS_STATE: spin::Mutex<VfsState> = spin::Mutex::new(VfsState::new());"
+      },
+      {
+        "id": "ISSUE-105",
+        "category": "BUGS",
+        "severity": "HIGH",
+        "line_start": 257,
+        "line_end": 268,
+        "code_snippet": "/// Unmount a filesystem at a path.\npub fn umount(path: &str) -> VfsResult<()> {\n    unsafe {\n        for i in 0..MAX_MOUNTS {\n            if MOUNTS[i].active && &MOUNTS[i].path[..MOUNTS[i].path_len] == path.as_bytes() {\n                MOUNTS[i].active = false;\n                return Ok(());\n            }\n        }\n    }\n    Err(VfsError::NotMounted)\n}",
+        "problem": "umount() removes a mount without checking whether file descriptors under that mount are still open.",
+        "failure_scenario": "Open file descriptors can point to a filesystem that has been unmounted, causing later read/write calls to target invalid state.",
+        "fix_instruction": "Track mount references/open files and return busy when any fd belongs to the mount being unmounted.",
+        "suggested_code": "if has_open_fds_for_mount(index) {\n    return Err(VfsError::Busy);\n}"
+      }
+    ],
+    "global_notes": []
+  },
+  {
+    "file": "daisy-rust-kernel/tests/test_kernel.rs",
+    "summary": {
+      "total_issues": 1,
+      "critical": 0,
+      "warnings": 1,
+      "suggestions": 0,
+      "overall_health": "FAIR"
+    },
+    "issues": [
+      {
+        "id": "ISSUE-084",
+        "category": "FAILURES",
+        "severity": "HIGH",
+        "line_start": 1,
+        "line_end": 50,
+        "code_snippet": "use daisy_kernel::capability::{CapabilitySystem, Perms, ResType};\nuse daisy_kernel::task::{TaskManager, TaskState};\nuse daisy_kernel::ipc::{IPCSystem, Message};\nuse daisy_kernel::scheduler::Scheduler;\n\n#[test]\nfn test_cap_grant_check() {\n    let mut caps = CapabilitySystem::new();\n    caps.grant(1, ResType::Task, 0, Perms::CREATE | Perms::DESTROY);\n    assert!(caps.check(1, ResType::Task, 0, Perms::CREATE));\n    assert!(!caps.check(2, ResType::Task, 0, Perms::CREATE));\n}\n\n#[test]\nfn test_cap_copy_revoke() {\n    let mut caps = CapabilitySystem::new();\n    let cid = caps.grant(1, ResType::Endpoint, 5, Perms::SEND);\n    caps.copy_cap(cid, 2);\n    assert!(caps.check(2, ResType::Endpoint, 5, Perms::SEND));\n    caps.revoke_all(2);\n    assert!(!caps.check(2, ResType::Endpoint, 5, Perms::SEND));\n}\n\n#[test]\nfn test_task_lifecycle() {\n    let mut tm = TaskManager::new();\n    let t = tm.create_task(\"test\", 0, 5);\n    assert!(tm.is_alive(t));\n    assert_eq!(tm.count_alive(), 1);\n    tm.destroy_task(t);\n    assert!(!tm.is_alive(t));\n}\n\n#[test]\nfn test_ipc_send_recv() {\n    let mut ipc = IPCSystem::new();\n    let ep = ipc.create_endpoint(1, b\"test\");\n    let msg = Message { sender: 1, msg_type: 0, payload: b\"hello\".to_vec(), caps: vec![] };\n    ipc.send(ep, msg).unwrap();\n    let got = ipc.recv(ep).unwrap();\n    assert_eq!(got.payload, b\"hello\");\n}\n\n#[test]\nfn test_scheduler_priority() {\n    let mut s = Scheduler::new();\n    s.add(10, 9);\n    s.add(20, 0);\n    assert_eq!(s.next().unwrap(), 20);\n}",
+        "problem": "Integration tests use normal #[test] functions against a no_std/no_main kernel crate. cargo test --target x86_64-unknown-none fails because the test crate and panic handler are unavailable.",
+        "failure_scenario": "CI cannot run kernel tests on the configured bare-metal target.",
+        "fix_instruction": "Move pure logic into a host-testable library with hardware modules cfg-gated, or implement a custom no_std test harness for QEMU-based tests.",
+        "suggested_code": "// Example direction:\n// #[cfg(test)] build pure modules for the host target, and keep hardware asm\n// behind #[cfg(target_os = 'none')] so cargo test can execute unit tests."
+      }
+    ],
+    "global_notes": []
+  }
+]

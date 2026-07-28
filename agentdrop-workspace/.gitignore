@@ -1,0 +1,12 @@
+.ig-cookies.txt
+.ig-session.json
+.ig-device.json
+.dm-seen.json
+.curate-skips.json
+.thumbs/
+instagram-saved/
+reels/
+__pycache__/
+*.log
+.models/
+.venv/

@@ -1,0 +1,22 @@
+If you are new to Cloud Code, do not watch another tutorial
+until you do this one thing first.
+And Droppic has released a GitHub repository
+and they are the company behind Cloud Code.
+This repository includes skills, cookbooks,
+prompt engineering guides, full courses,
+quick start resources, and even the source code
+for Cloud Code itself.
+Many people spend time scrolling through content,
+installing random skills, and becoming overwhelmed.
+A more effective approach is to use this repository
+as a foundation.
+You can bring it into Cloud Code and use it
+to explore the basics, learn structured workflows,
+and build a strong starting point.
+This allows you to work from a reliable source,
+rather than relying on trial and error.
+If anyone understands how to use Cloud Code effectively,
+it is the team that created it.
+You can find the repository link
+and a starter workflow in the caption.
+DM's send, and I'll send you the link.

@@ -1,0 +1,12 @@
+This is the only GitHub repo you need for Cloud Code.
+This is called everything Cloud Code.
+And it has almost 200,000 stars on GitHub.
+And it was built inside of Anthropics own hackathon.
+But inside you get 28 specialized subagents,
+119 skills, 60 slash commands, 34 rules, 20 automated hooks,
+and 14 MCP servers, all in one repo.
+That's insane.
+This turns your Cloud Code into a full blown dev team.
+It's insane.
+If you want to try for yourself,
+comment the word free and I'll send you the link directly.

@@ -1,0 +1,14 @@
+We can combine graphify with Obsidian to create an insanely powerful second brain for cloud code.
+We start this off with graphify, we can use graphify to point at any sort of repository out there
+whether it's a code base or not and turn that into a knowledge graph.
+That sort of knowledge graph looks just like this. It's taking a look at a bunch of documentation,
+in this case all of the cloud code documentation and broken out the concepts into nodes
+and then tied all of them together where it sees fit. Now this knowledge graph itself is super useful,
+but what if I wanted to bring this into Obsidian and sort of merge it with my current vault?
+But we can easily do that because graphify has its own command to take your knowledge graph and turn it into a vault.
+Once that standalone vault is created we just tell Cloud code to merge it with our main vault.
+And you can see that right here, this is my main vaults graph view and this huge cluster up here
+are all the cloud code documents I just pulled in from that graphify vault and it took just one
+command inside a cloud code. So the combination of these two tools allows you to improve all of them
+within your cloud code ecosystem. I did a full deep dive on this on my YouTube so check that out
+if you want to learn more.

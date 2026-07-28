@@ -1,0 +1,64 @@
+1
+00:00:00,000 --> 00:00:06,000
+If you're using Claude code and you think it actually knows your business, it's just pretending to.
+
+2
+00:00:06,000 --> 00:00:10,600
+Every time you start a new session with Claude, it re reads your files from scratch.
+
+3
+00:00:10,600 --> 00:00:15,600
+We're looking at hundreds of tokens that are wasted for Claude to just remember what it already knew.
+
+4
+00:00:15,600 --> 00:00:19,200
+What we're looking at is graphify inside of Obsidian.
+
+5
+00:00:19,200 --> 00:00:27,000
+Graphify turns your entire code base, your documents, your strategy notes, even your images into this.
+
+6
+00:00:27,000 --> 00:00:28,000
+A knowledge graph.
+
+7
+00:00:28,000 --> 00:00:31,600
+It maps how everything in your business actually connects with one another.
+
+8
+00:00:31,600 --> 00:00:33,600
+And it actually persists.
+
+9
+00:00:33,600 --> 00:00:38,200
+So you could see how some of my digital assets actually connect to other parts of my code base.
+
+10
+00:00:38,200 --> 00:00:42,600
+Now, when I ask Claude, how does my content pipeline connect to revenue?
+
+11
+00:00:42,600 --> 00:00:45,200
+It doesn't grab through 300 files.
+
+12
+00:00:45,200 --> 00:00:46,600
+It already has the map.
+
+13
+00:00:46,600 --> 00:00:48,000
+And it was a one time build.
+
+14
+00:00:48,000 --> 00:00:51,000
+70x fewer tokens per search.
+
+15
+00:00:51,000 --> 00:00:55,000
+In the next video, I'm going to show you how to set this up, so make sure you shoot me a follow.
+
+16
+00:00:55,000 --> 00:01:00,000
+And comment AI agent for access to all of my free Claude code guides and templates.
+

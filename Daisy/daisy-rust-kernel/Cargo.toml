@@ -1,0 +1,19 @@
+[package]
+name = "daisy-kernel"
+version = "2.0.0"
+edition = "2021"
+
+[dependencies]
+x86_64 = "0.15"
+spin = { version = "0.10", features = ["mutex", "once"] }
+bitflags = "2.6"
+log = "0.4"
+
+[dependencies.uefi]
+version = "0.33"
+features = ["alloc"]
+
+[profile.release]
+panic = "abort"
+opt-level = "z"
+lto = true

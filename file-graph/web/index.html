@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>File Graph</title>
+<style>
+  :root {
+    --bg: #0b0d12;
+    --bg2: #11141c;
+    --ink: #e8eaf2;
+    --ink-dim: #9aa0b4;
+    --ink-faint: #7b829b;
+    --mint: #9fe8c9;
+    --lav: #c3b8f5;
+    --peach: #f5c9a8;
+    --rose: #f2a9c4;
+    --sky: #a8d8f5;
+    --glass: rgba(255, 255, 255, 0.045);
+    --glass-brd: rgba(255, 255, 255, 0.09);
+    --r: 18px; /* Border radius */
+    --shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+
+    --panel: var(--glass); --border: var(--glass-brd);
+    --text: var(--ink); --dim: var(--ink-dim);
+    --accent: var(--mint); --green: var(--mint); --pink: var(--rose); --amber: var(--peach);
+    --red: var(--rose); --cyan: var(--sky);
+  }
+  * { box-sizing: border-box; margin: 0; }
+  *::-webkit-scrollbar { width: 6px; height: 6px; }
+  *::-webkit-scrollbar-thumb { background: rgba(255,255,255,.14); border-radius: 3px; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  :focus { outline: none; }
+  :focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(165,180,252,.55); }
+  body { background: radial-gradient(circle at 15% 50%, rgba(195, 184, 245, 0.15), transparent 25%), radial-gradient(circle at 85% 30%, rgba(159, 232, 201, 0.15), transparent 25%), radial-gradient(circle at 50% 80%, rgba(242, 169, 196, 0.15), transparent 25%), var(--bg); color: var(--text); font: 14px/1.5 "Avenir Next", -apple-system, "SF Pro Text", sans-serif; overflow: hidden; height: 100vh; }
+  canvas { position: fixed; inset: 0; }
+  .panel { position: fixed; background: var(--glass); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border: 1px solid var(--glass-brd); border-radius: var(--r); padding: 14px; box-shadow: var(--shadow); }
+  #topbar { top: 16px; left: 16px; right: 16px; display: flex; gap: 10px; align-items: center; }
+  #topbar h1 { font-size: 15px; font-weight: 600; white-space: nowrap; }
+  #topbar h1 span { color: var(--accent); }
+  #search { flex: 1; background: rgba(255,255,255,.06); border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; color: var(--text); font-size: 14px; outline: none; }
+  #search:focus { border-color: var(--accent); }
+  select, button { background: var(--glass); border: 1px solid var(--border); border-radius: var(--r); color: var(--text); padding: 8px 12px; font-size: 13px; cursor: pointer; transition: 0.2s; }
+  button:hover { border-color: var(--accent); }
+  #stats { font-size: 12px; color: var(--dim); white-space: nowrap; }
+  #mindmap { position: fixed; inset: 84px 16px 16px; overflow: auto; display: none; padding: 18px 18px 120px; }
+  .mind-title { max-width: 980px; margin: 0 auto 14px; }
+  .mind-title h2 { font-size: 18px; margin-bottom: 3px; }
+  .mind-title p { color: var(--dim); font-size: 12px; }
+  .mind-tree { max-width: 980px; margin: 0 auto; }
+  .mind-row { margin-left: calc(var(--depth) * 28px); border-left: 1px solid rgba(165,180,252,.24); padding: 5px 0 5px 16px; }
+  .mind-card { display: flex; gap: 10px; align-items: center; max-width: 760px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 12px; background: rgba(24,27,36,.76); cursor: pointer; }
+  .mind-card:hover { border-color: var(--accent); background: rgba(40,44,58,.85); }
+  .mind-card .label { font-weight: 600; }
+  .mind-card .sub { color: var(--dim); font-size: 11px; margin-left: auto; text-align: right; }
+  .mind-card .chevron { width: 18px; color: var(--accent); font-size: 15px; }
+  .mind-card.cloud { border-color: rgba(103,232,249,.28); }
+  body.mind-active #cv { display: none; }
+  #side { top: 84px; right: 16px; width: 320px; max-height: calc(100vh - 116px); overflow-y: auto; display: none; }
+  #side h2 { font-size: 13px; word-break: break-all; margin-bottom: 4px; }
+  #side .meta { font-size: 12px; color: var(--dim); margin-bottom: 10px; }
+  #side h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--dim); margin: 12px 0 6px; }
+  .item { padding: 6px 8px; border-radius: 8px; cursor: pointer; font-size: 12.5px; display: flex; gap: 6px; align-items: center; }
+  .item:hover { background: rgba(255,255,255,.06); }
+  .item .score { margin-left: auto; color: var(--dim); font-size: 11px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  #privacy { bottom: 16px; left: 16px; width: 340px; max-height: 46vh; overflow-y: auto; }
+  #privacy h3 { font-size: 12px; margin-bottom: 8px; display:flex; align-items:center; gap:6px; }
+  #privacy .hint { font-size: 11px; color: var(--dim); margin-bottom: 10px; }
+  .rule { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 12.5px; }
+  .rule .path { flex: 1; word-break: break-all; }
+  .toggle { width: 34px; height: 20px; border-radius: 10px; background: rgba(255,255,255,.15); position: relative; cursor: pointer; flex: none; transition: background .2s; }
+  .toggle::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: left .2s; }
+  .toggle.on { background: var(--green); } .toggle.on::after { left: 16px; }
+  .toggle.off { background: var(--red); }
+  #addrule { display: flex; gap: 6px; margin-top: 8px; }
+  #addrule input { flex: 1; background: rgba(255,255,255,.06); border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; color: var(--text); font-size: 12px; outline: none; }
+  #results { top: 84px; left: 16px; width: 360px; max-height: calc(100vh - 380px); overflow-y: auto; display: none; }
+  .badge { font-size: 10px; padding: 1px 6px; border-radius: 999px; background: var(--glass); border: 1px solid var(--glass-brd); color: var(--rose); }
+  #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 8px 16px; font-size: 13px; opacity: 0; transition: opacity .3s; pointer-events: none; backdrop-filter: blur(18px); }
+  .icon { width: 13px; height: 13px; flex: none; stroke: var(--accent); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  @media (prefers-reduced-motion: reduce) {
+    .toggle, .toggle::after, #toast { transition: none; }
+  }
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div class="panel" id="topbar">
+  <h1>File <span>Graph</span></h1>
+  <input id="search" placeholder="Search your files by meaning… (Enter)">
+  <select id="mode"><option value="semantic">semantic</option><option value="keyword">keyword</option></select>
+  <button id="mindBtn">Mind Map</button>
+  <button id="rescan">Rescan</button>
+  <div id="stats">loading…</div>
+</div>
+<div class="panel" id="results"></div>
+<div class="panel" id="side"></div>
+<div id="mindmap"><div class="mind-title"><h2>AI Mind Map</h2><p>Expand only the branches you need. Google Drive entries stay metadata-only; use search or a file card for exact context.</p></div><div class="mind-tree" id="mindtree"></div></div>
+<div class="panel" id="privacy">
+  <h3><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>AI Access Control</h3>
+  <div class="hint">What Claude &amp; other AIs can see through MCP. Longest matching path wins. Everything runs locally.</div>
+  <div id="rules"></div>
+  <div id="addrule"><input id="newprefix" placeholder="/Users/you/private-folder"><button id="deny">Block</button></div>
+</div>
+<div id="toast"></div>
+<script>
+const HOME = null; // resolved from first tree call
+const KIND_COLORS = { folder:"#a5b4fc", code:"#86efac", doc:"#f9a8d4", data:"#fcd34d", image:"#67e8f9", video:"#c4b5fd", audio:"#fda4af", archive:"#d6d3d1", other:"#8b90a0" };
+const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
+const $ = id => document.getElementById(id);
+let W, H, DPR = window.devicePixelRatio || 1;
+function resize(){ W = innerWidth; H = innerHeight; cv.width = W*DPR; cv.height = H*DPR; cv.style.width=W+"px"; cv.style.height=H+"px"; ctx.setTransform(DPR,0,0,DPR,0,0); }
+addEventListener("resize", resize); resize();
+
+// ---- graph state ----
+let nodes = new Map(); // path -> node
+let edges = [];        // {a, b}
+let cam = { x: 0, y: 0, z: 1 };
+let homePath = null;
+let viewMode = "graph";
+const mindChildren = new Map();
+
+function addNode(d, parent){
+  if (nodes.has(d.path)) return nodes.get(d.path);
+  const angle = Math.random() * Math.PI * 2;
+  const px = parent ? parent.x + Math.cos(angle)*80 : 0;
+  const py = parent ? parent.y + Math.sin(angle)*80 : 0;
+  const n = { ...d, x: px, y: py, vx: 0, vy: 0, expanded: false, r: d.is_dir ? Math.min(18, 8 + Math.log2(1+(d.child_count||0))*1.8) : 5 };
+  nodes.set(d.path, n);
+  if (parent) edges.push({ a: parent, b: n });
+  return n;
+}
+
+async function expand(node){
+  if (node.expanded || !node.is_dir) return;
+  node.expanded = true;
+  const r = await fetch(`/api/tree?path=${encodeURIComponent(node.path)}`).then(r=>r.json());
+  const kids = r.children.slice(0, 60);
+  for (const c of kids) addNode(c, node);
+  if (r.children.length > 60) toast(`showing 60 of ${r.children.length} items`);
+}
+
+async function boot(){
+  const r = await fetch("/api/tree").then(r=>r.json());
+  homePath = r.path;
+  mindChildren.set(homePath, r.children);
+  const root = addNode({ path: r.path, name: "Home", is_dir: 1, kind: "folder", child_count: r.children.length, allowed: true }, null);
+  root.expanded = true; root.fixed = true;
+  for (const c of r.children) addNode(c, root);
+  refreshStats(); refreshRules();
+}
+
+function esc(s){ return String(s ?? "").replace(/[&<>\"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;", "'":"&#39;"}[c])); }
+function mindMeta(n){
+  const bits = [n.kind || (n.is_dir ? "folder" : "file")];
+  if (n.child_count) bits.push(`${n.child_count.toLocaleString()} items`);
+  if (n.size) bits.push(fmtSize(n.size));
+  if (n.is_cloud) bits.push("☁ cloud metadata");
+  if (n.is_project_root) bits.push("project");
+  return bits.join(" · ");
+}
+function renderMindMap(){
+  const tree = $("mindtree"), children = mindChildren.get(homePath) || [];
+  let html = "";
+  const walk = (items, depth) => {
+    for (const n of items.slice(0, 100)) {
+      const open = mindChildren.has(n.path);
+      const arrow = n.is_dir ? (open ? "⌄" : "›") : "·";
+      html += `<div class="mind-row" style="--depth:${depth}"><div class="mind-card ${n.is_cloud ? "cloud" : ""}" data-path="${esc(n.path)}"><span class="chevron">${arrow}</span><span class="dot" style="background:${KIND_COLORS[n.kind] || KIND_COLORS.other}"></span><span class="label">${esc(n.name)}</span><span class="sub">${esc(mindMeta(n))}</span></div></div>`;
+      if (open && n.is_dir) walk(mindChildren.get(n.path), depth + 1);
+    }
+    if (items.length > 100) html += `<div class="mind-row" style="--depth:${depth}"><div class="mind-card"><span class="label">… ${items.length - 100} more items; use search to narrow</span></div></div>`;
+  };
+  walk(children, 0);
+  tree.innerHTML = html || `<div class="mind-card"><span class="label">No indexed children at this level.</span></div>`;
+}
+$("mindmap").addEventListener("click", async e => {
+  const card = e.target.closest(".mind-card[data-path]");
+  if (!card) return;
+  const path = card.dataset.path;
+  let n = nodes.get(path);
+  if (!n) {
+    const parent = path.slice(0, path.lastIndexOf("/"));
+    const list = mindChildren.get(parent) || [];
+    n = list.find(x => x.path === path);
+    if (n) nodes.set(path, n);
+  }
+  if (!n) return;
+  selected = n;
+  showDetail(n);
+  if (n.is_dir && !mindChildren.has(path)) {
+    const r = await fetch(`/api/tree?path=${encodeURIComponent(path)}`).then(r=>r.json());
+    mindChildren.set(path, r.children);
+  } else if (n.is_dir) {
+    mindChildren.delete(path);
+  }
+  renderMindMap();
+});
+$("mindBtn").onclick = () => {
+  viewMode = viewMode === "graph" ? "mind" : "graph";
+  document.body.classList.toggle("mind-active", viewMode === "mind");
+  $("mindmap").style.display = viewMode === "mind" ? "block" : "none";
+  $("mindBtn").textContent = viewMode === "mind" ? "Graph View" : "Mind Map";
+  if (viewMode === "mind") renderMindMap();
+};
+
+// ---- physics ----
+const REDUCED_MOTION = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const DAMPING = REDUCED_MOTION ? .6 : .86; // Reduce Motion: heavier damping, graph settles fast
+function step(){
+  const ns = [...nodes.values()];
+  for (const e of edges){
+    const dx = e.b.x - e.a.x, dy = e.b.y - e.a.y;
+    const d = Math.hypot(dx, dy) || 1, want = e.a.r + e.b.r + 46;
+    const f = (d - want) * 0.02;
+    e.a.vx += dx/d*f; e.a.vy += dy/d*f; e.b.vx -= dx/d*f; e.b.vy -= dy/d*f;
+  }
+  for (let i=0;i<ns.length;i++) for (let j=i+1;j<ns.length;j++){
+    const a = ns[i], b = ns[j];
+    const dx = b.x-a.x, dy = b.y-a.y; const d2 = dx*dx+dy*dy;
+    if (d2 > 40000 || d2 === 0) continue;
+    const d = Math.sqrt(d2), f = 320/d2;
+    a.vx -= dx/d*f; a.vy -= dy/d*f; b.vx += dx/d*f; b.vy += dy/d*f;
+  }
+  for (const n of ns){
+    if (n.fixed){ n.vx = n.vy = 0; continue; }
+    n.vx *= DAMPING; n.vy *= DAMPING; n.x += n.vx; n.y += n.vy;
+  }
+}
+
+let selected = null, hovered = null;
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  ctx.save();
+  ctx.translate(W/2 + cam.x, H/2 + cam.y); ctx.scale(cam.z, cam.z);
+  ctx.strokeStyle = "rgba(255,255,255,.07)"; ctx.lineWidth = 1;
+  for (const e of edges){ ctx.beginPath(); ctx.moveTo(e.a.x,e.a.y); ctx.lineTo(e.b.x,e.b.y); ctx.stroke(); }
+  for (const n of nodes.values()){
+    const c = KIND_COLORS[n.kind] || KIND_COLORS.other;
+    ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, 7);
+    ctx.fillStyle = n.allowed === false ? "rgba(252,165,165,.25)" : c + (n.is_dir ? "e6" : "99");
+    ctx.fill();
+    if (n === selected || n === hovered){ ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5/cam.z; ctx.stroke(); }
+    if (n.allowed === false){ ctx.fillStyle = "#fca5a5"; ctx.font = `${10/cam.z<10?10:10}px sans-serif`; ctx.fillText("🔒", n.x - 5, n.y + 3); }
+    if (n.is_dir || n === hovered || n === selected || cam.z > 1.6){
+      ctx.fillStyle = "rgba(232,234,240,.85)"; ctx.font = "10px -apple-system, sans-serif";
+      ctx.textAlign = "center"; ctx.fillText(n.name.slice(0, 26), n.x, n.y + n.r + 12);
+    }
+  }
+  ctx.restore();
+}
+(function loop(){ step(); draw(); requestAnimationFrame(loop); })();
+
+// ---- interaction ----
+function pick(mx, my){
+  const gx = (mx - W/2 - cam.x)/cam.z, gy = (my - H/2 - cam.y)/cam.z;
+  let best = null, bd = 1e9;
+  for (const n of nodes.values()){
+    const d = Math.hypot(n.x-gx, n.y-gy);
+    if (d < n.r + 8 && d < bd){ best = n; bd = d; }
+  }
+  return best;
+}
+let drag = null, panning = false, lx=0, ly=0;
+cv.addEventListener("mousedown", e => { lx=e.clientX; ly=e.clientY; drag = pick(e.clientX, e.clientY); panning = !drag; });
+cv.addEventListener("mousemove", e => {
+  hovered = pick(e.clientX, e.clientY);
+  cv.style.cursor = hovered ? "pointer" : "grab";
+  if (drag){ drag.x += (e.clientX-lx)/cam.z; drag.y += (e.clientY-ly)/cam.z; drag.vx=drag.vy=0; }
+  else if (panning && e.buttons){ cam.x += e.clientX-lx; cam.y += e.clientY-ly; }
+  lx=e.clientX; ly=e.clientY;
+});
+cv.addEventListener("mouseup", async e => {
+  if (drag && Math.hypot(e.clientX-lx, e.clientY-ly) < 4){}
+  const n = drag; drag = null; panning = false;
+  if (n){ selected = n; showDetail(n); if (n.is_dir) await expand(n); }
+});
+cv.addEventListener("wheel", e => { e.preventDefault(); const f = e.deltaY < 0 ? 1.1 : .9; cam.z = Math.max(.15, Math.min(4, cam.z*f)); }, { passive:false });
+
+// ---- panels ----
+function toast(msg){ const t = $("toast"); t.textContent = msg; t.style.opacity = 1; setTimeout(()=>t.style.opacity=0, 2600); }
+function fmtSize(b){ if(!b) return ""; const u=["B","KB","MB","GB"]; let i=0; while(b>=1024&&i<3){b/=1024;i++;} return b.toFixed(i?1:0)+u[i]; }
+
+async function showDetail(n){
+  const side = $("side"); side.style.display = "block";
+  side.innerHTML = `<h2>${n.name}</h2><div class="meta">${n.path}<br>${n.kind}${n.size?" · "+fmtSize(n.size):""}${n.is_cloud?" · ☁️ cloud (metadata only)":""}${n.allowed===false?' · <span class="badge">hidden from AIs</span>':""}</div><h3>Loading related…</h3>`;
+  if (n.is_dir) { side.innerHTML = side.innerHTML.replace("<h3>Loading related…</h3>",
+    `<button onclick="toggleAccess('${n.path.replace(/'/g,"\\'")}', ${n.allowed===false})">${n.allowed===false?"Allow AI access":"Block AI access"}</button>`); return; }
+  const r = await fetch(`/api/related?path=${encodeURIComponent(n.path)}`).then(r=>r.json());
+  let html = `<h2>${n.name}</h2><div class="meta">${n.path}<br>${n.kind}${n.size?" · "+fmtSize(n.size):""}</div>`;
+  if (r.semantic?.length){ html += `<h3>Similar files</h3>` + r.semantic.map(itemHtml).join(""); }
+  if (r.siblings?.length){ html += `<h3>Same folder</h3>` + r.siblings.slice(0,8).map(itemHtml).join(""); }
+  side.innerHTML = html;
+}
+function itemHtml(r){
+  const c = KIND_COLORS[r.kind]||KIND_COLORS.other;
+  return `<div class="item" onclick="jumpTo('${r.path.replace(/'/g,"\\'")}')"><span class="dot" style="background:${c}"></span><span>${r.name}</span>${r.score?`<span class="score">${(r.score*100|0)}%</span>`:""}</div>`;
+}
+window.jumpTo = async path => {
+  // expand ancestors so the node exists, then select it
+  if (!nodes.has(path)){
+    const parts = path.replace(homePath,"").split("/").filter(Boolean);
+    let cur = homePath, node = nodes.get(homePath);
+    for (const p of parts){ if (node?.is_dir) await expand(node); cur += "/"+p; node = nodes.get(cur); if (!node) break; }
+  }
+  const n = nodes.get(path);
+  if (n){ selected = n; cam.x = -n.x*cam.z; cam.y = -n.y*cam.z; showDetail(n); }
+};
+
+$("search").addEventListener("keydown", async e => {
+  if (e.key !== "Enter") return;
+  const q = e.target.value.trim(); if (!q) { $("results").style.display="none"; return; }
+  const mode = $("mode").value;
+  $("results").style.display = "block"; $("results").innerHTML = "Searching…";
+  const r = await fetch(`/api/search?q=${encodeURIComponent(q)}&mode=${mode}`).then(r=>r.json());
+  $("results").innerHTML = `<h3 style="font-size:11px;color:var(--dim);text-transform:uppercase;margin-bottom:6px">${r.results.length} results (${mode})</h3>` +
+    (r.results.map(x => itemHtml(x) + (x.allowed===false?`<div style="margin:-4px 0 4px 22px"><span class="badge">hidden from AIs</span></div>`:"")).join("") || "No results — try a rescan?");
+});
+
+async function refreshRules(){
+  const r = await fetch("/api/rules").then(r=>r.json());
+  $("rules").innerHTML = r.rules.map(x =>
+    `<div class="rule"><div class="toggle ${x.allow?"on":"off"}" onclick="setRule('${x.prefix.replace(/'/g,"\\'")}', ${x.allow?0:1})"></div><div class="path">${x.prefix.replace(homePath||"","~")}</div><button style="padding:2px 8px;font-size:11px" onclick="dropRule(${x.id})">✕</button></div>`
+  ).join("") || `<div class="hint">No rules yet — everything indexed is visible to AIs.</div>`;
+}
+window.setRule = async (prefix, allow) => { await fetch("/api/rules", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({prefix, allow: !!allow}) }); refreshRules(); toast(allow?"Folder visible to AIs":"Folder hidden from AIs"); };
+window.dropRule = async id => { await fetch(`/api/rules/${id}`, { method:"DELETE" }); refreshRules(); };
+window.toggleAccess = (path, allow) => { setRule(path, allow ? 1 : 0); const n = nodes.get(path); if (n) n.allowed = !!allow; showDetail(n); };
+$("deny").onclick = () => { const v = $("newprefix").value.trim(); if (v) { setRule(v, 0); $("newprefix").value=""; } };
+
+async function refreshStats(){
+  const s = await fetch("/api/stats").then(r=>r.json());
+  let txt = `${s.files.toLocaleString()} files · ${s.embedded.toLocaleString()} embedded`;
+  if (s.scan.state === "scanning") txt = `scanning… ${s.scan.scanned.toLocaleString()}`;
+  else if (s.embed.state === "embedding") txt = `embedding… ${s.embed.done}/${s.embed.total}`;
+  $("stats").textContent = txt;
+  if (s.scan.state !== "idle" || s.embed.state !== "idle") setTimeout(refreshStats, 1500);
+  else setTimeout(refreshStats, 15000);
+}
+$("rescan").onclick = async () => { await fetch("/api/scan", {method:"POST"}); toast("Scan started"); setTimeout(refreshStats, 800); };
+
+boot();
+</script>
+</body>
+</html>

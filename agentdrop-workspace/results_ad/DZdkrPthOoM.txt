@@ -1,0 +1,22 @@
+This is what happens when you let AI set up your server and nobody knows what they're doing.
+22,000, that's the bill.
+Keep listening because I'm going to show you exactly what went wrong.
+This is what you get when you try to do yourself or you hire 20-year-olds who've never
+developed a real production system a day in their lives.
+Kids so green their balls haven't even dropped yet.
+They can prompt AI all day but they don't know DevOps.
+Now, this 22,000 was not for some massive enterprise platform.
+This was a broke and set up getting abused by the same traffic over and over again.
+They had auto scaling turned on which means every time the traffic spike the cloud just kept
+adding more to the server.
+But they had no real security in the front end, no rate limit, no IP blocking, no fire wall rules,
+no detox production, no one's stopping the same attack or some coming back again and again.
+Group forcing the way right through the front door.
+And the sad funny part, they weren't just getting attacked, they got build for the attack.
+Instead of blocking the junk traffic, their system basically said it looks busy,
+spin up more servers, and the build kept climbing.
+And yes, they got through.
+We've found all sorts of malicious files sitting on the system, including SQL script files.
+AI didn't just cost them 22,000, letting clueless people play DevOps in production did.
+Make sure you work with the professional if you're going to set up your service,
+especially if you're a legitimate company and you have a lot of protocols in your follow.

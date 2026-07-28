@@ -1,0 +1,33 @@
+I just vibe-coded an entire app in two hours.
+It works. It looks great, but I have no idea if it's actually secure.
+Like, could someone hack this thing?
+Oh, they absolutely could. And they will.
+Unless you use these five prompts to lock it down before it's too late.
+Prom number one.
+Tell your AI to implement rate limiting on all endpoints.
+Five attempts max per 15 minutes on login routes.
+That way hackers can't brute force their way in.
+Oh yeah, that's smart.
+What about the passwords I left in the code?
+You did what?
+That's prompt number two, you buffoon.
+Tell the AI to scan your entire code base for any hard code.
+And prompt three.
+Move all sensitive data to environment variables.
+Make sure nothing is exposed in the front end or committed to get.
+You absolute walnut.
+Okay, okay, I'm writing this down.
+What else?
+Promt four.
+Scented eyes all user inputs and reject anything oversized or malformed.
+Unless you want someone injecting code straight into your database.
+That sounds bad.
+It is bad, Peter.
+And finally, prompt five.
+Run a full security audit and report any remaining vulnerabilities.
+Think of it as a final health check before you unleash your little creation on the world.
+Bang, Struy, you just saved my app and probably my identity.
+You're welcome.
+Now, if you found this useful, follow this page for more tips.
+So you don't get destroyed on the internet.
+Do it now.

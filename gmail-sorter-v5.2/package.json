@@ -1,0 +1,33 @@
+{
+  "name": "gmail-sorter",
+  "version": "5.2.0",
+  "description": "Smart Gmail inbox classifier — works with Claude Code or standalone Node.js",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/natehcmd/gmail-sorter-v5.2.git"
+  },
+  "keywords": [
+    "gmail",
+    "email",
+    "inbox",
+    "classifier",
+    "claude-code",
+    "skill",
+    "triage"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "type": "module",
+  "scripts": {
+    "setup": "node src/setup.js",
+    "sort": "node src/sort-now.mjs",
+    "test-batch": "node src/sort-now.mjs --test-batch"
+  },
+  "dependencies": {
+    "@google-cloud/local-auth": "^3.0.1",
+    "google-auth-library": "^9.0.0",
+    "googleapis": "^140.0.0"
+  }
+}

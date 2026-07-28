@@ -1,0 +1,12 @@
+Everyone tells you to learn Gitan GitHub, but no one actually shows you how, so here's the exact
+how I would learn them today if I had to start from scratch.
+First I will bash this brand new Gitan GitHub Crash Course.
+It starts from Episode 0 and walks you to the core commands like commits, branches, and
+merges.
+So you understand the fundamentals.
+Then I will do this in certain websites that walks you to a GitHub step by step
+I also know everything visually in the browser which makes things like branching and
+re-basing much easier to understand and finally I will watch this video that explains how
+experience table of abstraction use gets things like clean commentary, branching method
+to full request, and merge versus rebates.
+If you want to link to all these resources, it cannot get any other send them to you.

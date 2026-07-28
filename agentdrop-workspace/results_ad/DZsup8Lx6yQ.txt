@@ -1,0 +1,27 @@
+To get cursor, codecs, cloud code,
+solo developer just dropped the coding agent
+that's 20 times more memory efficient than cloud code,
+and 63 times faster than codecs.
+And it's open source and completely free to use.
+It's called J code.
+And to understand why this is a big deal,
+you need to know one thing first.
+Tools like cloud code and codecs,
+CLI have a layer between you and the AI model.
+That layer handles your prompts,
+your tools, your memory, and your session.
+It's called harness and J code just rebuilt
+that entire layer from scratch in rust.
+The performance numbers are insane.
+20 times more memory efficient than cloud code,
+63 times faster than codecs.
+But here's where it gets interesting.
+J code has a built-in memory system
+with zero extra setup.
+It natively supports parallel sessions.
+And the craziest part is agents can spawn in their own teammate.
+One agent becomes a coordinator
+and the others become workers
+and they all collaborate on the same codebase.
+If you want to try this yourself,
+follow me in the comment, AI and I'll send it to you.

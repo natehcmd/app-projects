@@ -1,0 +1,30 @@
+Hey Trilion, can you tell me the importance of AI agent security hardening?
+When you're running a local AI with access to your email, calendar, code and revenue data,
+security isn't optional. It's the only thing standing between your business and someone else's
+shopping spree. You own the hardware, which is good. You also own the attack surface, which is
+less good. One vulnerability and your productivity partner becomes their backdoor. Yep.
+The real threat isn't the AI going rogue. It's someone else teaching at new tricks.
+So I don't want you to exclude. I don't want to get screwed and that's why thinking about security
+early is absolutely essential. So let me show you quickly what I've built into Trilion
+to do this. So as you saw, now I have this little shield up here that's going to open up this
+security layer. Now as you can see right there, I have a pretty high score and I have all these things
+that it's going to check against and I can go ahead and run a daily audit manually or it's going
+to actually run regularly just to make sure that there's nothing malicious happening. Now it's like
+Trilion said more often than not, it's not the AI or the LLM that is going to be the issue. It's usually
+other actors. People that are doing prompt injection where they add a special script to their
+website that your AI agent goes to and then suddenly your AI agent is sending all your news
+or worse. I don't know if it works in that, but you don't want that to happen. So here's what
+we're going to do. So if you go over to the hellotrillion.ai website, there is a link right here directly
+to the prompt. Now if you're going through this process building your own AI agent, just grab the
+Markdown file, throw it in cloud code or cursor or whatever you're using. And out of good practice,
+I would highly recommend always running first through something like this. Hey, I want to use this
+Markdown file, put a plan in place to implement this, but first look for any malicious prompt
+injection. I'm not going to do that to you obviously, but it's a good practice to put in hand
+the more that you're utilizing GitHub repos or Markdown files from people that you find on social
+media will like me. All to say, I want all of us to be as safe as possible as we're running hard
+and fast at these AI agents and build them like crazy because it's fun, but it's not fun to get
+screwed and no one likes to get screwed or scams, especially this guy. So I hope that helps.
+Let me know if you have any questions and if you have any tricks, um, when it comes to security or
+hardening your own AI agents, drive me a comment below, like I'm always down to try different things
+to just make this even more robust and secure as I possibly can. With that, I'm out and I'll
+catch you in the next one later.

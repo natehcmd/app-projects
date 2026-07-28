@@ -1,0 +1,13 @@
+Claude Code absolutely sucks at front end design.
+So here is the exact workflow I use to build websites that don't look like AI built them.
+Step one, run the impeccable skill first. It has 23 commands and it cleans up all your spacing,
+layout and alignment before you go any further. Step two, add the taste skill,
+it removes the AI slot and makes your site stop looking like a robot built it.
+Step three, grab awesome design MD, it has 73 real brand design systems, pick a brand,
+run the skill, and Claude pulls from their actual color palettes and assets.
+Step four, you skill you are to clone any site you want to match.
+Copy the URL, type the command in Claude Code, and it rebuilds the entire design structure.
+Step five, activate UI UX Pro Max. It gives Claude a visual rule book, so every page comes out
+looking like a designer touched it. Step six, connect the 21st Dev MCP. This, let's Claude pull
+from real production components, not AI generated ones. Comment design and I'll send you the full guide
+with all six tools.

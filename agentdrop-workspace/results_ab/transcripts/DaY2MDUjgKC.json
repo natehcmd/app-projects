@@ -1,0 +1,1 @@
+{"text": " This will show you more", "segments": [{"id": 0, "seek": 0, "start": 0.0, "end": 3.36, "text": " This will show you more", "tokens": [50364, 639, 486, 855, 291, 544, 50532], "temperature": 1.0, "avg_logprob": -3.658482551574707, "compression_ratio": 0.7419354838709677, "no_speech_prob": 0.576508104801178}], "language": "en"}

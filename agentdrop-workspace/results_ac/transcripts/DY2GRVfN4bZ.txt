@@ -1,0 +1,13 @@
+Everyone uploading PDFs to Claude is basically wasting their tokens, and Microsoft had a free solution to this for months.
+So every time you upload a PDF, Claude has to process the entire thing.
+So formatting the broken tables, the images, and all the extra junk inside the file.
+And each PDF page can consume between 1,500 to 3,000 tokens.
+So 20 page document burns through up to 70,000 tokens in one shot, and this is before you even ask your first question.
+The fix is simple. It's called Market Down, a free Microsoft tool with over 110,000 stars on GitHub.
+It takes any file via PDFs, Word docs, Excel sheets, power points, or even YouTube videos,
+and converts them into clean Markdown text. This drops your token usage by up to 70%.
+And Claude actually gives better answers, because it was trained on millions of Markdown documents,
+and understands the format native view. Plus, Markdown comes with an MCP server,
+meaning when you connect it to Claude desktop, it automatically converts every file you upload to a
+dot MD file. So if you want the link and the full guide to this, just follow me and comment
+MD and I'll send it to you.

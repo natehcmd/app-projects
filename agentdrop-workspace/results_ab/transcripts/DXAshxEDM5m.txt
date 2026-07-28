@@ -1,0 +1,15 @@
+You can now give Claude infinite memory and reduce your token usage by 71.5 times by installing
+this one skill, these are the three easy steps.
+By the way, this is based on Andre Corpathy's system with the inventor of vibe coding.
+So he kind of knows what he's talking about, you know?
+The first step is to go to Disgiatry Repo scroll down, copy this inside of your Claude code.
+Once installed, run the graphified skill inside of your main Claude folder so it will map
+out every single file inside of that folder.
+By the way, if you want to skip all of that and you want to copy just one command,
+comment, graph and make sure to follow me.
+Then go to obsidian.md, download it, open your main Claude folder as a fault, click
+open Graph View and you will get something like this or like this.
+The third step is to add this inside of your Claude.md file so every time we send a prompt,
+it will look at the map that it built and use 75 times fewer tokens.
+If you want the full step by step guide including the cool visual you can build, just comment,
+graph and I'll send it to you, otherwise make sure to follow the scum for more videos like this.

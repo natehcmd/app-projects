@@ -1,0 +1,46 @@
+Hey Jarvis, wake up daddy, so how's the app doing?
+For that dashboard, give Cloth a reference image of what you want, and it'll pretty much
+one shot.
+So I did use Cloth but I used Cloth design to build this out, and then I exported that
+to Cloth code to actually build it for me.
+Voice mode to talk instead of type.
+So Jarvis actually isn't running on Cloth, it's running on a agenda carnus called Hermes
+Agent, and in Hermes Agent there's a built-in voice feature where you can talk to your
+agents, and I'm using that.
+Clothing chrome to give it access to your browser.
+So if you're running your Hermes agents on a MacMony like I am, then they can have full control
+over the computer that they're running on, and so they can pull up any tabs or windows
+that they need to.
+Over the last seven days, we had 2,459 downloads, and generated 4,280 million dollars in revenue.
+Revenue cat MCP, the tracker app revenue.
+Yep, he got this one right.
+I am using Revenue cat to track my app stats, and bought for MCP to publish to all platforms
+in a single command.
+So I'm actually using a service called Metricool to post on all platforms.
+He's been $475 as a 1.5% on MacMony.
+Metricool launched on official ads MCP.
+Yep, my Bobby Agent is connected to my meta ads MCP, so he can run all my ads for me.
+Organize all of your FAQs and markdown, and Claude will handle 90% of customer service.
+Nope, this is one of the biggest mistakes I see people make, because if you're not running
+Claude on a server, running 247, it will be able to respond to customer emails at any
+time, and it won't ever have the same context as an agenda carnus has, because the
+agenda carnus can build custom skills to learn how you respond to customer support, and
+then you can train them on specific knowledge bases to make them better at responding.
+Claude on his own is not going enough to handle customer support emails, trust me, I've tried.
+The fine custom sub agents, and equipped them with proper skills and collectors, then
+your main agent can handle forks with proper sub agent.
+Conceptually he's correct here.
+I do have my main Jarvis agent in a bunch of sub agents underneath it, but I'm not using
+Claude ecosystem.
+Once again, using Hermes agent, it's so much better than in Claude's agents.
+Suck this entire daily preface routine, and Claude will have this ready for you by the
+time you sit down to work.
+Overall, I think his breakdown was okay, it definitely leaned to heavily into the Claude
+world, or trying to use Claude to automate everything.
+It's one of the biggest problems I see in this AI space.
+There's a whole world of AI tools out there, guys.
+You don't need to use Claude for everything.
+Yes, Claude designs great at building design, but using a agenda carnus for agents, codecs
+is better at tooling, hot take, oh yeah, that's personally what I prefer to use.
+But there, there's a whole world of tools, go try other things, you don't need to use Claude
+for everything.
