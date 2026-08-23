@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Japan, Together — Day Planner</title>
-<meta name="description" content="Interactive day-by-day Japan trip planner — 75+ activities and boutique hotels across Tokyo, Kyoto, and Osaka with budgets, booking links, search, and a live route map.">
+<title>Japan, Together — Nate &amp; Dad 5-Day Planner (Sep 9–14)</title>
+<meta name="description" content="Interactive 5-day Japan trip planner for Nate & Dad (Sep 9–14, 2026) — JDM car meets, Fuji Speedway, teamLab, custom knives, sumo, wagyu, and live route mapping.">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#0d0f14" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0d0f14" media="(prefers-color-scheme: dark)">
-<meta property="og:title" content="Japan, Together — Day Planner">
-<meta property="og:description" content="Build a 10-day Tokyo–Kyoto–Osaka itinerary: 75+ activities, boutique hotels, budgets, booking links and a live route map.">
+<meta property="og:title" content="Japan, Together — Nate &amp; Dad 5-Day Trip Planner">
+<meta property="og:description" content="Nate & Dad's 5-day Japan itinerary (Sep 9–14): Daikoku PA, Fuji Speedway, teamLab, custom knives, wagyu, and live route map.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://natehcmd.github.io/japan-trip/">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%97%BE%3C/text%3E%3C/svg%3E">
@@ -65,17 +65,22 @@ nav{position:sticky;top:0;z-index:100;background:rgba(13,15,20,0.88);backdrop-fi
 .nav-budget{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:.84rem}
 .budget-pill{background:var(--glass); backdrop-filter:blur(18px);border:1px solid var(--glass-brd);border-radius:30px;padding:6px 14px;font-weight:600;font-family:"Avenir Next", -apple-system, "SF Pro Text", sans-serif}
 .budget-pill span{color:var(--peach)}
+.nav-preset{background:linear-gradient(135deg, var(--mint), #b3352a);border:none;color:#fff;font-size:.78rem;font-weight:700;padding:6px 14px;border-radius:20px;transition:all .14s;box-shadow:0 4px 14px rgba(224,83,67,0.3)}
+.nav-preset:hover{background:var(--peach);color:var(--bg2);transform:scale(1.03)}
 .nav-copy{background:rgba(245,201,168,0.15);border:1px solid rgba(245,201,168,0.4);color:var(--peach);font-size:.78rem;font-weight:700;padding:5px 12px;border-radius:8px;transition:all .14s}
 .nav-copy:hover{background:var(--peach);color:var(--bg2)}
 .nav-reset{background:none;border:1px solid var(--glass-brd);color:var(--ink-dim);font-size:.76rem;padding:5px 10px;border-radius:8px;transition:all .14s}
 .nav-reset:hover{border-color:var(--peach);color:var(--peach)}
 
 /* HERO */
-.hero{background:linear-gradient(180deg, rgba(20,24,34,0.95), rgba(13,15,20,1));padding:clamp(32px,7vw,56px) clamp(16px,4vw,36px) clamp(28px,5vw,44px);max-width:1200px;margin:0 auto;border-bottom:1px solid var(--glass-brd)}
+.hero{background:linear-gradient(180deg, rgba(20,24,34,0.95), rgba(13,15,20,1));padding:clamp(32px,7vw,52px) clamp(16px,4vw,36px) clamp(28px,5vw,40px);max-width:1200px;margin:0 auto;border-bottom:1px solid var(--glass-brd)}
 .hero .eyebrow{font-size:.74rem;letter-spacing:.32em;text-transform:uppercase;color:var(--mint);font-weight:700;margin-bottom:10px}
 .hero h1{font-size:clamp(1.8rem,6vw,3.4rem);line-height:1;font-weight:800;margin-bottom:8px;color:var(--ink)}
-.hero .sub{color:var(--ink-dim);font-size:1.02rem;max-width:56ch;margin-bottom:20px}
-.date-strip{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.hero .sub{color:var(--ink-dim);font-size:1.02rem;max-width:62ch;margin-bottom:20px}
+.flight-badge-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px}
+.flight-badge{background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.35);color:#93c5fd;font-size:.8rem;font-weight:700;padding:5px 12px;border-radius:20px;display:inline-flex;align-items:center;gap:6px}
+
+.date-strip{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
 .date-label{font-size:.82rem;color:var(--ink-dim);font-weight:600}
 .date-input-wrap{display:flex;align-items:center;gap:6px}
 #startDate{border:1.5px solid var(--glass-brd);background:var(--glass); backdrop-filter:blur(18px);border-radius: var(--r);padding:6px 10px;font-family:inherit;font-size:.88rem;color:var(--ink)}
@@ -102,7 +107,6 @@ nav{position:sticky;top:0;z-index:100;background:rgba(13,15,20,0.88);backdrop-fi
 .filter-btn.city-tokyo.active{background:#3b82f6;border-color:#3b82f6;color:#fff}
 .filter-btn.city-kyoto.active{background:#16a34a;border-color:#16a34a;color:#fff}
 .filter-btn.city-osaka.active{background:#c026d3;border-color:#c026d3;color:#fff}
-.filter-sep{width:1px;background:var(--glass-brd);align-self:stretch;margin:2px 2px}
 
 /* PRIORITY FEATURED SECTION */
 .priority-section{background:rgba(245,201,168,0.05);border:1px solid rgba(245,201,168,0.25);border-radius:var(--r);padding:22px;margin-bottom:28px;box-shadow:0 12px 36px rgba(0,0,0,0.4)}
@@ -172,7 +176,12 @@ nav{position:sticky;top:0;z-index:100;background:rgba(13,15,20,0.88);backdrop-fi
 
 /* ITINERARY PANEL */
 .itinerary-panel{position:sticky;top:70px}
-.days-list{display:flex;flex-direction:column;gap:10px;padding-top:24px}
+.itinerary-header-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-top:24px}
+.days-mode-toggle{display:flex;gap:4px;background:var(--bg2);border:1px solid var(--glass-brd);border-radius:20px;padding:3px}
+.mode-btn{background:none;border:none;color:var(--ink-dim);font-size:.76rem;font-weight:700;padding:4px 10px;border-radius:16px;transition:all .14s}
+.mode-btn.active{background:var(--ink);color:var(--bg2)}
+
+.days-list{display:flex;flex-direction:column;gap:10px}
 .day-card{background:var(--glass); backdrop-filter:blur(18px);border:1px solid var(--glass-brd);border-radius: var(--r);overflow:hidden;box-shadow:var(--shadow)}
 .day-header{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;transition:background .14s;user-select:none}
 .day-header:hover{background:rgba(255,255,255,0.06)}
@@ -201,9 +210,6 @@ nav{position:sticky;top:0;z-index:100;background:rgba(13,15,20,0.88);backdrop-fi
 .sched-move:hover{color:var(--ink);background:rgba(255,255,255,0.1)}
 .sched-remove{background:none;border:none;color:var(--ink-dim);font-size:.9rem;padding:2px 6px;border-radius:6px;transition:color .14s,background .14s}
 .sched-remove:hover{color:#ef4444;background:rgba(239,68,68,0.15)}
-
-/* TOTAL BUDGET */
-.budget-section{grid-column:1/-1;background:var(--glass); backdrop-filter:blur(18px);border:1px solid var(--glass-brd);border-radius: var(--r);padding:clamp(20px,3vw,32px);box-shadow:var(--shadow);margin-top:8px}
 
 /* CHATBOT */
 .chat-fab{position:fixed;bottom:28px;right:28px;z-index:300;width:56px;height:56px;border-radius:50%;background:var(--ink);color:var(--bg2);border:none;font-size:1.4rem;box-shadow:0 8px 28px -8px rgba(33,28,22,.7);transition:transform .15s,background .15s;display:flex;align-items:center;justify-content:center}
@@ -260,9 +266,10 @@ nav{position:sticky;top:0;z-index:100;background:rgba(13,15,20,0.88);backdrop-fi
 <!-- NAV -->
 <nav>
   <div class="nav-in">
-    <span class="brand"><span class="mk">旅</span>Japan Planner</span>
+    <span class="brand"><span class="mk">旅</span>Nate &amp; Dad's Japan Trip</span>
     <a href="overview.html" class="nav-back">← Overview</a>
     <div class="nav-budget">
+      <button class="nav-preset" onclick="loadNatesPreset()" title="Load Nate & Dad's 5-Day Sep 9–14 Itinerary">⚡ Load Sep 9–14 Plan</button>
       <span class="budget-label" style="font-size:.8rem;color:var(--ink-dim)">Activities total:</span>
       <div class="budget-pill">$<span id="navTotal">0</span></div>
       <button class="nav-copy" onclick="copyItineraryText()" title="Copy scheduled itinerary to clipboard">📋 Copy Plan</button>
@@ -273,13 +280,20 @@ nav{position:sticky;top:0;z-index:100;background:rgba(13,15,20,0.88);backdrop-fi
 
 <!-- HERO -->
 <div class="hero">
-  <p class="eyebrow">Father &amp; Son · September 2026</p>
-  <h1>Build Your Japan Days</h1>
-  <p class="sub">Browse 75+ curated activities, boutique hotels, and hidden gems. Assign them to any day and track your route &amp; budget live.</p>
+  <p class="eyebrow">Father &amp; Son · September 9–14, 2026</p>
+  <h1>Nate &amp; Dad's 5-Day Japan Trip</h1>
+  <p class="sub">Customized for your exact flight window: Arrive Sep 9 @ 2:00 PM → Depart Sep 14 @ 4:00 PM. High-impact car culture, trackside hotel, teamLab, custom knives &amp; wagyu.</p>
+
+  <div class="flight-badge-row">
+    <span class="flight-badge">🛬 Land: Wed Sep 9 @ 2:00 PM</span>
+    <span class="flight-badge" style="background:rgba(234,179,8,0.12);border-color:rgba(234,179,8,0.35);color:#fef08a">🛫 Depart: Mon Sep 14 @ 4:00 PM</span>
+    <span class="flight-badge" style="background:rgba(236,72,153,0.12);border-color:rgba(236,72,153,0.35);color:#f472b6">⚡ 5 High-Impact Days</span>
+  </div>
+
   <div class="date-strip">
     <span class="date-label">Arrive:</span>
     <div class="date-input-wrap">
-      <input type="date" id="startDate" value="2026-09-24">
+      <input type="date" id="startDate" value="2026-09-09">
     </div>
     <span class="date-label" style="margin-left:8px">→ <span id="endDateDisplay"></span></span>
   </div>
@@ -290,16 +304,16 @@ nav{position:sticky;top:0;z-index:100;background:rgba(13,15,20,0.88);backdrop-fi
 
   <!-- LEFT: ACTIVITIES -->
   <div>
-    <h2 class="panel-title">Explore Activities &amp; Stay</h2>
-    <p class="panel-sub">Click <strong>Add to Day</strong> to schedule any experience or hotel stay.</p>
+    <h2 class="panel-title">Explore Activities &amp; Stays</h2>
+    <p class="panel-sub">Click <strong>Add to Day</strong> to schedule any experience or boutique hotel.</p>
 
     <!-- NATE & DAD'S TOP PRIORITY FAVORITES -->
     <div class="priority-section">
       <div class="priority-header">
         <h3 class="priority-title">⭐ Nate &amp; Dad's Top Priority Favorites</h3>
-        <span class="prio-badge">🔥 Most Requested Experiences</span>
+        <span class="prio-badge">🔥 Recommended 5-Day Highlights</span>
       </div>
-      <p class="priority-sub">Hand-picked crown jewel experiences — Daikoku PA, Fuji Speedway Trackside Hotel, Skytree, Sumo Practice, A5 Wagyu, Ryokan &amp; Kaiseki.</p>
+      <p class="priority-sub">Hand-picked crown jewel experiences for your 5-day window — Daikoku PA, Fuji Speedway Trackside Hotel, teamLab, Sumo Practice, Custom Knives &amp; Wagyu.</p>
       <div class="priority-grid" id="priorityGrid"></div>
     </div>
 
@@ -312,7 +326,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(13,15,20,0.88);backdrop-fi
     <!-- CITY FILTERS -->
     <div class="filter-row" id="cityFilters">
       <button class="filter-btn active" data-city="All">All Cities</button>
-      <button class="filter-btn city-tokyo" data-city="Tokyo">🗼 Tokyo</button>
+      <button class="filter-btn city-tokyo" data-city="Tokyo">🗼 Tokyo &amp; Fuji</button>
       <button class="filter-btn city-kyoto" data-city="Kyoto">⛩️ Kyoto</button>
       <button class="filter-btn city-osaka" data-city="Osaka">🏯 Osaka</button>
     </div>
@@ -335,22 +349,31 @@ nav{position:sticky;top:0;z-index:100;background:rgba(13,15,20,0.88);backdrop-fi
 
   <!-- RIGHT: ITINERARY -->
   <div>
-    <h2 class="panel-title">Your Itinerary</h2>
-    <p class="panel-sub">10 days, click any day to expand or reorder.</p>
+    <div class="itinerary-header-bar">
+      <div>
+        <h2 class="panel-title" style="padding-top:0">Your Itinerary</h2>
+        <p class="panel-sub" style="margin-bottom:0">Scheduled experiences &amp; flight notes.</p>
+      </div>
+      <div class="days-mode-toggle">
+        <button class="mode-btn active" id="btnMode5" onclick="setTripMode(5)">5 Days</button>
+        <button class="mode-btn" id="btnMode10" onclick="setTripMode(10)">10 Days</button>
+      </div>
+    </div>
+
     <div class="days-list" id="daysList"></div>
 
     <!-- BUDGET SUMMARY -->
     <div style="margin-top:20px;background:var(--glass); backdrop-filter:blur(18px);border:1px solid var(--glass-brd);border-radius:16px;padding:20px;box-shadow:var(--shadow)">
-      <h3 style="font-size:1rem;margin-bottom:12px">💴 Budget Summary</h3>
+      <h3 style="font-size:1rem;margin-bottom:12px">💴 5-Day Estimated Budget</h3>
       <div style="display:flex;flex-direction:column;gap:7px;font-size:.85rem">
         <div style="display:flex;justify-content:space-between"><span style="color:var(--ink-dim)">Flights (est.)</span><span style="font-family:'Shippori Mincho',serif;font-weight:700">$1,000–1,200</span></div>
-        <div style="display:flex;justify-content:space-between"><span style="color:var(--ink-dim)">JR Pass (14-day)</span><span style="font-family:'Shippori Mincho',serif;font-weight:700">~$435</span></div>
-        <div style="display:flex;justify-content:space-between"><span style="color:var(--ink-dim)">Hotels (10 nights)</span><span style="font-family:'Shippori Mincho',serif;font-weight:700">$800–1,200</span></div>
-        <div style="display:flex;justify-content:space-between"><span style="color:var(--ink-dim)">Food (~$50/day)</span><span style="font-family:'Shippori Mincho',serif;font-weight:700">~$500</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--ink-dim)">Hotels (5 nights)</span><span style="font-family:'Shippori Mincho',serif;font-weight:700">$500–800</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--ink-dim)">Local Transit / Pasmo</span><span style="font-family:'Shippori Mincho',serif;font-weight:700">~$100</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--ink-dim)">Food (~$60/day)</span><span style="font-family:'Shippori Mincho',serif;font-weight:700">~$300</span></div>
         <div style="display:flex;justify-content:space-between;padding-top:7px;border-top:1px solid var(--glass-brd)"><span style="color:var(--ink-dim)">Your activities</span><span style="font-family:'Shippori Mincho',serif;font-weight:700;color:var(--peach)">$<span id="actTotal">0</span></span></div>
-        <div style="display:flex;justify-content:space-between;padding-top:7px;border-top:2px solid var(--ink);font-weight:700"><span>Est. per person</span><span style="font-family:'Shippori Mincho',serif;font-size:1.1rem;color:var(--peach)">~$<span id="grandTotal">2,735</span></span></div>
+        <div style="display:flex;justify-content:space-between;padding-top:7px;border-top:2px solid var(--ink);font-weight:700"><span>Est. per person</span><span style="font-family:'Shippori Mincho',serif;font-size:1.1rem;color:var(--peach)">~$<span id="grandTotal">1,900</span></span></div>
       </div>
-      <p style="font-size:.76rem;color:var(--ink-dim);margin-top:10px">Base ~$2,735 + your planned activities &amp; hotel choices. Shopping &amp; souvenirs extra — especially at Up Garage 😄</p>
+      <p style="font-size:.76rem;color:var(--ink-dim);margin-top:10px">Base ~$1,900 + your scheduled activities &amp; hotel stays. Shopping &amp; souvenirs extra!</p>
     </div>
   </div>
 </div>
@@ -390,7 +413,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(13,15,20,0.88);backdrop-fi
     <span class="ch-avatar">🤖</span>
     <div class="ch-info">
       <div class="ch-name">Japan Trip Assistant</div>
-      <div class="ch-status">Ask me anything about hotels, activities &amp; plans</div>
+      <div class="ch-status">Ask me anything about Sep 9–14 plans</div>
     </div>
     <button class="chat-close" onclick="toggleChat()">✕</button>
   </div>
@@ -405,7 +428,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(13,15,20,0.88);backdrop-fi
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 // ============================================================
-// MASTER ACTIVITIES DATASET (75+ CURATED EXPERIENCES & HOTELS)
+// MASTER ACTIVITIES DATASET
 // ============================================================
 const ACTIVITIES = [
   // --- HOTELS & UNIQUE STAYS ---
@@ -461,6 +484,7 @@ const ACTIVITIES = [
   {id:'t22',name:'Mt. Fuji Day Trip',city:'Tokyo',cat:'Nature',emoji:'🗻',duration:10,cost:30,desc:"Bus from Shinjuku to Fuji 5th Station (2,305m) — volcanic rock fields, sweeping views, and crater trails.",bookAhead:false,siteUrl:'https://www.fujisan-climb.jp/en/',bookUrl:'https://www.klook.com/en-US/search/?q=mount+fuji+day+trip+tokyo',mapUrl:'https://maps.google.com/?q=Mt+Fuji+5th+Station+Japan',lat:35.3606,lng:138.7274},
   {id:'t23',name:'Fuji Speedway Circuit',city:'Tokyo',cat:'Cars',emoji:'🏎️',duration:6,cost:40,desc:"Legendary FIA Grade-1 circuit at the foot of Mt. Fuji. Motorsport museum, circuit tours, and supercar driving experiences.",bookAhead:true,bookNote:'Book circuit experience or museum ticket in advance',siteUrl:'https://www.fsw.tv/en/',mapUrl:'https://maps.google.com/?q=Fuji+Speedway',lat:35.3717,lng:138.9267},
   {id:'t24',name:'Miraikan Robotics Museum',city:'Tokyo',cat:'Tech',emoji:'🤖',duration:2.5,cost:12,desc:"National Museum of Emerging Science and Innovation in Odaiba — androids, AI robotics, humanoids, and space exploration.",bookAhead:false,siteUrl:'https://www.miraikan.jst.go.jp/en/',mapUrl:'https://maps.google.com/?q=Miraikan+Tokyo',lat:35.6193,lng:139.7764},
+  {id:'t27',name:'Fun2Drive Hakone Touge Rental',city:'Tokyo',cat:'Cars',emoji:'🏎️',duration:6,cost:250,desc:'Rent an R34 GT-R, RX-7, or AE86 to drive the legendary Touge mountain passes near Mt. Fuji.',bookAhead:true,bookNote:'Book ahead, requires International Driving Permit',bookUrl:'https://www.fun2drive.jp/',mapUrl:'https://maps.google.com/?q=Fun2Drive+Hakone',lat:35.2323,lng:139.0267},
   {id:'t75',name:'Sumo Stable Practice Visit',city:'Tokyo',cat:'History',emoji:'🥋',duration:2,cost:45,desc:"Watch active sumo wrestlers train up close during early morning practice (asageiko) at a Ryogoku stable.",bookAhead:true,bookNote:'Book guided morning sumo stable practice weeks ahead',bookUrl:'https://www.klook.com/en-US/search/?q=sumo+morning+practice+tokyo',siteUrl:'https://www.klook.com/en-US/search/?q=sumo+morning+practice+tokyo',mapUrl:'https://maps.google.com/?q=Ryogoku+Kokugikan+Tokyo',lat:35.6969,lng:139.7933},
   {id:'t76',name:'Pro Drift Taxi Ride-Along',city:'Tokyo',cat:'Cars',emoji:'💨',duration:4,cost:120,desc:"Buckle into the passenger seat of a tuned 500hp Silvia/Chaser with a pro D1 drift driver sliding sideways at full speed.",bookAhead:true,bookNote:'Book drift taxi passenger experience in advance',siteUrl:'https://www.ebisu-circuit.com/',mapUrl:'https://maps.google.com/?q=Ebisu+Circuit+Japan',lat:37.6439,lng:140.5283},
 
@@ -473,35 +497,18 @@ const ACTIVITIES = [
   {id:'k6',name:'Nishiki Market',city:'Kyoto',cat:'Food',emoji:'🛒',duration:1.5,cost:20,desc:"Kyoto's Kitchen — a narrow covered market with pickles, skewers, tamagoyaki, and every snack imaginable.",bookAhead:false,siteUrl:'https://www.kyoto-nishiki.or.jp/en/',mapUrl:'https://maps.google.com/?q=Nishiki+Market+Kyoto',lat:35.0053,lng:135.7670},
   {id:'k7',name:'Kaiseki Dinner',city:'Kyoto',cat:'Food',emoji:'🍱',duration:2,cost:80,desc:"Traditional multi-course Japanese cuisine — a dozen tiny, perfect dishes. The most elegant meal you'll ever have.",bookAhead:true,bookNote:'Book 2–4 weeks ahead — look for English-friendly restaurants',bookUrl:'https://www.tablecheck.com/en/japan/reserve?area=kyoto',siteUrl:'https://www.tablecheck.com/en/japan/reserve?area=kyoto',mapUrl:'https://maps.google.com/?q=Kaiseki+Restaurant+Kyoto',lat:35.0080,lng:135.7680},
   {id:'k8',name:'Ryokan Night Stay & Kaiseki',city:'Kyoto',cat:'Hotels',emoji:'🛁',duration:24,cost:200,desc:'Sleep in an authentic traditional Japanese inn — tatami floors, yukata robes, private onsen bath, and seasonal Kaiseki dinner & breakfast.',bookAhead:true,bookNote:'Book several months ahead — includes multi-course Kaiseki dinner & breakfast.',bookUrl:'https://www.booking.com/searchresults.en-gb.html?ss=Kyoto+ryokan',siteUrl:'https://www.booking.com/searchresults.en-gb.html?ss=Kyoto+ryokan',mapUrl:'https://maps.google.com/?q=Ryokan+Kyoto',lat:35.0160,lng:135.7680},
-  {id:'k9',name:'Kiyomizu-dera Temple',city:'Kyoto',cat:'History',emoji:'🕌',duration:1.5,cost:5,desc:'A wooden stage temple built on a cliff over the forest — panoramic views of Kyoto below.',bookAhead:false,siteUrl:'https://www.kiyomizudera.or.jp/en/',mapUrl:'https://maps.google.com/?q=Kiyomizudera+Temple+Kyoto',lat:34.9948,lng:135.7851},
-  {id:'k10',name:"Philosopher's Path",city:'Kyoto',cat:'Nature',emoji:'🚶',duration:1.5,cost:0,desc:'A quiet stone path along a canal connecting several temples. Named after a philosopher who walked it daily.',bookAhead:false,siteUrl:'https://www.japan-guide.com/e/e3950.html',mapUrl:'https://maps.google.com/?q=Philosopher%27s+Path+Kyoto',lat:35.0177,lng:135.7938},
-  {id:'k11',name:'Sake Tasting — Fushimi',city:'Kyoto',cat:'Food',emoji:'🍶',duration:1.5,cost:15,desc:"Kyoto's Fushimi district has been brewing sake for centuries. Walk the sake street and taste at multiple breweries.",bookAhead:false,siteUrl:'https://www.gekkeikan.co.jp/english/enjoy/museum/',mapUrl:'https://maps.google.com/?q=Fushimi+Sake+District+Kyoto',lat:34.9440,lng:135.7659},
-  {id:'k12',name:'Sagano Scenic Railway',city:'Kyoto',cat:'Nature',emoji:'🚞',duration:1,cost:10,desc:'A charming open-air train through the Hozu River gorge and bamboo forests of Arashiyama.',bookAhead:true,bookNote:'Buy tickets at the station early — can sell out on weekends',bookUrl:'https://www.klook.com/en-US/search/?q=sagano+scenic+railway+kyoto',siteUrl:'https://www.sagano-kanko.co.jp/en/',mapUrl:'https://maps.google.com/?q=Sagano+Scenic+Railway+Arashiyama+Kyoto',lat:35.0172,lng:135.6714},
-  {id:'k13',name:'Arashiyama Monkey Park',city:'Kyoto',cat:'Nature',emoji:'🐒',duration:1.5,cost:7,desc:'Hike a small mountain to reach a park with 170 wild Japanese macaques. Feed them through wire from the inside.',bookAhead:false,siteUrl:'https://www.monkeypark.jp/',mapUrl:'https://maps.google.com/?q=Iwatayama+Monkey+Park+Arashiyama+Kyoto',lat:35.0098,lng:135.6720},
-  {id:'k15',name:'Samurai Post Town Sake Flights',city:'Kyoto',cat:'Food',emoji:'🍶',duration:5,cost:25,desc:'Stroll preserved Edo-period samurai post towns (Narai-juku / Tsumago) and sample craft sake flights inside centuries-old wooden teahouses.',bookAhead:false,mapUrl:'https://maps.google.com/?q=Narai-juku+Japan',lat:35.9680,lng:137.8150},
 
   // --- OSAKA & NEARBY ---
   {id:'o1',name:'Dotonbori Street Food',city:'Osaka',cat:'Food',emoji:'🦑',duration:2,cost:30,desc:"Osaka's neon entertainment district and the city's beating culinary heart. Takoyaki, ramen, crab claw signs.",bookAhead:false,siteUrl:'https://dotonbori.or.jp/en/',mapUrl:'https://maps.google.com/?q=Dotonbori+Osaka',lat:34.6687,lng:135.5013},
   {id:'o2',name:'Kuromon Market',city:'Osaka',cat:'Food',emoji:'🐟',duration:1.5,cost:20,desc:"Osaka's biggest covered market — fresh seafood, wagyu skewers, and vendors who'll cook on the spot.",bookAhead:false,siteUrl:'https://kuromon.com/en/',mapUrl:'https://maps.google.com/?q=Kuromon+Market+Osaka',lat:34.6680,lng:135.5071},
-  {id:'o3',name:'Takoyaki & Okonomiyaki',city:'Osaka',cat:'Food',emoji:'🥘',duration:1,cost:15,desc:"Osaka invented both — octopus balls and savory pancakes. Mandatory eating. Kiji restaurant for okonomiyaki.",bookAhead:false,siteUrl:'https://www.osaka-info.jp/en/food/',mapUrl:'https://maps.google.com/?q=Kiji+Okonomiyaki+Osaka',lat:34.6687,lng:135.5020},
   {id:'o4',name:'Super Nintendo World',city:'Osaka',cat:'Tech',emoji:'🍄',duration:4,cost:80,desc:"A fully immersive Mario world inside Universal Studios Japan. Mario Kart ride, Donkey Kong area, interactive power-ups.",bookAhead:true,bookNote:'Book USJ tickets + Nintendo World express pass weeks ahead',bookUrl:'https://www.usj.co.jp/web/en/us/tickets',siteUrl:'https://www.usj.co.jp/web/en/us/areas/super-nintendo-world',mapUrl:'https://maps.google.com/?q=Universal+Studios+Japan+Osaka',lat:34.6654,lng:135.4321},
-  {id:'o5',name:'Osaka Castle',city:'Osaka',cat:'History',emoji:'🏯',duration:1.5,cost:6,desc:"One of Japan's most iconic castles surrounded by a moat and cherry trees. Great museum inside.",bookAhead:false,siteUrl:'https://www.osakacastle.net/english/',mapUrl:'https://maps.google.com/?q=Osaka+Castle',lat:34.6873,lng:135.5262},
   {id:'o6',name:'Day Trip to Nara',city:'Osaka',cat:'Nature',emoji:'🦌',duration:4,cost:15,desc:'Hundreds of wild deer roam freely and bow to you for crackers. Todai-ji temple houses a giant bronze Buddha.',bookAhead:false,siteUrl:'https://www.japan-guide.com/e/e4103.html',mapUrl:'https://maps.google.com/?q=Nara+Park+Japan',lat:34.6851,lng:135.8048},
-  {id:'o7',name:'Umeda Sky Building',city:'Osaka',cat:'Tech',emoji:'🔭',duration:1,cost:16,desc:'Two towers connected by a floating sky garden 170m up — one of the most striking modern buildings in Japan.',bookAhead:false,siteUrl:'https://www.skybldg.co.jp/en/',bookUrl:'https://www.klook.com/en-US/search/?q=umeda+sky+building',mapUrl:'https://maps.google.com/?q=Umeda+Sky+Building+Osaka',lat:34.7056,lng:135.4904},
-  {id:'o8',name:'Den Den Town',city:'Osaka',cat:'Tech',emoji:'🎮',duration:2,cost:20,desc:"Osaka's own Akihabara — electronics, anime, retro games, figures, and the densest concentration of hobby shops.",bookAhead:false,siteUrl:'https://www.osaka-info.jp/en/',mapUrl:'https://maps.google.com/?q=Den+Den+Town+Nipponbashi+Osaka',lat:34.6620,lng:135.5060},
-  {id:'o9',name:'Himeji Castle',city:'Osaka',cat:'History',emoji:'🏯',duration:4,cost:30,desc:"Japan's most beautiful castle — a UNESCO World Heritage Site nicknamed the White Heron. 45 min from Osaka by bullet train.",bookAhead:false,siteUrl:'https://www.himejicastle.jp/en/',mapUrl:'https://maps.google.com/?q=Himeji+Castle',lat:34.8394,lng:134.6939},
   {id:'o10',name:'Kobe Beef Lunch',city:'Osaka',cat:'Food',emoji:'🥩',duration:4,cost:95,desc:'Day trip to Kobe for the real thing — teppanyaki-grilled A5 Kobe beef. Misono restaurant is the famous one.',bookAhead:true,bookNote:'Reserve at your restaurant — popular spots book up',bookUrl:'https://www.tablecheck.com/en/japan/reserve?area=kobe',siteUrl:'https://www.kobe-tourism.com/en/',mapUrl:'https://maps.google.com/?q=Kobe+Beef+Misono+Restaurant',lat:34.6901,lng:135.1956},
-  {id:'o11',name:'Shinsaibashi Shopping',city:'Osaka',cat:'Nightlife',emoji:'🛍️',duration:2,cost:0,desc:"Osaka's main covered shopping arcade — 600m of stores, street food, and people.",bookAhead:false,siteUrl:'https://www.shinsaibashi.or.jp/en/',mapUrl:'https://maps.google.com/?q=Shinsaibashi+Shopping+Street+Osaka',lat:34.6726,lng:135.5013},
-  {id:'o12',name:'Osaka Baseball Game',city:'Osaka',cat:'Nightlife',emoji:'⚾',duration:3,cost:30,desc:"Orix Buffaloes play September home games at Kyocera Dome. Japanese baseball crowds are the loudest in the world.",bookAhead:true,bookNote:'Check the September schedule and buy tickets online',bookUrl:'https://www.buffaloes.co.jp/ticket/',siteUrl:'https://www.buffaloes.co.jp/en/',mapUrl:'https://maps.google.com/?q=Kyocera+Dome+Osaka',lat:34.6678,lng:135.4744},
   {id:'o13',name:'Hida & Kobe Beef in Takayama',city:'Osaka',cat:'Food',emoji:'🥩',duration:6,cost:90,desc:'Sample melt-in-your-mouth A5 Hida beef nigiri skewers in Takayama old town and teppanyaki Kobe beef — prime beef heaven.',bookAhead:true,bookNote:'Reserve Takayama/Kobe beef restaurants in advance',mapUrl:'https://maps.google.com/?q=Takayama+Old+Town+Japan',lat:36.1408,lng:137.2582}
 ];
 
-// City defaults: which days each city covers
-const CITY_DAYS = {Tokyo:[1,2,3,4],Kyoto:[5,6,7],Osaka:[8,9,10]};
-const DAY_CITY = {};
-for(const [city,days] of Object.entries(CITY_DAYS)) days.forEach(d=>DAY_CITY[d]=city);
-
 // State
+let tripMode = 5; // 5 days default
 let plan = {};
 let pendingActId = null;
 let activeCityFilter = 'All';
@@ -509,8 +516,24 @@ let activeCatFilter = 'All';
 let chatOpen = false;
 let chatInitialized = false;
 
-// Load from localStorage
-try { const saved = localStorage.getItem('japanPlan'); if(saved) plan = JSON.parse(saved); } catch(e){}
+// NATE & DAD'S HIGH-IMPACT 5-DAY PRESET
+const NATES_PRESET_5DAY = {
+  1: ['t7', 't9', 't10', 'h2'],             // Day 1 (Sep 9, Arrive 2 PM): Shinjuku check-in, Ramen, Omoide Yokocho, Golden Gai, Hoshinoya Tokyo
+  2: ['t1', 't2', 's3', 't3', 't15'],       // Day 2 (Sep 10): teamLab, Shibuya Sky, Akihabara Gachapon & Arcades, Daikoku PA Night Car Tour
+  3: ['t23', 't27', 'h1'],                  // Day 3 (Sep 11): Fuji Speedway Circuit, Fun2Drive Touge Rental, Fuji Speedway Hotel & Onsen
+  4: ['t75', 's1', 't13', 'o10', 's4'],      // Day 4 (Sep 12): Sumo Practice, Kappabashi Knife Engraving, Senso-ji, Kobe/Wagyu Teppanyaki, Bar High Five
+  5: ['t6', 's2', 't16']                    // Day 5 (Sep 13/14, Depart 4 PM): Tsukiji 6am Sushi, Hands 8-Floor Hunt, Up Garage Parts Hunt
+};
+
+// Load from localStorage or load Nate's 5-day preset if empty
+try { 
+  const saved = localStorage.getItem('japanPlan'); 
+  if(saved) plan = JSON.parse(saved); 
+} catch(e){}
+
+if (Object.keys(plan).length === 0) {
+  plan = JSON.parse(JSON.stringify(NATES_PRESET_5DAY));
+}
 
 // ============================================================
 // FUNCTIONS & RENDER
@@ -519,9 +542,16 @@ function savePlan() {
   try { localStorage.setItem('japanPlan', JSON.stringify(plan)); } catch(e){}
 }
 
+function setTripMode(mode) {
+  tripMode = mode;
+  document.getElementById('btnMode5').classList.toggle('active', mode === 5);
+  document.getElementById('btnMode10').classList.toggle('active', mode === 10);
+  renderAll();
+}
+
 function getStartDate() {
   const val = document.getElementById('startDate').value;
-  return val ? new Date(val+'T12:00:00') : new Date('2026-09-24T12:00:00');
+  return val ? new Date(val+'T12:00:00') : new Date('2026-09-09T12:00:00');
 }
 
 function getDayDate(dayNum) {
@@ -536,8 +566,10 @@ function fmtDate(d) {
 
 function calcTotal() {
   let total = 0;
-  for(const [,ids] of Object.entries(plan)) {
-    ids.forEach(id => { const a = ACTIVITIES.find(x=>x.id===id); if(a) total += a.cost; });
+  for(const [dayNum, ids] of Object.entries(plan)) {
+    if (parseInt(dayNum) <= tripMode) {
+      ids.forEach(id => { const a = ACTIVITIES.find(x=>x.id===id); if(a) total += a.cost; });
+    }
   }
   return total;
 }
@@ -546,22 +578,23 @@ function updateBudget() {
   const t = calcTotal();
   document.getElementById('navTotal').textContent = t;
   document.getElementById('actTotal').textContent = t;
-  const base = 2735;
+  const base = tripMode === 5 ? 1900 : 2735;
   document.getElementById('grandTotal').textContent = (base + t).toLocaleString();
 }
 
 function getScheduledDaysForAct(actId) {
-  return Object.entries(plan).filter(([,ids])=>ids.includes(actId)).map(([d])=>parseInt(d));
+  return Object.entries(plan)
+    .filter(([d, ids]) => parseInt(d) <= tripMode && ids.includes(actId))
+    .map(([d]) => parseInt(d));
 }
 
-const PRIORITY_IDS = ['t15', 't23', 'h1', 'h5', 'h2', 's1', 't5', 'k8', 't76', 't75', 'o13', 's6', 't1', 'h7'];
+const PRIORITY_IDS = ['t15', 't23', 'h1', 'h2', 's1', 't5', 'k8', 't76', 't75', 'o10', 's4', 't1'];
 
 function renderCardHTML(a, isPriority = false) {
   const days = getScheduledDaysForAct(a.id);
   const isScheduled = days.length > 0;
   const dayLabel = days.length ? ` · Day ${days.join(', ')}` : '';
   const isHotel = a.cat === 'Hotels';
-  const isGem = a.cat === 'Gems';
   
   return `<div class="act-card${isScheduled?' scheduled':''}" id="card-${a.id}">
     <div class="act-top">
@@ -571,7 +604,7 @@ function renderCardHTML(a, isPriority = false) {
         <div class="act-tags">
           <span class="city-tag ${a.city}">${a.city}</span>
           <span class="cat-tag ${a.cat}">${a.cat === 'Gems' ? '✨ Gem' : a.cat}</span>
-          ${isPriority ? `<span class="prio-badge">⭐ Priority</span>` : ''}
+          ${isPriority ? `<span class="prio-badge">⭐ Favorite</span>` : ''}
           ${isHotel ? `<span class="prio-badge" style="background:rgba(234,179,8,0.18);color:#fef08a;border-color:rgba(234,179,8,0.4)">🏨 Stay</span>` : ''}
         </div>
       </div>
@@ -625,20 +658,26 @@ function renderActivities() {
 
 function renderDays() {
   const list = document.getElementById('daysList');
-  list.innerHTML = Array.from({length:10},(_,i)=>i+1).map(day => {
-    const city = DAY_CITY[day];
+  list.innerHTML = Array.from({length: tripMode},(_,i)=>i+1).map(day => {
+    const city = day <= 4 ? 'Tokyo' : (day <= 7 ? 'Kyoto' : 'Osaka');
     const date = getDayDate(day);
     const ids = plan[day] || [];
     const acts = ids.map(id=>ACTIVITIES.find(a=>a.id===id)).filter(Boolean);
     const dayCost = acts.reduce((s,a)=>s+a.cost,0);
+    
+    let note = '';
+    if (day === 1) note = '🛬 Land @ 2:00 PM · Shinjuku Check-in';
+    if (day === 5 && tripMode === 5) note = '🛫 Depart @ 4:00 PM · Leave for Airport ~12:30 PM';
+
     return `<div class="day-card" id="day-${day}">
       <div class="day-header" onclick="toggleDay(${day})">
         <span class="day-num">${day}</span>
         <div class="day-info">
-          <div style="display:flex;align-items:center">
+          <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px">
             <span style="font-size:.9rem;font-weight:600">${fmtDate(date)}</span>
             <span class="day-cityname ${city}">${city}</span>
           </div>
+          ${note ? `<div style="font-size:.72rem;color:var(--peach);font-weight:700;margin-top:2px">${note}</div>` : ''}
           <div class="day-summary">${acts.length === 0 ? 'Nothing planned yet' : `${acts.length} experience${acts.length===1?'':'s'}`}</div>
         </div>
         ${dayCost > 0 ? `<span class="day-cost-badge">$${dayCost}</span>` : ''}
@@ -646,7 +685,7 @@ function renderDays() {
       </div>
       <div class="day-body" id="body-${day}">
         ${acts.length === 0
-          ? '<p class="day-empty">No activities yet — click "Add to Day" on any card on the left!</p>'
+          ? '<p class="day-empty">No activities scheduled yet — click "Add to Day" on any card on the left!</p>'
           : acts.map((a, idx)=>`<div class="sched-act">
               <span class="sched-emoji">${a.emoji}</span>
               <div class="sched-info">
@@ -695,25 +734,37 @@ function renderAll() {
 function updateEndDate() {
   const start = getStartDate();
   const end = new Date(start);
-  end.setDate(end.getDate() + 9);
-  document.getElementById('endDateDisplay').textContent = fmtDate(end);
+  end.setDate(end.getDate() + tripMode - 1);
+  const note = tripMode === 5 ? ' (Flight @ 4:00 PM)' : '';
+  document.getElementById('endDateDisplay').textContent = fmtDate(end) + note;
+}
+
+function loadNatesPreset() {
+  plan = JSON.parse(JSON.stringify(NATES_PRESET_5DAY));
+  tripMode = 5;
+  setTripMode(5);
+  savePlan();
+  renderAll();
+  alert("⚡ Loaded Nate & Dad's Sep 9–14 5-Day High-Impact Itinerary!");
 }
 
 function copyItineraryText() {
   const startDate = getStartDate();
-  let text = `🗾 Nate & Dad's Japan 2026 Trip Plan\nArriving: ${fmtDate(startDate)}\n\n`;
+  let text = `🗾 Nate & Dad's 5-Day Japan Trip Plan (Sep 9–14, 2026)\n`;
+  text += `🛬 Land: Wed Sep 9 @ 2:00 PM\n🛫 Depart: Mon Sep 14 @ 4:00 PM\n\n`;
   let totalCost = 0;
   let count = 0;
 
-  for (let day = 1; day <= 10; day++) {
+  for (let day = 1; day <= tripMode; day++) {
     const dDate = getDayDate(day);
-    const city = DAY_CITY[day];
+    const city = day <= 4 ? 'Tokyo' : 'Kyoto/Osaka';
     const ids = plan[day] || [];
     const acts = ids.map(id => ACTIVITIES.find(a => a.id === id)).filter(Boolean);
     
     text += `Day ${day} (${fmtDate(dDate)}) - ${city}:\n`;
+    if (day === 1) text += `  🛬 2:00 PM Arrival & Hotel Check-in\n`;
     if (acts.length === 0) {
-      text += `  • (Flex / Open Day)\n`;
+      text += `  • (Flex / Open Window)\n`;
     } else {
       acts.forEach(a => {
         text += `  • ${a.emoji} ${a.name} (${a.cost === 0 ? 'Free' : '$'+a.cost})\n`;
@@ -721,12 +772,13 @@ function copyItineraryText() {
         count++;
       });
     }
+    if (day === 5) text += `  🛫 12:30 PM Departure to Airport for 4:00 PM Flight\n`;
     text += `\n`;
   }
-  text += `Summary: ${count} activities planned. Activities Total: $${totalCost} per person.`;
+  text += `Summary: ${count} scheduled experiences. Total Activities & Stays: $${totalCost} per person.`;
 
   navigator.clipboard.writeText(text).then(() => {
-    alert('📋 Your scheduled trip itinerary has been copied to your clipboard!');
+    alert('📋 Your scheduled 5-day itinerary has been copied to your clipboard!');
   }).catch(err => {
     alert('Copying failed: ' + err);
   });
@@ -740,15 +792,15 @@ function openDayPicker(actId) {
   const act = ACTIVITIES.find(a=>a.id===actId);
   document.getElementById('dpActName').textContent = act.name;
   const grid = document.getElementById('dayGrid');
-  grid.innerHTML = Array.from({length:10},(_,i)=>i+1).map(day => {
-    const city = DAY_CITY[day];
+  grid.innerHTML = Array.from({length: tripMode},(_,i)=>i+1).map(day => {
+    const city = day <= 4 ? 'Tokyo' : 'Kyoto/Osaka';
     const date = getDayDate(day);
     const ids = plan[day] || [];
     const alreadyHere = ids.includes(actId);
     return `<div class="day-opt${alreadyHere?' taken':''}" onclick="addToDay(${day})">
       <span class="d-num">${day}</span>
       <span class="d-date">${date.toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>
-      <span class="d-city ${city}">${city}</span>
+      <span class="d-city ${city.split('/')[0]}">${city}</span>
       ${alreadyHere?'<span style="font-size:.65rem;color:var(--mint)">✓ here</span>':''}
     </div>`;
   }).join('');
@@ -814,20 +866,14 @@ document.getElementById('dayPickerOverlay').addEventListener('click', e => {
 // CHATBOT KNOWLEDGE BASE
 // ============================================================
 const KB = [
-  {p:['hotel','stay','ryokan','boutique','resort','where to stay','hoshinoya','fuji speedway hotel','park hyatt','w osaka','sowaka','anshin oyado','capsule'],r:`<b>Top Hotel & Ryokan Stays:</b><br><br>🏎️ <b>Fuji Speedway Hotel</b> — Luxury Hyatt Unbound trackside hotel with Mt. Fuji views, private onsen & motorsport museum.<br>🏯 <b>Hoshinoya Tokyo</b> — 17-story luxury ryokan in central Tokyo with natural hot springs 1,500m underground.<br>🌸 <b>Hoshinoya Kyoto & Sowaka</b> — Romantic riverside pavilion ryokan in Arashiyama & 100yr Gion sanctuary.<br>🍸 <b>W Osaka</b> — Tadao Ando designed neon monolith in Shinsaibashi.<br>♨️ <b>Hakone Ginyu</b> — Private open-air infinity onsen in every room.<br>📚 <b>Book & Bed / Anshin Oyado</b> — Sleep in bookshelves or high-end luxury capsules with free curry!`},
-  {p:['knife','knives','kappabashi','engrave','engraving','kitchen'],r:`<b>Kappabashi Hand-Forged Knife Engraving</b> is an unforgettable small experience! Visit Kama-Asa or surrounding knife shops in Kitchen Town (between Asakusa & Ueno). You can choose a hand-hammered VG-10 or Aogami carbon steel knife, and master craftsmen will engrave your name or initials in Kanji right on the blade.`},
-  {p:['small things','hidden gem','hidden gems','micro','cool things','unique'],r:`<b>Cool Small Things To Do:</b><br><br>🔪 <b>Kappabashi Knife Engraving</b> — Custom name engraved on Japanese steel.<br>🚤 <b>Fushimi Sake Canal Cruise</b> — Flat-bottom wooden boat past 400yr Edo breweries.<br>🍸 <b>Bar High Five</b> — Master mixologist hand-carving ice spheres in Ginza.<br>🎰 <b>Akihabara Gachapon Kaikan</b> — 500+ capsule toy vending machines.<br>🐤 <b>Nijo Castle Nightingale Floors</b> — Samurai ninja-warning squeaking floors.<br>🛳️ <b>Dotonbori Wonder Cruise</b> — Open-top night boat under neon billboards.`},
-  {p:['teamlab','team lab','digital art museum'],r:`<b>teamLab Borderless</b> is an immersive digital art museum in Tokyo where entire rooms are filled with living light, sound, and movement — you literally walk inside the art. It's one of the most unique experiences in the world and absolutely worth it.<br><br>⚠️ <b>Must book ahead</b> at teamlab.art — usually 2–4 weeks out. It costs about $30/person and takes 2–3 hours. Don't miss it!`},
-  {p:['ghibli','studio ghibli','spirited away','totoro'],r:`<b>The Ghibli Museum</b> in Mitaka (western Tokyo) is a dream if you grew up with Spirited Away, My Neighbor Totoro, or any of Miyazaki's films. It's small, magical, and packed with original animation art.<br><br>⚠️ <b>Extremely hard to book</b> — tickets sell out within minutes on the 10th of each month at l-tike.com. Set a reminder! It costs ~$15/person and takes about 3 hours.`},
-  {p:['nintendo world','super nintendo','mario','universal'],r:`<b>Super Nintendo World</b> is inside Universal Studios Japan in Osaka — a fully immersive Mario theme park with a real Mario Kart ride, interactive Koopa shells to punch, and the new Donkey Kong Country area.<br><br>⚠️ Book USJ tickets + the Nintendo World Express Pass well ahead at usj.co.jp. It fills up. Budget about $80/person plus park entry. Give it 3–4 hours minimum.`},
-  {p:['fushimi inari','torii','gates','thousand gates'],r:`<b>Fushimi Inari</b> is the famous tunnel of thousands of red torii gates winding up a mountain in Kyoto — one of Japan's most iconic sights and completely free to enter. The full hike takes 2–4 hours.<br><br>💡 Go at <b>dawn or after 6pm</b> to avoid the crowds. Early morning light through the gates is magical.`},
-  {p:['daikoku','car meet','jdm'],r:`<b>Daikoku PA</b> (Parking Area) is a highway service area near Yokohama that becomes the world's greatest spontaneous car show late at night. R34 GT-Rs, RWB Porsches, LC500s, S2000s — all gathering on their own.<br><br>🚗 Book a guided Daikoku JDM car tour with private van/car transport from Tokyo. Go around <b>10pm–2am</b> for peak action!`},
-  {p:['jr pass','bullet train','shinkansen','train pass'],r:`The <b>JR Pass</b> is a rail pass that covers all of Japan's bullet trains (Shinkansen) and most JR lines — it's how you get from Tokyo to Kyoto to Osaka.<br><br>💴 A 14-day pass costs around <b>$435/person</b>. You <b>must buy it before flying to Japan</b> — it's sold outside Japan. The Tokyo → Kyoto bullet train takes about 2h 15min and the views are incredible — see Mt. Fuji from the right side.`},
-  {p:['suica','ic card','train card','tap'],r:`A <b>Suica card</b> is a rechargeable IC card for trains, buses, and convenience stores across Japan. You tap in, tap out — no buying individual tickets.<br><br>📱 The easiest way is to add it to your Apple Wallet or Google Pay before you arrive. Otherwise pick one up at any major train station for ¥1,000 (~$7) including a ¥500 deposit.`},
-  {p:['idp','international driving permit','driving permit','go kart','karting'],r:`An <b>International Driving Permit (IDP)</b> is required for both driving a car and for the street go-karting in Tokyo.<br><br>📋 Get it from <b>AAA</b> before you fly — bring your driver's license, a passport photo, and $20. Takes about 15 minutes. It's valid for 1 year.`},
-  {p:['cash','money','yen','card','credit card','atm'],r:`Japan is <b>more cash-based</b> than most countries — many temples, small restaurants, and markets are cash-only.<br><br>💴 1 USD ≈ 145–155 JPY. Budget about ¥5,000–8,000/day for cash spending (~$35–55). <b>7-Eleven and Japan Post ATMs</b> reliably accept foreign debit/credit cards. Always carry at least ¥10,000 on you.`},
-  {p:['tip','tipping'],r:`🚫 <b>Do not tip in Japan.</b> It's considered rude — it implies the person needs charity, which is insulting to Japanese service culture. The price on the bill is the price. Exceptional service is standard.`},
-  {p:['budget','cost','how much','total','expensive'],r:`Here's the rough per-person budget for the trip:<br><br>✈️ Flights (DFW→Tokyo): $1,000–1,200<br>🚅 JR Pass (14-day): ~$435<br>🏨 Hotels (10 nights): $800–1,200<br>🍜 Food (~$50/day): ~$500<br>🎟️ Activities: varies (see your planner)<br><br>💰 <b>Total: roughly $3,000–3,500/person</b>, not counting shopping or souvenirs.`}
+  {p:['sep 9','september 9','flight','arrive','2pm','2:00 pm','land'],r:`🛬 <b>Day 1 (Wed Sep 9): Landing @ 2:00 PM</b><br><br>After clearing customs (~1 hour), take the Narita Express (N'EX) or Skyliner directly into Shinjuku/Tokyo (~1 hour). Check into your hotel around 4:30 PM, then start the trip with a piping hot bowl of Shinjuku ramen, followed by smoky yakitori in <b>Omoide Yokocho</b> and drinks in <b>Golden Gai</b>!`},
+  {p:['sep 14','september 14','depart','4pm','4:00 pm','leave','leaving'],r:`🛫 <b>Day 5 (Mon Sep 14): Departure Flight @ 4:00 PM</b><br><br>You'll need to be at Narita/Haneda airport by 2:00 PM (2 hours before flight). Plan to leave central Tokyo around <b>12:30 PM</b>.<br><br>💡 <b>Final Morning Plan (6:00 AM – 12:00 PM):</b><br>• 6:00 AM: Tsukiji Outer Market for legendary fresh sushi breakfast.<br>• 9:30 AM: Tokyu Hands 8-floor gadget hunt or last-minute souvenir shopping.`},
+  {p:['hotel','stay','ryokan','boutique','resort','where to stay','hoshinoya','fuji speedway hotel','park hyatt','w osaka','sowaka','anshin oyado','capsule'],r:`<b>Top Hotel & Ryokan Stays for 5 Days:</b><br><br>🏎️ <b>Fuji Speedway Hotel</b> — Luxury Hyatt Unbound trackside hotel at Mt. Fuji with circuit views, private onsen & motorsport museum (Great for Day 3!).<br>🏯 <b>Hoshinoya Tokyo</b> — 17-story luxury ryokan in central Tokyo with natural hot springs 1,500m underground.<br>🏙️ <b>Park Hyatt Tokyo</b> — Lost in Translation sky hotel with Mt. Fuji views in Shinjuku.<br>📚 <b>Book & Bed / Anshin Oyado</b> — Sleep in bookshelves or high-end luxury capsules with free curry!`},
+  {p:['knife','knives','kappabashi','engrave','engraving','kitchen'],r:`<b>Kappabashi Hand-Forged Knife Engraving</b> is an unforgettable experience for Day 4! Visit Kama-Asa or surrounding knife shops in Kitchen Town (between Asakusa & Ueno). Master craftsmen will engrave your name or initials in Kanji right on the blade while you wait.`},
+  {p:['daikoku','car meet','jdm'],r:`<b>Daikoku PA (Sep 10 Night):</b><br><br>Yokohama highway parking area that turns into the world's greatest spontaneous car meet late at night. Book a guided Daikoku JDM car tour with private vehicle transport from Tokyo. Go <b>10pm–1am</b> on Thursday night (Day 2)!`},
+  {p:['fuji speedway','speedway','fsw','touge','fun2drive','fuji'],r:`🏎️ <b>Fuji Speedway & Touge Mountain Drive (Sep 11):</b><br><br>Take a day trip to Gotemba / Mt. Fuji. Rent an R34 GT-R or RX-7 at Fun2Drive to carve legendary Touge mountain passes, visit Fuji Speedway Circuit, and spend the night at the trackside <b>Fuji Speedway Hotel</b>!`},
+  {p:['jr pass','bullet train','shinkansen','train pass'],r:`Since you're staying in Tokyo & Fuji for 5 high-impact days, you <b>do NOT need a 14-day JR Pass</b> (which costs $435+). Just use a digital <b>Suica / Pasmo card</b> on your phone for local subways and trains, and buy point-to-point tickets for the bus/train to Fuji. This saves you $300+ per person!`},
+  {p:['cash','money','yen','card','credit card','atm'],r:`Japan is <b>more cash-based</b> than most countries — budget about ¥5,000–8,000/day in cash (~$35–55). <b>7-Eleven ATMs</b> reliably accept foreign debit/credit cards. Always carry ¥10,000 on you.`}
 ];
 
 function getBotResponse(input) {
@@ -835,17 +881,17 @@ function getBotResponse(input) {
   for(const entry of KB) {
     if(entry.p.some(p=>lower.includes(p))) return entry.r;
   }
-  if(lower.includes('hello')||lower.includes('hi ')||lower.includes('^hi$')) return `Hey! I'm your Japan trip assistant 🗾 I know everything about this trip — activities, hotels, booking tips, budget, food, and transportation. What would you like to know?`;
-  if(lower.includes('thank')) return `You're welcome! This trip is going to be unforgettable. Anything else you want to check?`;
-  if(lower.includes('itinerary')||lower.includes('plan')||lower.includes('schedule')) return `Your itinerary is on the right side of the screen — 10 days covering Tokyo (1–4), Kyoto (5–7), and Osaka (8–10). Add activities from the left panel and they'll show up in your schedule.`;
-  return `Great question! You can ask me about cool hotels, small hidden gems, booking tips, JR Pass, Daikoku PA, wagyu beef, or what to pack!`;
+  if(lower.includes('hello')||lower.includes('hi ')||lower.includes('^hi$')) return `Hey! I'm your Japan trip assistant 🗾 I know everything about your Sep 9–14 trip window — arriving Sep 9 @ 2 PM and departing Sep 14 @ 4 PM. What would you like to know?`;
+  if(lower.includes('thank')) return `You're welcome! This 5-day trip is going to be epic. Anything else you want to check?`;
+  if(lower.includes('itinerary')||lower.includes('plan')||lower.includes('schedule')) return `Your 5-day itinerary is on the right side of the screen! Click "⚡ Load Sep 9–14 Plan" at the top anytime to reload your optimized schedule.`;
+  return `Great question! You can ask me about arrival/departure logistics, Daikoku PA, Fuji Speedway, knife engraving, hotels, or what to pack!`;
 }
 
 const SUGGESTIONS = [
-  'Show me cool hotels & ryokans',
-  'What small hidden gems are listed?',
-  'Tell me about knife engraving',
-  'What needs to be booked ahead?'
+  'What is the Day 1 arrival plan?',
+  'What is the Day 5 departure plan?',
+  'Do we need a JR Pass for 5 days?',
+  'Show me Fuji Speedway & hotels'
 ];
 
 function toggleChat() {
@@ -854,7 +900,7 @@ function toggleChat() {
   document.getElementById('chatNotif').style.display = 'none';
   if(chatOpen && !chatInitialized) {
     chatInitialized = true;
-    addBotMsg(`こんにちは！ I'm your Japan trip assistant 🗾<br><br>I know all about Nate &amp; Dad's trip — activities, boutique hotels, hidden gems, booking tips, budget, and transportation. Ask me anything!`);
+    addBotMsg(`こんにちは！ I'm your Sep 9–14 trip assistant 🗾<br><br>Customized for your flight times: landing Sep 9 @ 2:00 PM and flying out Sep 14 @ 4:00 PM. Ask me anything!`);
     renderSuggestions();
   }
 }
@@ -905,8 +951,8 @@ let miniMapCollapsed = false;
 
 function initMiniMap() {
   miniMap = L.map('miniMap', {
-    zoom: 6,
-    center: [35.5, 136.5],
+    zoom: 7,
+    center: [35.6, 139.5],
     zoomControl: false,
     attributionControl: false,
     scrollWheelZoom: false,
@@ -919,10 +965,12 @@ function initMiniMap() {
 function updateMiniMap() {
   const planned = [];
   for (const [day, ids] of Object.entries(plan)) {
-    ids.forEach(id => {
-      const a = ACTIVITIES.find(x => x.id === id);
-      if (a && a.lat && a.lng) planned.push({a, day: parseInt(day)});
-    });
+    if (parseInt(day) <= tripMode) {
+      ids.forEach(id => {
+        const a = ACTIVITIES.find(x => x.id === id);
+        if (a && a.lat && a.lng) planned.push({a, day: parseInt(day)});
+      });
+    }
   }
 
   const panel = document.getElementById('miniMapPanel');
