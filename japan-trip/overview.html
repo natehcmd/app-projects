@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Japan, Together — Trip Overview</title>
-<meta name="description" content="A father-and-son Japan trip overview — when to go month by month, the Tokyo–Kyoto–Osaka route, what we'll do, and everything to book before flying.">
+<meta name="description" content="A father-and-son Japan trip overview — when to go month by month, the Tokyo–Kyoto–Osaka route, boutique hotels, small hidden gems, and everything to book before flying.">
 <meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#100c0b" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#100c0b" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#0d0f14" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0d0f14" media="(prefers-color-scheme: dark)">
 <meta property="og:title" content="Japan, Together — Trip Overview">
-<meta property="og:description" content="Three cities, the two of us. Month-by-month guide, route, activities and pre-trip checklist for a father-and-son Japan trip.">
+<meta property="og:description" content="Three cities, the two of us. Month-by-month guide, route, activities, boutique stays and pre-trip checklist for a father-and-son Japan trip.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://natehcmd.github.io/japan-trip/overview.html">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%97%BE%3C/text%3E%3C/svg%3E">
@@ -31,7 +31,7 @@
   --sky: #3b82f6;
   --glass: rgba(255, 255, 255, 0.045);
   --glass-brd: rgba(244, 236, 224, 0.12);
-  --r: 18px; /* Border radius */
+  --r: 18px;
   --shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -41,19 +41,16 @@ h1,h2,h3{font-family:"Avenir Next", -apple-system, "SF Pro Text", sans-serif;let
 a{color:inherit}
 .wrap{max-width:1040px;margin:0 auto;padding:0 clamp(18px,4vw,40px)}
 
-/* Focus rings — soft glow instead of default outline */
 :focus{outline:none}
 :focus-visible{outline:none;box-shadow:0 0 0 3px rgba(224,83,67,.5);border-radius:8px}
 button:focus-visible,a:focus-visible{box-shadow:0 0 0 3px rgba(224,83,67,.5)}
 
-/* Thin custom scrollbars */
 *{scrollbar-width:thin;scrollbar-color:var(--glass-brd) transparent}
 ::-webkit-scrollbar{width:8px;height:8px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--glass-brd);border-radius:8px}
 ::-webkit-scrollbar-thumb:hover{background:var(--ink-dim)}
 
-/* nav */
 nav{position:sticky;top:0;z-index:200;background:rgba(13,15,20,0.88);backdrop-filter:blur(16px);border-bottom:1px solid var(--glass-brd);color:var(--ink)}
 .nav-in{max-width:1040px;margin:0 auto;padding:11px clamp(18px,4vw,40px);display:flex;align-items:center;gap:18px}
 .brand{display:flex;align-items:center;gap:10px;font-family:"Avenir Next", -apple-system, "SF Pro Text", sans-serif;font-weight:700;font-size:1.05rem}
@@ -65,14 +62,13 @@ nav{position:sticky;top:0;z-index:200;background:rgba(13,15,20,0.88);backdrop-fi
 .nav-links a.cta:hover{background:var(--peach);color:var(--bg2)}
 @media(max-width:620px){.nav-links a.hideph{display:none}}
 
-/* hero */
 .hero{position:relative;overflow:hidden;background:linear-gradient(180deg, rgba(20,24,34,0.95), rgba(13,15,20,1));border-bottom:1px solid var(--glass-brd)}
 .hero-art{position:absolute;inset:0;width:100%;height:100%;display:block}
 .hero-in{position:relative;z-index:2;max-width:1040px;margin:0 auto;padding:clamp(54px,11vw,100px) clamp(18px,4vw,40px) clamp(100px,16vw,160px)}
 .eyebrow{font-size:.76rem;letter-spacing:.34em;text-transform:uppercase;color:var(--mint);font-weight:700;margin-bottom:16px}
 .hero h1{font-size:clamp(2.6rem,9vw,5.4rem);line-height:.98;font-weight:800;margin-bottom:14px;color:var(--ink)}
 .hero h1 .jp{display:block;font-size:.32em;font-weight:600;color:var(--ink-dim);letter-spacing:.1em;margin-top:12px}
-.hero .sub{font-size:clamp(1.05rem,2.4vw,1.3rem);color:var(--ink-dim);max-width:30ch;margin-bottom:28px;font-weight:500}
+.hero .sub{font-size:clamp(1.05rem,2.4vw,1.3rem);color:var(--ink-dim);max-width:34ch;margin-bottom:28px;font-weight:500}
 .hero-cta{display:flex;flex-wrap:wrap;gap:12px}
 .btn{appearance:none;border:0;cursor:pointer;font-family:inherit;font-weight:700;font-size:.96rem;padding:14px 24px;border-radius:30px;text-decoration:none;display:inline-flex;align-items:center;gap:9px;transition:transform .14s,box-shadow .14s,background .14s}
 .btn:hover{transform:translateY(-2px)}
@@ -81,7 +77,6 @@ nav{position:sticky;top:0;z-index:200;background:rgba(13,15,20,0.88);backdrop-fi
 .btn-ghost{background:transparent;color:var(--ink);border:1.5px solid var(--glass-brd)}
 .btn-ghost:hover{background:var(--glass);color:var(--ink);border-color:var(--peach)}
 
-/* sections */
 section{padding:clamp(48px,8vw,88px) 0}
 .sec-label{font-size:.76rem;letter-spacing:.22em;text-transform:uppercase;font-weight:700;color:var(--mint);margin-bottom:12px;display:flex;align-items:center;gap:12px}
 .sec-label::before{content:"";width:30px;height:1px;background:var(--mint)}
@@ -91,7 +86,6 @@ h2.sec-title{font-size:clamp(1.8rem,5vw,2.9rem);font-weight:700;line-height:1.05
 .reveal{opacity:0;transform:translateY(20px);transition:opacity .7s ease,transform .7s ease}
 .reveal.in{opacity:1;transform:none}
 
-/* ── DAY PICKER ── */
 .day-picker-wrap{background:var(--glass); backdrop-filter:blur(18px);border:1px solid var(--glass-brd);border-radius: var(--r);padding:clamp(22px,4vw,40px);box-shadow:var(--shadow);margin-bottom:32px}
 .day-picker-wrap h3{font-size:1.3rem;margin-bottom:6px;color:var(--ink)}
 .day-picker-wrap p{color:var(--ink-dim);font-size:.92rem;margin-bottom:20px}
@@ -107,7 +101,6 @@ h2.sec-title{font-size:clamp(1.8rem,5vw,2.9rem);font-weight:700;line-height:1.05
 .day-split-city .ds-days{font-family:"Avenir Next", -apple-system, "SF Pro Text", sans-serif;font-size:1.3rem;font-weight:700;margin-top:8px}
 .day-split-city .ds-sub{font-size:.74rem;opacity:.75;margin-top:2px}
 
-/* ── CITIES ── */
 .cities{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
 @media(max-width:820px){.cities{grid-template-columns:1fr}}
 .city{background:var(--glass); backdrop-filter:blur(18px);border:1px solid var(--glass-brd);border-radius: var(--r);padding:26px;box-shadow:var(--shadow)}
@@ -118,7 +111,6 @@ h2.sec-title{font-size:clamp(1.8rem,5vw,2.9rem);font-weight:700;line-height:1.05
 .city ul{padding-left:18px;font-size:.9rem;color:var(--ink-dim)}
 .city li{margin-bottom:5px}
 
-/* ── MONTH GUIDE ── */
 .month-nav{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none;margin-bottom:24px}
 .month-nav::-webkit-scrollbar{display:none}
 .month-btn{flex:0 0 auto;background:var(--glass); backdrop-filter:blur(18px);border:1.5px solid var(--glass-brd);border-radius:30px;padding:8px 16px;font-size:.82rem;font-weight:700;color:var(--ink-dim);cursor:pointer;transition:all .15s;white-space:nowrap}
@@ -151,14 +143,12 @@ h2.sec-title{font-size:clamp(1.8rem,5vw,2.9rem);font-weight:700;line-height:1.05
 .month-act-chip.star{border-color:rgba(192,98,58,.4);background:rgba(192,98,58,.06);color:var(--peach)}
 .month-act-chip.warn{border-color:#f0c080;background:#fffaf0;color:#8a6000}
 
-/* ── CATEGORIES ── */
 .cats{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
 @media(max-width:760px){.cats{grid-template-columns:1fr}}
 .cat{background:var(--glass); backdrop-filter:blur(18px);border:1px solid var(--glass-brd);border-left:5px solid var(--c);border-radius: var(--r);padding:22px 24px;box-shadow:var(--shadow)}
 .cat h3{font-size:1.2rem;margin-bottom:4px;color:var(--c)}
 .cat .ex{font-size:.93rem;color:var(--ink-dim)}
 
-/* ── FEATURE CAR DAY ── */
 .feature{background:linear-gradient(135deg,#2b2f34,#3c434b);color:#f1ece2;border-radius:24px;padding:clamp(28px,5vw,52px);box-shadow:var(--shadow);position:relative;overflow:hidden}
 .feature::after{content:"車";position:absolute;right:18px;bottom:-30px;font-family:"Avenir Next", -apple-system, "SF Pro Text", sans-serif;font-size:11rem;font-weight:800;color:rgba(255,255,255,.05);line-height:1}
 .feature .sec-label{color:#e8a989}
@@ -170,7 +160,6 @@ h2.sec-title{font-size:clamp(1.8rem,5vw,2.9rem);font-weight:700;line-height:1.05
 .feature .idp{margin-top:24px;background:rgba(232,169,137,.16);border:1px solid rgba(232,169,137,.4);border-radius:13px;padding:14px 18px;font-size:.92rem;position:relative;z-index:2}
 .feature .idp b{color:#f3c4ab}
 
-/* ── CHECKLIST ── */
 .checks{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
 @media(max-width:680px){.checks{grid-template-columns:1fr}}
 .check{display:flex;gap:13px;align-items:flex-start;background:var(--glass); backdrop-filter:blur(18px);border:1px solid var(--glass-brd);border-radius: var(--r);padding:16px 18px}
@@ -178,7 +167,6 @@ h2.sec-title{font-size:clamp(1.8rem,5vw,2.9rem);font-weight:700;line-height:1.05
 .check .t{font-weight:700;font-size:.96rem}
 .check .d{font-size:.88rem;color:var(--ink-dim)}
 
-/* ── MAP ── */
 #map{height:520px;border-radius:20px;overflow:hidden;border:1px solid var(--glass-brd);box-shadow:var(--shadow)}
 .map-legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px}
 .legend-item{display:flex;align-items:center;gap:7px;font-size:.82rem;font-weight:600;color:var(--ink-dim)}
@@ -192,13 +180,7 @@ h2.sec-title{font-size:clamp(1.8rem,5vw,2.9rem);font-weight:700;line-height:1.05
 .lp-city.Kyoto{background:#48624b}
 .lp-city.Osaka,.lp-city.Near,.lp-city.Kobe,.lp-city.Nara,.lp-city.Himeji{background:#6d4b66}
 .lp-desc{font-size:.8rem;color:#555;margin-bottom:8px}
-.lp-links{display:flex;gap:6px}
-.lp-links a{font-size:.74rem;font-weight:700;padding:3px 9px;border-radius:20px;text-decoration:none;transition:opacity .14s}
-.lp-links a:hover{opacity:.8}
-.lp-map{background:#e8f0fa;color:#355074;border:1px solid #b8ccee}
-.lp-plan{background:#355074;color:#fff}
 
-/* ── FINAL CTA ── */
 .final{text-align:center;background:linear-gradient(180deg,var(--glass),#f1e6d4);border:1px solid var(--glass-brd);border-radius:24px;padding:clamp(34px,6vw,64px);box-shadow:var(--shadow)}
 .final .mk{font-family:"Avenir Next", -apple-system, "SF Pro Text", sans-serif;font-size:3rem;color:var(--peach);line-height:1}
 .final h2{font-size:clamp(1.6rem,4.4vw,2.4rem);margin:14px 0 12px}
@@ -213,8 +195,6 @@ footer .jp{font-family:"Avenir Next", -apple-system, "SF Pro Text", sans-serif;f
   .btn:hover{transform:none}
   *,*::before,*::after{transition-duration:.01ms !important;animation-duration:.01ms !important}
 }
-
-/* DARK MODE — sumi-inverted washi palette */
 </style>
 </head>
 <body>
@@ -251,7 +231,7 @@ footer .jp{font-family:"Avenir Next", -apple-system, "SF Pro Text", sans-serif;f
   <div class="hero-in">
     <p class="eyebrow">A father &amp; son trip · Japan 2026–2027</p>
     <h1>Japan,<br>Together<span class="jp">日本へ、ふたりで</span></h1>
-    <p class="sub">Three cities. The two of us. Pick your month, pick your days.</p>
+    <p class="sub">Three cities. The two of us. Pick your month, boutique stays &amp; daily route.</p>
     <div class="hero-cta">
       <a href="index.html" class="btn btn-primary">Open the day planner →</a>
       <a href="#when" class="btn btn-ghost">Pick a month ↓</a>
@@ -319,7 +299,7 @@ footer .jp{font-family:"Avenir Next", -apple-system, "SF Pro Text", sans-serif;f
       <ul>
         <li>teamLab Borderless digital art</li>
         <li>Tsukiji market breakfast at 6am</li>
-        <li>Shimokitazawa &amp; Golden Gai</li>
+        <li>Kappabashi knife custom engraving</li>
         <li>Daikoku PA car meets at night</li>
       </ul>
     </div>
@@ -331,8 +311,8 @@ footer .jp{font-family:"Avenir Next", -apple-system, "SF Pro Text", sans-serif;f
       <ul>
         <li>Fushimi Inari's red gates</li>
         <li>Arashiyama bamboo grove</li>
-        <li>A ryokan night &amp; kaiseki dinner</li>
-        <li>Gion at dusk</li>
+        <li>Hoshinoya or Sowaka ryokan night</li>
+        <li>Fushimi sake canal boat cruise</li>
       </ul>
     </div>
     <div class="city">
@@ -341,10 +321,10 @@ footer .jp{font-family:"Avenir Next", -apple-system, "SF Pro Text", sans-serif;f
       <div class="days-label" id="osaka-label">Days 8–10 · food &amp; fun</div>
       <p>Looser, louder and all about eating — with Nara's deer a short ride away.</p>
       <ul>
-        <li>Dotonbori street food</li>
-        <li>Kuromon Market</li>
-        <li>Day trip to Nara's deer</li>
-        <li>Super Nintendo World</li>
+        <li>Dotonbori street food &amp; night cruise</li>
+        <li>Kuromon Market wagyu skewers</li>
+        <li>Day trip to Nara's deer &amp; Buddha</li>
+        <li>Super Nintendo World USJ</li>
       </ul>
     </div>
   </div>
@@ -354,14 +334,16 @@ footer .jp{font-family:"Avenir Next", -apple-system, "SF Pro Text", sans-serif;f
 <section id="do"><div class="wrap reveal">
   <p class="sec-label">What we'll do</p>
   <h2 class="sec-title">Everything we love, in one trip</h2>
-  <p class="sec-intro">Fifty activities across six categories in the planner. Here's the shape of it.</p>
+  <p class="sec-intro">75+ curated experiences &amp; boutique hotels across eight categories in the planner. Here's the shape of it.</p>
   <div class="cats">
-    <div class="cat" style="--c:var(--mint)"><h3>Nature</h3><p class="ex">Bamboo grove, Nara's deer, Mt. Fuji views, an onsen soak, monkey park.</p></div>
-    <div class="cat" style="--c:var(--lav)"><h3>History &amp; Culture</h3><p class="ex">Fushimi Inari, Golden Pavilion, Himeji Castle, Nijo Castle, a tea ceremony.</p></div>
-    <div class="cat" style="--c:var(--peach)"><h3>Food &amp; Drink</h3><p class="ex">Tsukiji breakfast, ramen, Kobe beef, Dotonbori street food, kaiseki dinner.</p></div>
-    <div class="cat" style="--c:var(--sky)"><h3>Tech &amp; Modern</h3><p class="ex">teamLab, Akihabara arcades, Shibuya Sky, Ghibli Museum, Nintendo World.</p></div>
-    <div class="cat" style="--c:var(--ink-faint)"><h3>Cars &amp; Motorsport</h3><p class="ex">Daikoku PA meets, Up Garage parts hunt, Nissan Crossing, street go-karting.</p></div>
-    <div class="cat" style="--c:var(--peach)"><h3>Streets &amp; Nightlife</h3><p class="ex">Golden Gai's tiny bars, Omoide Yokocho, karaoke, Japanese baseball game.</p></div>
+    <div class="cat" style="--c:var(--peach)"><h3>🏨 Boutique Hotels &amp; Ryokans</h3><p class="ex">Fuji Speedway trackside Hyatt, Hoshinoya skyscraper ryokan, Hakone open-air onsen, Sowaka Gion sanctuary.</p></div>
+    <div class="cat" style="--c:rgba(236,72,153,0.9)"><h3>✨ Small Hidden Gems</h3><p class="ex">Kappabashi custom knife engraving, Fushimi sake boat cruise, Gachapon 500-machine hall, Dotonbori river boat.</p></div>
+    <div class="cat" style="--c:var(--mint)"><h3>Nature</h3><p class="ex">Arashiyama bamboo, Nara deer, Mt. Fuji 5th station, Hakone volcanic ropeway, monkey park.</p></div>
+    <div class="cat" style="--c:var(--lav)"><h3>History &amp; Culture</h3><p class="ex">Fushimi Inari, Golden Pavilion, Himeji Castle, Nijo Castle nightingale floors, sumo practice.</p></div>
+    <div class="cat" style="--c:var(--peach)"><h3>Food &amp; Drink</h3><p class="ex">Tsukiji sushi, A5 Kobe &amp; Hida beef teppanyaki, Dotonbori takoyaki, Ebisu yakitori, Kaiseki dinner.</p></div>
+    <div class="cat" style="--c:var(--sky)"><h3>Tech &amp; Modern</h3><p class="ex">teamLab Borderless &amp; Osaka Botanical, Akihabara arcades, Shibuya Sky, Ghibli Museum, Nintendo World.</p></div>
+    <div class="cat" style="--c:var(--ink-faint)"><h3>Cars &amp; Motorsport</h3><p class="ex">Daikoku PA night meets, Fuji Speedway, Up Garage parts hunt, pro drift taxi, street go-karting.</p></div>
+    <div class="cat" style="--c:var(--peach)"><h3>Streets &amp; Nightlife</h3><p class="ex">Bar High Five ice carving, Golden Gai tiny bars, Omoide Yokocho, private karaoke, baseball game.</p></div>
   </div>
 </div></section>
 
@@ -373,20 +355,20 @@ footer .jp{font-family:"Avenir Next", -apple-system, "SF Pro Text", sans-serif;f
     <p>Japan is holy ground for car people, and we're carving out a day for it — the late-night highway meets, the parts shops, and a drive through Tokyo streets you can't experience anywhere else on earth.</p>
     <div class="chips">
       <span class="chip">Daikoku PA meets</span>
+      <span class="chip">Fuji Speedway Hotel</span>
       <span class="chip">Up Garage parts hunt</span>
       <span class="chip">Super Autobacs</span>
-      <span class="chip">Nissan Crossing</span>
       <span class="chip">Street go-karting</span>
     </div>
-    <div class="idp"><b>One thing to handle first:</b> the driving and go-karting need an International Driving Permit, picked up in the US before we fly (AAA, about $20, a few minutes). Same errand as the passport.</div>
+    <div class="idp"><b>One thing to handle first:</b> driving and go-karting need an International Driving Permit, picked up in the US before we fly (AAA, about $20, a few minutes). Same errand as the passport.</div>
   </div>
 </div></section>
 
 <!-- MAP -->
 <section id="map-section"><div class="wrap reveal">
   <p class="sec-label">Where everything is</p>
-  <h2 class="sec-title">Every activity, on the map</h2>
-  <p class="sec-intro">Click any pin to see what's there and open it in Google Maps or jump straight to the planner.</p>
+  <h2 class="sec-title">Every activity &amp; hotel, on the map</h2>
+  <p class="sec-intro">Click any pin to see what's there, open in Google Maps, or jump straight to the planner.</p>
   <div id="map"></div>
   <div class="map-legend">
     <div class="legend-item"><span class="legend-dot" style="background:#355074"></span>Tokyo</div>
@@ -405,7 +387,7 @@ footer .jp{font-family:"Avenir Next", -apple-system, "SF Pro Text", sans-serif;f
     <div class="check"><span class="bx">✓</span><span><span class="t">International Driving Permit</span><br><span class="d">From AAA in the US — required for any driving or go-karting.</span></span></div>
     <div class="check"><span class="bx">✓</span><span><span class="t">JR Pass</span><br><span class="d">Buy before flying; covers all bullet trains between cities.</span></span></div>
     <div class="check"><span class="bx">✓</span><span><span class="t">Suica card</span><br><span class="d">Add to a phone wallet for trains and convenience stores.</span></span></div>
-    <div class="check"><span class="bx">✓</span><span><span class="t">Book the sell-outs</span><br><span class="d">teamLab, Ghibli Museum, Super Nintendo World, and the ryokan all go fast.</span></span></div>
+    <div class="check"><span class="bx">✓</span><span><span class="t">Book the sell-outs</span><br><span class="d">teamLab, Ghibli Museum, Super Nintendo World, and ryokans go fast.</span></span></div>
     <div class="check"><span class="bx">✓</span><span><span class="t">Hold one flex day</span><br><span class="d">Weather insurance — skip non-refundable hotels in typhoon season.</span></span></div>
   </div>
 </div></section>
@@ -415,7 +397,7 @@ footer .jp{font-family:"Avenir Next", -apple-system, "SF Pro Text", sans-serif;f
   <div class="final">
     <div class="mk">旅</div>
     <h2>Ready to build your days?</h2>
-    <p>The planner has all 50 activities with maps, booking links, and a chatbot to answer any question.</p>
+    <p>The planner has 75+ curated activities &amp; boutique hotels with interactive search, maps, booking links, and a chatbot to answer any question.</p>
     <a href="index.html" class="btn btn-primary">Open the day planner →</a>
   </div>
 </div></section>
@@ -625,6 +607,21 @@ function setDays(n) {
 
 // ── MAP ──
 const PINS = [
+  // HOTELS & STAYS
+  {name:'Fuji Speedway Hotel & Museum',city:'Tokyo',lat:35.3672,lng:138.9280,desc:'Hyatt Unbound trackside hotel with Mt. Fuji views & motorsport museum',map:'https://maps.google.com/?q=Fuji+Speedway+Hotel',site:'https://www.hyatt.com/en-US/hotel/japan/fuji-speedway-hotel/fswub'},
+  {name:'Hoshinoya Tokyo',city:'Tokyo',lat:35.6869,lng:139.7640,desc:'17-story luxury ryokan in central Tokyo with natural onsen',map:'https://maps.google.com/?q=Hoshinoya+Tokyo',site:'https://hoshinoya.com/tokyo/en/'},
+  {name:'Trunk (Hotel) Yoyogi Park',city:'Tokyo',lat:35.6668,lng:139.6938,desc:'Boutique hotel with rooftop infinity pool overlooking Yoyogi Park',map:'https://maps.google.com/?q=TRUNK+HOTEL+Yoyogi+Park',site:'https://yoyogipark.trunk-hotel.com/'},
+  {name:'Hoshinoya Kyoto',city:'Kyoto',lat:35.0112,lng:135.6675,desc:'100yr wooden pavilion ryokan reached by riverboat down Oi River',map:'https://maps.google.com/?q=Hoshinoya+Kyoto',site:'https://hoshinoya.com/kyoto/en/'},
+  {name:'Sowaka Kyoto Ryokan',city:'Kyoto',lat:35.0006,lng:135.7770,desc:'Restored 100yr ryokan with private courtyard gardens in Gion',map:'https://maps.google.com/?q=Sowaka+Kyoto',site:'https://sowaka.com/en/'},
+  {name:'W Osaka Neon Monolith',city:'Osaka',lat:34.6750,lng:135.4990,desc:'Tadao Ando black monolith exterior with neon interior in Shinsaibashi',map:'https://maps.google.com/?q=W+Osaka'},
+  {name:'Hakone Ginyu Onsen Ryokan',city:'Tokyo',lat:35.2395,lng:139.0570,desc:'Mountain-side ryokan with private open-air infinity onsen in room',map:'https://maps.google.com/?q=Hakone+Ginyu'},
+
+  // SMALL GEMS
+  {name:'Kappabashi Knife Engraving',city:'Tokyo',lat:35.7137,lng:139.7889,desc:'Hand-forged chef knives engraved with your name in kanji',map:'https://maps.google.com/?q=Kappabashi+Kitchen+Town'},
+  {name:'Bar High Five Ice Carving',city:'Tokyo',lat:35.6705,lng:139.7632,desc:'Ginza speakeasy with hand-carved ice spheres for rare whiskies',map:'https://maps.google.com/?q=Bar+High+Five+Ginza'},
+  {name:'Fushimi Sake Canal Cruise',city:'Kyoto',lat:34.9385,lng:135.7610,desc:'Wooden flat-bottom boat cruise past 400yr Edo sake breweries',map:'https://maps.google.com/?q=Fushimi+Jukutsubune+Kyoto'},
+  {name:'Dotonbori Wonder River Cruise',city:'Osaka',lat:34.6687,lng:135.5013,desc:'Night riverboat cruise under the giant Glico Running Man neon sign',map:'https://maps.google.com/?q=Dotonbori+River+Cruise'},
+
   // TOKYO
   {name:'teamLab Borderless',city:'Tokyo',lat:35.6258,lng:139.7744,desc:'Immersive digital art museum',map:'https://maps.google.com/?q=teamLab+Borderless+Tokyo',site:'https://www.teamlab.art/e/borderless/'},
   {name:'Shibuya Sky',city:'Tokyo',lat:35.6580,lng:139.7016,desc:'360° rooftop above the Scramble',map:'https://maps.google.com/?q=Shibuya+Sky+Tokyo',site:'https://www.shibuya-sky.com/en/'},
@@ -634,21 +631,14 @@ const PINS = [
   {name:'Tsukiji Market',city:'Tokyo',lat:35.6654,lng:139.7707,desc:'Best sushi breakfast in the world',map:'https://maps.google.com/?q=Tsukiji+Outer+Market+Tokyo'},
   {name:'Omoide Yokocho',city:'Tokyo',lat:35.6909,lng:139.7001,desc:'Smoky yakitori alley in Shinjuku',map:'https://maps.google.com/?q=Omoide+Yokocho+Shinjuku+Tokyo'},
   {name:'Golden Gai',city:'Tokyo',lat:35.6938,lng:139.7027,desc:'200+ tiny bars, six alleys',map:'https://maps.google.com/?q=Golden+Gai+Shinjuku+Tokyo'},
-  {name:'Shimokitazawa',city:'Tokyo',lat:35.6614,lng:139.6681,desc:'Vintage shops, records, live music',map:'https://maps.google.com/?q=Shimokitazawa+Tokyo'},
-  {name:'Harajuku / Takeshita Dori',city:'Tokyo',lat:35.6702,lng:139.7026,desc:'Wild fashion & crepes',map:'https://maps.google.com/?q=Takeshita+Street+Harajuku+Tokyo'},
   {name:'Senso-ji Temple',city:'Tokyo',lat:35.7147,lng:139.7966,desc:'Tokyo\'s oldest temple in Asakusa',map:'https://maps.google.com/?q=Senso-ji+Temple+Asakusa+Tokyo',site:'https://www.senso-ji.jp/english/'},
   {name:'Meiji Shrine',city:'Tokyo',lat:35.6763,lng:139.6993,desc:'Forested Shinto shrine',map:'https://maps.google.com/?q=Meiji+Shrine+Tokyo',site:'https://www.meijijingu.or.jp/en/'},
   {name:'Daikoku PA (Car Meet)',city:'Tokyo',lat:35.4738,lng:139.6630,desc:'Late-night JDM car heaven (10pm+)',map:'https://maps.google.com/?q=Daikoku+Parking+Area+Yokohama'},
   {name:'Up Garage',city:'Tokyo',lat:35.6900,lng:139.7200,desc:'JDM parts chain',map:'https://maps.google.com/?q=Up+Garage+Tokyo',site:'https://www.up-garage.com/'},
   {name:'Street Go-Karting',city:'Tokyo',lat:35.6980,lng:139.7716,desc:'Mario Kart through real streets',map:'https://maps.google.com/?q=MariCar+Akihabara+Tokyo',site:'https://www.maricar.com/en/'},
-  {name:'Nissan Crossing',city:'Tokyo',lat:35.6718,lng:139.7649,desc:'Nissan\'s Ginza showroom',map:'https://maps.google.com/?q=Nissan+Crossing+Ginza+Tokyo'},
-  {name:'Ueno Park',city:'Tokyo',lat:35.7146,lng:139.7734,desc:'Green park, museums, zoo',map:'https://maps.google.com/?q=Ueno+Park+Tokyo'},
-  {name:'Downtown Tokyo Walk',city:'Tokyo',lat:35.6896,lng:139.6917,desc:'Shinjuku, Shibuya crossing, Ginza, Imperial Palace',map:'https://maps.google.com/?q=Shinjuku+Tokyo'},
-  {name:'Mt. Fuji Day Trip',city:'Tokyo',lat:35.3606,lng:138.7274,desc:'5th Station day trip — volcanic trails & crater views',map:'https://maps.google.com/?q=Mt+Fuji+5th+Station+Japan',site:'https://www.fujisan-climb.jp/en/'},
   {name:'Fuji Speedway Circuit',city:'Tokyo',lat:35.3717,lng:138.9267,desc:'FIA Grade-1 circuit, motorsport museum & driving',map:'https://maps.google.com/?q=Fuji+Speedway',site:'https://www.fsw.tv/en/'},
-  {name:'Fuji Speedway Hotel & Museum',city:'Tokyo',lat:35.3672,lng:138.9280,desc:'Hyatt Unbound luxury trackside hotel, circuit views & museum',map:'https://maps.google.com/?q=Fuji+Speedway+Hotel',site:'https://www.hyatt.com/en-US/hotel/japan/fuji-speedway-hotel/fswub'},
   {name:'Miraikan Robotics Museum',city:'Tokyo',lat:35.6193,lng:139.7764,desc:'Robotics, androids & emerging tech in Odaiba',map:'https://maps.google.com/?q=Miraikan+Tokyo',site:'https://www.miraikan.jst.go.jp/en/'},
-  {name:'Sumo Stable Morning Practice',city:'Tokyo',lat:35.6969,lng:139.7933,desc:'Intense morning sumo practice in Ryogoku',map:'https://maps.google.com/?q=Ryogoku+Kokugikan+Tokyo'},
+
   // KYOTO
   {name:'Fushimi Inari',city:'Kyoto',lat:34.9671,lng:135.7727,desc:'Thousands of torii gates up a mountain',map:'https://maps.google.com/?q=Fushimi+Inari+Taisha+Kyoto',site:'https://inari.jp/en/'},
   {name:'Arashiyama Bamboo Grove',city:'Kyoto',lat:35.0166,lng:135.6724,desc:'Towering bamboo forest',map:'https://maps.google.com/?q=Arashiyama+Bamboo+Grove+Kyoto'},
@@ -656,28 +646,21 @@ const PINS = [
   {name:'Gion District',city:'Kyoto',lat:35.0036,lng:135.7752,desc:'Ancient geisha district at dusk',map:'https://maps.google.com/?q=Gion+District+Kyoto'},
   {name:'Nishiki Market',city:'Kyoto',lat:35.0053,lng:135.7670,desc:'Kyoto\'s covered food market',map:'https://maps.google.com/?q=Nishiki+Market+Kyoto',site:'https://www.kyoto-nishiki.or.jp/en/'},
   {name:'Kiyomizu-dera Temple',city:'Kyoto',lat:34.9948,lng:135.7851,desc:'Cliff-top temple, panoramic views',map:'https://maps.google.com/?q=Kiyomizudera+Temple+Kyoto',site:'https://www.kiyomizudera.or.jp/en/'},
-  {name:"Philosopher's Path",city:'Kyoto',lat:35.0177,lng:135.7938,desc:'Peaceful canal walk between temples',map:"https://maps.google.com/?q=Philosopher's+Path+Kyoto"},
-  {name:'Fushimi Sake District',city:'Kyoto',lat:34.9440,lng:135.7659,desc:'Sake breweries & tasting',map:'https://maps.google.com/?q=Fushimi+Sake+District+Kyoto',site:'https://www.gekkeikan.co.jp/english/enjoy/museum/'},
-  {name:'Sagano Scenic Railway',city:'Kyoto',lat:35.0172,lng:135.6714,desc:'Open-air train through the gorge',map:'https://maps.google.com/?q=Sagano+Scenic+Railway+Arashiyama+Kyoto',site:'https://www.sagano-kanko.co.jp/en/'},
-  {name:'Arashiyama Monkey Park',city:'Kyoto',lat:35.0098,lng:135.6720,desc:'Wild macaques on the mountain',map:'https://maps.google.com/?q=Iwatayama+Monkey+Park+Arashiyama+Kyoto',site:'https://www.monkeypark.jp/'},
-  {name:'Nijo Castle',city:'Kyoto',lat:35.0142,lng:135.7481,desc:'Shogun\'s palace, nightingale floors',map:'https://maps.google.com/?q=Nijo+Castle+Kyoto',site:'https://nijo-jocastle.city.kyoto.lg.jp/en/'},
-  {name:'Samurai Post Town Sake Flights',city:'Kyoto',lat:35.9680,lng:137.8150,desc:'Edo post towns & craft sake flights',map:'https://maps.google.com/?q=Narai-juku+Japan'},
+  {name:'Nijo Castle',city:'Kyoto',lat:35.0142,lng:135.7481,desc:'Shogun\'s palace, nightingale squeaking floors',map:'https://maps.google.com/?q=Nijo+Castle+Kyoto',site:'https://nijo-jocastle.city.kyoto.lg.jp/en/'},
+
   // OSAKA + NEARBY
   {name:'Dotonbori',city:'Osaka',lat:34.6687,lng:135.5013,desc:'Neon street food heart of Osaka',map:'https://maps.google.com/?q=Dotonbori+Osaka'},
   {name:'Kuromon Market',city:'Osaka',lat:34.6680,lng:135.5071,desc:'Osaka\'s famous food market',map:'https://maps.google.com/?q=Kuromon+Market+Osaka',site:'https://kuromon.com/en/'},
   {name:'Super Nintendo World (USJ)',city:'Osaka',lat:34.6654,lng:135.4321,desc:'Immersive Mario world',map:'https://maps.google.com/?q=Universal+Studios+Japan+Osaka',site:'https://www.usj.co.jp/web/en/us/areas/super-nintendo-world'},
   {name:'Osaka Castle',city:'Osaka',lat:34.6873,lng:135.5262,desc:'Iconic castle with museum',map:'https://maps.google.com/?q=Osaka+Castle',site:'https://www.osakacastle.net/english/'},
   {name:'Umeda Sky Building',city:'Osaka',lat:34.7056,lng:135.4904,desc:'Floating Garden Observatory',map:'https://maps.google.com/?q=Umeda+Sky+Building+Osaka',site:'https://www.skybldg.co.jp/en/'},
-  {name:'Den Den Town',city:'Osaka',lat:34.6620,lng:135.5060,desc:'Electronics & anime district',map:'https://maps.google.com/?q=Den+Den+Town+Nipponbashi+Osaka'},
-  {name:'Shinsaibashi',city:'Osaka',lat:34.6726,lng:135.5013,desc:'Main covered shopping arcade',map:'https://maps.google.com/?q=Shinsaibashi+Shopping+Street+Osaka'},
-  {name:'Kyocera Dome (Baseball)',city:'Osaka',lat:34.6678,lng:135.4744,desc:'Orix Buffaloes home games',map:'https://maps.google.com/?q=Kyocera+Dome+Osaka',site:'https://www.buffaloes.co.jp/'},
   {name:'Nara Park (Deer)',city:'Near',lat:34.6851,lng:135.8048,desc:'Free-roaming deer + giant Buddha',map:'https://maps.google.com/?q=Nara+Park+Japan',site:'https://www.naravisitor.jp/en'},
   {name:'Himeji Castle',city:'Himeji',lat:34.8394,lng:134.6939,desc:'Japan\'s most beautiful castle',map:'https://maps.google.com/?q=Himeji+Castle',site:'https://www.himejicastle.jp/en/'},
   {name:'Kobe (Beef Lunch)',city:'Kobe',lat:34.6901,lng:135.1956,desc:'A5 Kobe beef teppanyaki day trip',map:'https://maps.google.com/?q=Kobe+Beef+Misono+Restaurant'},
   {name:'Takayama (Hida & Kobe Beef)',city:'Near',lat:36.1408,lng:137.2582,desc:'A5 Hida beef nigiri & Kobe beef in old town',map:'https://maps.google.com/?q=Takayama+Old+Town+Japan'},
 ];
 
-const CITY_COLORS = {Tokyo:'#355074', Kyoto:'#48624b', Osaka:'#6d4b66', Near:'#6d4b66', Himeji:'#6d4b66', Kobe:'#6d4b66'};
+const CITY_COLORS = {Tokyo:'#3b82f6', Kyoto:'#16a34a', Osaka:'#c026d3', Near:'#c026d3', Himeji:'#c026d3', Kobe:'#c026d3'};
 
 function buildMap() {
   const map = L.map('map', {center:[35.2,136.5],zoom:6,scrollWheelZoom:false});
@@ -686,10 +669,10 @@ function buildMap() {
   }).addTo(map);
 
   PINS.forEach(p => {
-    const color = CITY_COLORS[p.city] || '#555';
+    const color = CITY_COLORS[p.city] || '#e05343';
     const icon = L.divIcon({
       className:'',
-      html:`<div style="width:14px;height:14px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)"></div>`,
+      html:`<div style="width:14px;height:14px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4)"></div>`,
       iconSize:[14,14],iconAnchor:[7,7]
     });
     const marker = L.marker([p.lat,p.lng],{icon}).addTo(map);
