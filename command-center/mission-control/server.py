@@ -1,5 +1,5 @@
 """Mission Control — local agentic OS dashboard. Runs on http://localhost:8450"""
-import json, os, re, shutil, sqlite3, subprocess, datetime, threading, urllib.request, shlex, base64, hashlib, secrets
+import json, os, re, shutil, sqlite3, subprocess, datetime, threading, urllib.request, shlex, base64, hashlib, secrets, time, plistlib, ipaddress, hmac
 from pathlib import Path
 from urllib.parse import urlparse
 from dotenv import load_dotenv
@@ -18,21 +18,90 @@ BRIEF_MODEL = "qwen3-coder:30b"  # actually installed on this Mac (qwen2.5-coder
 app = FastAPI(title="Mission Control")
 SESSION_SECRET = secrets.token_hex(32)
 
+def _is_private_or_local_host(host_str: str) -> bool:
+    if not host_str:
+        return False
+    if ":" in host_str and not host_str.startswith("["):
+        host_parts = host_str.split(":")
+        if len(host_parts) == 2 and host_parts[1].isdigit():
+            host_str = host_parts[0]
+    if host_str in ("127.0.0.1", "::1", "localhost", "testclient"):
+        return True
+    if host_str.endswith(".local"):
+        return True
+    try:
+        return ipaddress.ip_address(host_str).is_private
+    except ValueError:
+        return False
+
 def _is_local_request(request: Request) -> bool:
     if not request:
         return False
     host = getattr(request.client, "host", "") if request.client else ""
-    is_local_ip = host in ("127.0.0.1", "::1", "localhost", "testclient")
+    if not _is_private_or_local_host(host):
+        return False
+
     fetch_site = request.headers.get("sec-fetch-site", "")
-    origin = request.headers.get("origin", "")
     if fetch_site == "cross-site":
         return False
-    if origin and not any(origin.startswith(h) for h in ("http://localhost:8450", "http://127.0.0.1:8450")):
-        return False
-    return is_local_ip
+
+    origin = request.headers.get("origin", "")
+    if origin:
+        orig_host = urlparse(origin).hostname or ""
+        if not _is_private_or_local_host(orig_host):
+            return False
+
+    referer = request.headers.get("referer", "")
+    if referer:
+        ref_host = urlparse(referer).hostname or ""
+        if not _is_private_or_local_host(ref_host):
+            return False
+
+    return True
+
+_CONFIGURED_TOKEN_CACHE = {"token": "", "expires": 0.0}
 
 def _get_configured_token() -> str:
-    return sh("defaults read com.natehoward.handsai remote.token 2>/dev/null").strip()
+    now = time.time()
+    if now < _CONFIGURED_TOKEN_CACHE["expires"] and _CONFIGURED_TOKEN_CACHE["token"]:
+        return _CONFIGURED_TOKEN_CACHE["token"]
+
+    token = ""
+    plist_path = Path.home() / "Library" / "Preferences" / "com.natehoward.handsai.plist"
+    if plist_path.exists():
+        try:
+            with open(plist_path, "rb") as f:
+                pl = plistlib.load(f)
+                token = str(pl.get("remote.token", "")).strip()
+        except Exception:
+            pass
+    if not token:
+        token = sh("defaults read com.natehoward.handsai remote.token 2>/dev/null").strip()
+
+    _CONFIGURED_TOKEN_CACHE["token"] = token
+    _CONFIGURED_TOKEN_CACHE["expires"] = now + 5.0
+    return token
+
+def _get_hands_prefs() -> dict:
+    plist_path = Path.home() / "Library" / "Preferences" / "com.natehoward.handsai.plist"
+    if plist_path.exists():
+        try:
+            with open(plist_path, "rb") as f:
+                pl = plistlib.load(f)
+                token = str(pl.get("remote.token", "")).strip()
+                port = int(pl.get("remote.port", 8787))
+                enabled = str(pl.get("remote.serverEnabled", "0")).strip() == "1"
+                return {"token": token, "port": port, "enabled": enabled}
+        except Exception:
+            pass
+    token = _get_configured_token()
+    port = sh("defaults read com.natehoward.handsai remote.port 2>/dev/null")
+    enabled = sh("defaults read com.natehoward.handsai remote.serverEnabled 2>/dev/null")
+    return {
+        "token": token,
+        "port": int(port) if port.isdigit() else 8787,
+        "enabled": enabled == "1"
+    }
 
 def _get_keychain_key() -> bytes:
     try:
@@ -221,18 +290,17 @@ def sh(cmd):
 async def session_cookie_middleware(request: Request, call_next):
     response = await call_next(request)
     if _is_local_request(request):
-        if not request.cookies.get("mc_session"):
+        if request.cookies.get("mc_session") != SESSION_SECRET:
             response.set_cookie(key="mc_session", value=SESSION_SECRET, httponly=True, samesite="strict")
     return response
 
 @app.get("/api/hands/token")
 def hands_token(request: Request = None):
-    token = _get_configured_token()
-    port = sh("defaults read com.natehoward.handsai remote.port 2>/dev/null")
-    enabled = sh("defaults read com.natehoward.handsai remote.serverEnabled 2>/dev/null")
-    port_num = int(port) if port.isdigit() else 8787
+    prefs = _get_hands_prefs()
+    token = prefs["token"]
+    port_num = prefs["port"]
+    enabled = prefs["enabled"]
 
-    # Check if authorized via bearer token OR if request is a same-origin request from local browser
     is_authed = False
     if request:
         if _verify_token(request):
@@ -241,11 +309,11 @@ def hands_token(request: Request = None):
             is_authed = True
 
     if is_authed:
-        resp = JSONResponse({"configured": enabled == "1", "token": token, "port": port_num})
+        resp = JSONResponse({"configured": enabled and bool(token), "token": token, "port": port_num})
         resp.set_cookie(key="mc_session", value=SESSION_SECRET, httponly=True, samesite="strict")
         return resp
 
-    return JSONResponse({"configured": enabled == "1" and bool(token), "port": port_num}, status_code=403)
+    return JSONResponse({"configured": enabled and bool(token), "port": port_num}, status_code=403)
 
 def _verify_token(request: Request = None, payload: dict = None) -> bool:
     expected = _get_configured_token()
@@ -257,13 +325,14 @@ def _verify_token(request: Request = None, payload: dict = None) -> bool:
         token = str(payload["token"]).strip()
     elif request and "token" in request.query_params:
         token = request.query_params["token"].strip()
-    if expected and token == expected:
+
+    if expected and token and hmac.compare_digest(token, expected):
         return True
 
-    # Allow local requests carrying the valid session cookie
+    # Allow local/LAN requests carrying the valid session cookie
     if request:
         sess = request.cookies.get("mc_session")
-        if sess and sess == SESSION_SECRET and _is_local_request(request):
+        if sess and hmac.compare_digest(sess, SESSION_SECRET) and _is_local_request(request):
             return True
 
     return False
@@ -347,10 +416,9 @@ def activity(limit: int = 40):
     return rows
 
 @app.post("/api/activity/log")
-def activity_log(payload: dict = Body(...)):
-    # Lets client-side-only tabs (Hands AI's WebSocket chat isn't a server
-    # route here — it talks straight to the native Mac app) still land in
-    # the shared activity feed / command palette like every other tab does.
+def activity_log(payload: dict = Body(...), request: Request = None):
+    if not _verify_token(request, payload):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
     kind = (payload.get("kind") or "").strip()[:40]
     if not kind:
         return JSONResponse({"error": "kind required"}, status_code=400)
@@ -500,10 +568,9 @@ def reels():
     return rows
 
 @app.post("/api/reels/add")
-def reels_add(payload: dict = Body(...)):
-    # add_reels.py loops over sys.argv directly (no argparse, so a "--"
-    # separator would just be treated as a literal argument) — filtering to
-    # only well-formed http(s) strings closes the flag-injection risk instead.
+def reels_add(payload: dict = Body(...), request: Request = None):
+    if not _verify_token(request, payload):
+        return JSONResponse({"error": "unauthorized: valid bearer token required"}, status_code=401)
     urls = [u for u in payload.get("urls", []) if isinstance(u, str) and u.startswith("http")]
     def run():
         subprocess.run([str(ROOT / ".venv/bin/python"), str(ROOT / "scripts/add_reels.py"), *urls])
@@ -512,7 +579,9 @@ def reels_add(payload: dict = Body(...)):
     return {"queued": len(urls)}
 
 @app.post("/api/reels/update")
-def reels_update(payload: dict = Body(...)):
+def reels_update(payload: dict = Body(...), request: Request = None):
+    if not _verify_token(request, payload):
+        return JSONResponse({"error": "unauthorized: valid bearer token required"}, status_code=401)
     reel_id = payload.get("id")
     if not reel_id:
         return {"ok": False, "error": "missing id"}
@@ -573,7 +642,9 @@ def _parse_flexible_date(s):
         return None
 
 @app.post("/api/lifehq/txn_import")
-def txn_import(payload: dict = Body(...)):
+def txn_import(payload: dict = Body(...), request: Request = None):
+    if not _verify_token(request, payload):
+        return JSONResponse({"error": "unauthorized: valid bearer token required"}, status_code=401)
     import csv, io
     raw = payload.get("csv", "")
     reader = csv.reader(io.StringIO(raw))
@@ -658,7 +729,9 @@ _LIFEHQ_TABLES = {"goal", "goal_done", "goal_delete", "subscription", "subscript
                   "budget", "checkin"}
 
 @app.post("/api/lifehq/{table}")
-def lifehq_add(table: str, payload: dict = Body(...)):
+def lifehq_add(table: str, payload: dict = Body(...), request: Request = None):
+    if not _verify_token(request, payload):
+        return JSONResponse({"error": "unauthorized: valid bearer token required"}, status_code=401)
     if table not in _LIFEHQ_TABLES:
         return JSONResponse({"error": f"unknown table '{table}'"}, status_code=400)
     c = db()
@@ -740,7 +813,9 @@ def plaid_status():
             "env": os.environ.get("PLAID_ENV", "sandbox"), "linked_items": items}
 
 @app.post("/api/plaid/link-token")
-def plaid_link_token():
+def plaid_link_token(request: Request = None, payload: dict = Body(default={})):
+    if not _verify_token(request, payload):
+        return JSONResponse({"error": "unauthorized: valid bearer token required"}, status_code=401)
     client = _plaid_client()
     if not client:
         return JSONResponse({"error": "Plaid not configured — set PLAID_CLIENT_ID/PLAID_SECRET in .env"},
@@ -749,18 +824,20 @@ def plaid_link_token():
     from plaid.model.country_code import CountryCode
     from plaid.model.link_token_create_request import LinkTokenCreateRequest
     from plaid.model.link_token_create_request_user import LinkTokenCreateRequestUser
-    request = LinkTokenCreateRequest(
+    request_obj = LinkTokenCreateRequest(
         products=[Products("transactions")],
         client_name="Command Center",
         country_codes=[CountryCode("US")],
         language="en",
         user=LinkTokenCreateRequestUser(client_user_id="nate"),  # single-user, local-only app
     )
-    response = client.link_token_create(request)
+    response = client.link_token_create(request_obj)
     return {"link_token": response["link_token"]}
 
 @app.post("/api/plaid/exchange")
-def plaid_exchange(payload: dict = Body(...)):
+def plaid_exchange(payload: dict = Body(...), request: Request = None):
+    if not _verify_token(request, payload):
+        return JSONResponse({"error": "unauthorized: valid bearer token required"}, status_code=401)
     client = _plaid_client()
     if not client:
         return JSONResponse({"error": "Plaid not configured"}, status_code=400)
@@ -779,7 +856,9 @@ def plaid_exchange(payload: dict = Body(...)):
     return {"ok": True}
 
 @app.get("/api/plaid/accounts")
-def plaid_accounts():
+def plaid_accounts(request: Request = None):
+    if not _verify_token(request):
+        return JSONResponse({"error": "unauthorized: valid bearer token required"}, status_code=401)
     client = _plaid_client()
     if not client:
         return JSONResponse({"error": "Plaid not configured"}, status_code=400)
@@ -812,7 +891,9 @@ def plaid_accounts():
     return out
 
 @app.post("/api/plaid/unlink")
-def plaid_unlink(payload: dict = Body(...)):
+def plaid_unlink(payload: dict = Body(...), request: Request = None):
+    if not _verify_token(request, payload):
+        return JSONResponse({"error": "unauthorized: valid bearer token required"}, status_code=401)
     client = _plaid_client()
     c = db()
     row = c.execute("SELECT * FROM plaid_items WHERE id=?", (payload["id"],)).fetchone()
@@ -830,7 +911,9 @@ def plaid_unlink(payload: dict = Body(...)):
     return {"ok": True}
 
 @app.post("/api/overseer")
-def overseer():
+def overseer(request: Request = None, payload: dict = Body(default={})):
+    if not _verify_token(request, payload):
+        return JSONResponse({"error": "unauthorized: valid bearer token required"}, status_code=401)
     c = db()
     goals = [dict(r) for r in c.execute("SELECT text,urgent,created FROM goals WHERE done=0")]
     done = [dict(r) for r in c.execute("SELECT text FROM goals WHERE done=1 ORDER BY id DESC LIMIT 10")]
@@ -854,7 +937,9 @@ def briefs():
     return [{"name": f.stem, "content": f.read_text()} for f in files]
 
 @app.post("/api/briefs/generate")
-def brief_now():
+def brief_now(request: Request = None, payload: dict = Body(default={})):
+    if not _verify_token(request, payload):
+        return JSONResponse({"error": "unauthorized: valid bearer token required"}, status_code=401)
     r = subprocess.run([str(ROOT / ".venv/bin/python"), str(ROOT / "scripts/morning_brief.py")],
                        capture_output=True, text=True, timeout=600)
     log_activity("brief", "morning brief generated" if r.returncode == 0 else "brief generation failed")
@@ -949,11 +1034,9 @@ def compare_list():
         return []
 
 @app.post("/api/compare/add")
-def compare_add(payload: dict = Body(...)):
-    # Records a real side-by-side you've actually done (built the same
-    # feature two ways, or evaluated both on something concrete) — this
-    # does NOT generate a comparison from nothing; there's no way to
-    # honestly synthesize "what Gemini built" without it actually existing.
+def compare_add(payload: dict = Body(...), request: Request = None):
+    if not _verify_token(request, payload):
+        return JSONResponse({"error": "unauthorized: valid bearer token required"}, status_code=401)
     for key in ("feature", "claude", "gemini", "verdict"):
         if key not in payload:
             return JSONResponse({"error": f"missing '{key}'"}, status_code=400)
@@ -1087,7 +1170,9 @@ def _curated_resources_for(subject):
     return matches[:6]
 
 @app.post("/api/learn/plan")
-def learn_plan(payload: dict = Body(...)):
+def learn_plan(payload: dict = Body(...), request: Request = None):
+    if not _verify_token(request, payload):
+        return JSONResponse({"error": "unauthorized: valid bearer token required"}, status_code=401)
     subject = (payload.get("subject") or "").strip()
     if not subject:
         return JSONResponse({"error": "need a subject"}, status_code=400)
@@ -1626,7 +1711,9 @@ def _plan_flow_steps(goal):
     return [{"name": "Step 1", "engine": "claude", "model": "default", "prompt": "{goal}"}]
 
 @app.post("/api/flows/plan")
-def flows_plan(payload: dict = Body(...)):
+def flows_plan(payload: dict = Body(...), request: Request = None):
+    if not _verify_token(request, payload):
+        return JSONResponse({"error": "unauthorized: valid bearer token required"}, status_code=401)
     goal = payload.get("goal", "").strip()
     if not goal:
         return JSONResponse({"error": "need a goal"}, status_code=400)
