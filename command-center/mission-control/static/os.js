@@ -687,13 +687,13 @@ async artifacts() {
     <div class="sub" style="margin-bottom:12px">Generated markdown reports, task plans, research outputs, and swarm synthesis results across your workspace.</div>
     <div class="list" style="max-height:70vh;overflow-y:auto">
       ${(items || []).map(a => `
-        <div class="item" style="cursor:pointer" onclick="viewArtifact('${esc(a.path)}')">
+        <div class="item" style="cursor:pointer" data-path="${esc(a.path)}" onclick="viewArtifact(this.dataset.path)">
           <span class="pill t-${a.source==='swarm'?'mint':a.source==='flow'?'sky':'peach'}">${esc(a.source)}</span>
           <div class="grow" style="margin-left:8px">
             <b>${esc(a.title)}</b>
             <div class="meta">${esc(a.name)} · ${(a.size/1024).toFixed(1)} KB · ${esc(a.modified)}</div>
           </div>
-          <button onclick="event.stopPropagation();viewArtifact('${esc(a.path)}')">View</button>
+          <button onclick="event.stopPropagation();viewArtifact(this.closest('.item').dataset.path)">View</button>
         </div>
       `).join("") || '<div class="empty">No artifacts generated yet</div>'}
     </div>

@@ -10,6 +10,7 @@ final class OllamaClient: ObservableObject {
     @Published var isReachable: Bool = false
     @Published var availableModels: [Model] = []
     @AppStorage("ollama.model") var selectedModel: String = "devstral:latest"
+    @AppStorage("ollama.userSelectedModel") var userExplicitlySelectedModel: Bool = false
     @Published var lastError: String? = nil
 
     struct Model: Decodable, Identifiable, Hashable {
@@ -42,6 +43,11 @@ final class OllamaClient: ObservableObject {
         }
     }
 
+    func selectModel(_ model: String) {
+        selectedModel = model
+        userExplicitlySelectedModel = true
+    }
+
     func refresh() async {
         struct Tags: Decodable { let models: [Model] }
         do {
@@ -67,8 +73,11 @@ final class OllamaClient: ObservableObject {
             let currentRank = prefs.firstIndex(where: { selectedModel.contains($0) }) ?? Int.max
             let best = pickBestModel()
             let bestRank = best != nil ? (prefs.firstIndex(where: { best!.contains($0) }) ?? Int.max) : Int.max
-            if currentBanned || currentMissing || bestRank < currentRank, let best = best {
-                selectedModel = best
+            if currentBanned || currentMissing {
+                userExplicitlySelectedModel = false
+                if let best = best { selectedModel = best }
+            } else if !userExplicitlySelectedModel && bestRank < currentRank {
+                if let best = best { selectedModel = best }
             }
         } catch {
             self.isReachable = false

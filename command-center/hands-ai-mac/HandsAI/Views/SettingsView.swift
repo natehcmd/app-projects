@@ -161,6 +161,9 @@ struct SettingsView: View {
                     }
                 }
                 .pickerStyle(.menu)
+                .onChange(of: ollama.selectedModel) { _ in
+                    ollama.userExplicitlySelectedModel = true
+                }
                 if !ollama.isReachable {
                     Text("Start Ollama with: `ollama serve` in a terminal.")
                         .font(.system(size: 11, design: .monospaced))

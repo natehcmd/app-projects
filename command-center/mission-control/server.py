@@ -1,5 +1,5 @@
 """Mission Control — local agentic OS dashboard. Runs on http://localhost:8450"""
-import json, os, re, shutil, sqlite3, subprocess, datetime, threading, urllib.request, shlex
+import json, os, re, shutil, sqlite3, subprocess, datetime, threading, urllib.request, shlex, base64, hashlib, secrets
 from pathlib import Path
 from urllib.parse import urlparse
 from dotenv import load_dotenv
@@ -16,6 +16,20 @@ OLLAMA = "http://localhost:11434"
 BRIEF_MODEL = "qwen3-coder:30b"  # actually installed on this Mac (qwen2.5-coder:32b never was)
 
 app = FastAPI(title="Mission Control")
+SESSION_SECRET = secrets.token_hex(32)
+
+def _is_local_request(request: Request) -> bool:
+    if not request:
+        return False
+    host = getattr(request.client, "host", "") if request.client else ""
+    is_local_ip = host in ("127.0.0.1", "::1", "localhost", "testclient")
+    fetch_site = request.headers.get("sec-fetch-site", "")
+    origin = request.headers.get("origin", "")
+    if fetch_site == "cross-site":
+        return False
+    if origin and not any(origin.startswith(h) for h in ("http://localhost:8450", "http://127.0.0.1:8450")):
+        return False
+    return is_local_ip
 
 def _get_configured_token() -> str:
     return sh("defaults read com.natehoward.handsai remote.token 2>/dev/null").strip()
@@ -39,27 +53,33 @@ def _get_keychain_key() -> bytes:
             sec_file.write_text(Fernet.generate_key().decode())
         return sec_file.read_text().strip().encode()
 
+def _derive_fernet_key(raw_key: bytes) -> bytes:
+    if len(raw_key) == 44:
+        try:
+            from cryptography.fernet import Fernet
+            Fernet(raw_key)
+            return raw_key
+        except Exception:
+            pass
+    return base64.urlsafe_b64encode(hashlib.sha256(raw_key).digest())
+
 def _encrypt_secret(raw: str) -> str:
     if not raw:
         return ""
-    try:
-        from cryptography.fernet import Fernet
-        f = Fernet(_get_keychain_key())
-        return f.encrypt(raw.encode()).decode()
-    except Exception:
-        return raw
+    from cryptography.fernet import Fernet
+    key = _derive_fernet_key(_get_keychain_key())
+    f = Fernet(key)
+    return f.encrypt(raw.encode()).decode()
 
 def _decrypt_secret(enc: str) -> str:
     if not enc:
         return ""
     if not enc.startswith("gAAAAA"):
         return enc
-    try:
-        from cryptography.fernet import Fernet
-        f = Fernet(_get_keychain_key())
-        return f.decrypt(enc.encode()).decode()
-    except Exception:
-        return enc
+    from cryptography.fernet import Fernet
+    key = _derive_fernet_key(_get_keychain_key())
+    f = Fernet(key)
+    return f.decrypt(enc.encode()).decode()
 
 def quarantine(text: str, source: str = "untrusted") -> str:
     return (
@@ -197,20 +217,38 @@ def sh(cmd):
     except Exception:
         return ""
 
+@app.middleware("http")
+async def session_cookie_middleware(request: Request, call_next):
+    response = await call_next(request)
+    if _is_local_request(request):
+        if not request.cookies.get("mc_session"):
+            response.set_cookie(key="mc_session", value=SESSION_SECRET, httponly=True, samesite="strict")
+    return response
+
 @app.get("/api/hands/token")
 def hands_token(request: Request = None):
-    # Do not leak secret bearer token over unauthenticated HTTP
     token = _get_configured_token()
     port = sh("defaults read com.natehoward.handsai remote.port 2>/dev/null")
     enabled = sh("defaults read com.natehoward.handsai remote.serverEnabled 2>/dev/null")
-    if request and _verify_token(request):
-        return {"configured": enabled == "1", "token": token, "port": int(port) if port.isdigit() else 8787}
-    return {"configured": enabled == "1" and bool(token), "port": int(port) if port.isdigit() else 8787}
+    port_num = int(port) if port.isdigit() else 8787
+
+    # Check if authorized via bearer token OR if request is a same-origin request from local browser
+    is_authed = False
+    if request:
+        if _verify_token(request):
+            is_authed = True
+        elif _is_local_request(request):
+            is_authed = True
+
+    if is_authed:
+        resp = JSONResponse({"configured": enabled == "1", "token": token, "port": port_num})
+        resp.set_cookie(key="mc_session", value=SESSION_SECRET, httponly=True, samesite="strict")
+        return resp
+
+    return JSONResponse({"configured": enabled == "1" and bool(token), "port": port_num}, status_code=403)
 
 def _verify_token(request: Request = None, payload: dict = None) -> bool:
     expected = _get_configured_token()
-    if not expected:
-        return False  # Fail-closed! Never allow execution if token is unconfigured
     auth = (request.headers.get("Authorization") or "") if request else ""
     token = ""
     if auth.lower().startswith("bearer "):
@@ -219,7 +257,16 @@ def _verify_token(request: Request = None, payload: dict = None) -> bool:
         token = str(payload["token"]).strip()
     elif request and "token" in request.query_params:
         token = request.query_params["token"].strip()
-    return token == expected
+    if expected and token == expected:
+        return True
+
+    # Allow local requests carrying the valid session cookie
+    if request:
+        sess = request.cookies.get("mc_session")
+        if sess and sess == SESSION_SECRET and _is_local_request(request):
+            return True
+
+    return False
 
 def log_activity(kind, detail="", conn=None):
     """Append one row to the activity feed. Never raises — logging must not break the action.
@@ -582,12 +629,11 @@ def txn_import(payload: dict = Body(...)):
         ttype = f[i_type].strip().lower() if i_type is not None and len(f) > i_type else ""
         parsed_records.append({"date": date, "desc": desc, "amount": amt, "cat": cat, "type": ttype})
 
-    pos_count = sum(1 for r in parsed_records if r["amount"] > 0)
-    neg_count = sum(1 for r in parsed_records if r["amount"] < 0)
     has_debit_hint = any("debit" in h for h in header)
     has_credit_card_hint = any("credit card" in h for h in header) or any("card member" in h for h in header)
-    # A card statement convention uses positive values for charges and negative for payments
-    is_card_positive_convention = (has_credit_card_hint and not has_debit_hint) or (pos_count > 0 and pos_count > neg_count * 3 and not has_debit_hint)
+    account_kind = str(payload.get("account_kind") or payload.get("kind") or "").strip().lower()
+    # Never infer card convention purely from positive/negative transaction ratios, which inverts checking deposits
+    is_card_positive_convention = (account_kind == "credit") or (has_credit_card_hint and not has_debit_hint)
 
     c = db(); imported = 0
     for r in parsed_records:
@@ -1882,7 +1928,9 @@ def filegraph_rebuild(request: Request = None, payload: dict = Body(default={}))
 
 # ---------- Artifacts Ring ----------
 @app.get("/api/artifacts")
-def artifacts_list():
+def artifacts_list(request: Request = None):
+    if not _verify_token(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
     items = []
     if SWARM_DIR.is_dir():
         for sd in SWARM_DIR.iterdir():
@@ -1940,13 +1988,20 @@ def artifacts_list():
     return items[:100]
 
 @app.get("/api/artifacts/content")
-def artifacts_content(path: str):
+def artifacts_content(path: str, request: Request = None):
+    if not _verify_token(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
     p = Path(path)
-    allowed_roots = [ROOT.resolve(), SWARM_DIR.resolve(), FLOW_DIR.resolve(), (ROOT / "sandbox").resolve()]
+    allowed_roots = [SWARM_DIR.resolve(), FLOW_DIR.resolve(), (ROOT / "sandbox").resolve()]
     try:
         res = p.resolve()
         if not any(str(res).startswith(str(r)) for r in allowed_roots):
             return JSONResponse({"error": "access denied"}, status_code=403)
+        name_lower = res.name.lower()
+        if (name_lower.startswith(".env") or 
+            name_lower.endswith((".db", ".db-wal", ".db-shm", ".key", ".py", ".sh", ".pem")) or
+            any(part.startswith(".") for part in res.parts)):
+            return JSONResponse({"error": "access denied: sensitive file type"}, status_code=403)
         if not res.exists():
             return JSONResponse({"error": "not found"}, status_code=404)
         return {"content": res.read_text(errors="replace"), "path": str(res)}

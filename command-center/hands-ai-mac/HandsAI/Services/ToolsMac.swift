@@ -372,6 +372,7 @@ extension Tools {
         tell application "Calendar"
             tell first calendar whose writable is true
                 set sDate to current date
+                set day of sDate to 1
                 set year of sDate to \(sY)
                 set month of sDate to \(sM)
                 set day of sDate to \(sD)
@@ -379,6 +380,7 @@ extension Tools {
                 set minutes of sDate to \(sMin)
                 set seconds of sDate to 0
                 set eDate to current date
+                set day of eDate to 1
                 set year of eDate to \(eY)
                 set month of eDate to \(eM)
                 set day of eDate to \(eD)
@@ -395,15 +397,30 @@ extension Tools {
 
     static func remindersAdd(args: Args) -> String {
         guard let title = args.string("title") else { return "error: missing 'title'" }
-        var props = "name:\"\(escAS(title))\""
         if let due = args.string("due") {
             let fmt = DateFormatter(); fmt.dateFormat = "yyyy-MM-dd HH:mm"
             if let d = fmt.date(from: due) {
-                let asFmt = DateFormatter(); asFmt.dateFormat = "MMMM d, yyyy HH:mm:ss"
-                props += ", due date:date \"\(asFmt.string(from: d))\""
+                let cal = Calendar(identifier: .gregorian)
+                let y = cal.component(.year, from: d), m = cal.component(.month, from: d), day = cal.component(.day, from: d)
+                let h = cal.component(.hour, from: d), min = cal.component(.minute, from: d)
+                let script = """
+                tell application "Reminders"
+                    set dDate to current date
+                    set day of dDate to 1
+                    set year of dDate to \(y)
+                    set month of dDate to \(m)
+                    set day of dDate to \(day)
+                    set hours of dDate to \(h)
+                    set minutes of dDate to \(min)
+                    set seconds of dDate to 0
+                    make new reminder with properties {name:"\(escAS(title))", due date:dDate}
+                end tell
+                """
+                let r = osascript(script)
+                return r.ok ? "reminder added: \(title)" : "error: \(r.out)"
             }
         }
-        let r = osascript("tell application \"Reminders\" to make new reminder with properties {\(props)}")
+        let r = osascript("tell application \"Reminders\" to make new reminder with properties {name:\"\(escAS(title))\"}")
         return r.ok ? "reminder added: \(title)" : "error: \(r.out)"
     }
 
