@@ -410,7 +410,9 @@ def vitals():
             "ollama_loaded": ollama_loaded()}
 
 @app.get("/api/activity")
-def activity(limit: int = 40):
+def activity(limit: int = 40, request: Request = None):
+    if not _verify_token(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
     c = db()
     rows = [dict(r) for r in c.execute("SELECT * FROM activity ORDER BY id DESC LIMIT ?",
                                        (max(1, min(limit, 200)),))]
@@ -428,7 +430,9 @@ def activity_log(payload: dict = Body(...), request: Request = None):
     return {"ok": True}
 
 @app.get("/api/search")
-def search(q: str = ""):
+def search(q: str = "", request: Request = None):
+    if not _verify_token(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
     q = q.strip()
     if len(q) < 2:
         return {"q": q, "results": []}
@@ -596,7 +600,9 @@ def reels_update(payload: dict = Body(...), request: Request = None):
 
 # ---------- life hq ----------
 @app.get("/api/lifehq")
-def lifehq():
+def lifehq(request: Request = None):
+    if not _verify_token(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
     c = db()
     accounts = [dict(r) for r in c.execute("SELECT * FROM accounts ORDER BY kind, name")]
     budgets = {r["category"]: r["monthly"] for r in c.execute("SELECT * FROM budgets")}
@@ -934,7 +940,9 @@ In under 120 words: call out anything slipping (old goals, low scores), acknowle
 
 # ---------- briefs ----------
 @app.get("/api/briefs")
-def briefs():
+def briefs(request: Request = None):
+    if not _verify_token(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
     files = sorted((ROOT / "data" / "briefs").glob("*.md"), reverse=True)[:14]
     return [{"name": f.stem, "content": f.read_text()} for f in files]
 
@@ -1492,12 +1500,16 @@ def term_run(payload: dict = Body(...), request: Request = None):
     return {"id": jid}
 
 @app.get("/api/term/jobs")
-def term_jobs():
+def term_jobs(request: Request = None):
+    if not _verify_token(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
     _load_jobs_from_disk()
     return [j["meta"] for j in list(JOBS.values())][::-1]
 
 @app.get("/api/term/out/{jid}")
-def term_out(jid: str, off: int = 0):
+def term_out(jid: str, off: int = 0, request: Request = None):
+    if not _verify_token(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
     if not re.match(r"^[A-Za-z0-9_]+$", jid):
         return JSONResponse({"error": "invalid job id"}, status_code=400)
     f = TERM_DIR / f"{jid}.log"
@@ -1669,13 +1681,17 @@ def swarm_run(payload: dict = Body(...), request: Request = None):
     return {"id": rid, "plan": plan}
 
 @app.get("/api/swarm/runs")
-def swarm_runs():
+def swarm_runs(request: Request = None):
+    if not _verify_token(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
     _load_swarms_from_disk()
     return [{"id": s["id"], "goal": s["goal"][:120], "status": s["status"],
              "started": s["started"], "workers": len(s["jobs"])} for s in list(SWARMS.values())][::-1]
 
 @app.get("/api/swarm/{rid}")
-def swarm_detail(rid: str):
+def swarm_detail(rid: str, request: Request = None):
+    if not _verify_token(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
     _load_swarms_from_disk()
     s = SWARMS.get(rid)
     if not s:
@@ -1872,12 +1888,16 @@ def flows_run(fid: str, payload: dict = Body(...), request: Request = None):
     return {"id": rid}
 
 @app.get("/api/flows/runs")
-def flows_runs():
+def flows_runs(request: Request = None):
+    if not _verify_token(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
     _load_flow_runs_from_disk()
     return sorted(FLOW_RUNS.values(), key=lambda r: r["started"], reverse=True)[:30]
 
 @app.get("/api/flows/run/{rid}")
-def flows_run_detail(rid: str):
+def flows_run_detail(rid: str, request: Request = None):
+    if not _verify_token(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
     _load_flow_runs_from_disk()
     r = FLOW_RUNS.get(rid)
     if not r:
