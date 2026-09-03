@@ -7,6 +7,7 @@ async function getAuthToken() {
     const d = await res.json();
     if (d && d.token) {
       _cachedToken = d.token;
+      if (d.port && typeof state !== "undefined") state.handsPort = d.port;
       localStorage.setItem("hands_token", _cachedToken);
       return _cachedToken;
     }
@@ -48,6 +49,7 @@ async chat() {
     api("hands/token").then(t => {
       if (t.token) {
         state.handsToken = t.token;
+        if (t.port) state.handsPort = t.port;
         localStorage.setItem("hands_token", t.token);
         const el = $("#handstoken"); if (el) el.value = t.token;
         connectHands();
@@ -1136,7 +1138,9 @@ window.connectHands = () => {
   if (handsSocket) { try { handsSocket.close(); } catch (e) {} }
 
   setHandsStatus("connecting", "connecting…");
-  const ws = new WebSocket("ws://127.0.0.1:8787/agent");
+  const wsHost = (location.hostname === "localhost" || location.hostname === "127.0.0.1") ? "127.0.0.1" : location.hostname;
+  const wsPort = (state && state.handsPort) ? state.handsPort : 8787;
+  const ws = new WebSocket(`ws://${wsHost}:${wsPort}/agent`);
   handsSocket = ws;
 
   ws.onopen = () => ws.send(JSON.stringify({type: "message", text: "", token}));

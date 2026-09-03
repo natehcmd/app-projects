@@ -1068,7 +1068,11 @@ def tools_run(tool_id: str, payload: dict = Body(...), request: Request = None):
         return JSONResponse({"error": "script missing"}, status_code=404)
     args = (payload.get("args") or "").strip()
     python_bin = str(ROOT / ".venv" / "bin" / "python")
-    cmd = [python_bin, tool["script"]] + (shlex.split(args) if args else [])
+    try:
+        split_args = shlex.split(args) if args else []
+    except ValueError:
+        split_args = args.split() if args else []
+    cmd = [python_bin, tool["script"]] + split_args
     jid = datetime.datetime.now().strftime("%H%M%S") + secrets.token_hex(2) + "tl"
     log = open(TERM_DIR / f"{jid}.log", "w")
     env = os.environ.copy()
