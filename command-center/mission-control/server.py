@@ -21,7 +21,9 @@ SESSION_SECRET = secrets.token_hex(32)
 def _is_private_or_local_host(host_str: str) -> bool:
     if not host_str:
         return False
-    if ":" in host_str and not host_str.startswith("["):
+    if host_str.startswith("[") and "]" in host_str:
+        host_str = host_str[1:host_str.index("]")]
+    elif ":" in host_str:
         host_parts = host_str.split(":")
         if len(host_parts) == 2 and host_parts[1].isdigit():
             host_str = host_parts[0]
@@ -1067,7 +1069,7 @@ def tools_run(tool_id: str, payload: dict = Body(...), request: Request = None):
     args = (payload.get("args") or "").strip()
     python_bin = str(ROOT / ".venv" / "bin" / "python")
     cmd = [python_bin, tool["script"]] + (shlex.split(args) if args else [])
-    jid = datetime.datetime.now().strftime("%H%M%S") + "tl"
+    jid = datetime.datetime.now().strftime("%H%M%S") + secrets.token_hex(2) + "tl"
     log = open(TERM_DIR / f"{jid}.log", "w")
     env = os.environ.copy()
     env["PATH"] = f"{Path.home()}/.npm-global/bin:{Path.home()}/.local/bin:/opt/homebrew/bin:" + env.get("PATH", "")
@@ -1471,7 +1473,7 @@ def term_run(payload: dict = Body(...), request: Request = None):
         cmd = ["bash", "-c", prompt]
     else:
         return JSONResponse({"error": "unknown engine"}, status_code=400)
-    jid = datetime.datetime.now().strftime("%H%M%S") + engine[:2]
+    jid = datetime.datetime.now().strftime("%H%M%S") + secrets.token_hex(2) + engine[:2]
     log = open(TERM_DIR / f"{jid}.log", "w")
     env["PATH"] = f"{Path.home()}/.npm-global/bin:{Path.home()}/.local/bin:/opt/homebrew/bin:" + env.get("PATH", "")
     proc = subprocess.Popen(cmd, cwd=cwd, stdout=log, stderr=subprocess.STDOUT,
@@ -1617,8 +1619,9 @@ def _swarm_finish(rid):
                 pass
 
         try:
+            quarantined_mem = quarantine(mem[:6000], source="swarm_workers")
             summary = ollama_gen(f"Synthesize this swarm run into a short result report (what was accomplished, "
-                                 f"key findings, anything unresolved). Under 200 words, markdown.\n\n{mem[:6000]}",
+                                 f"key findings, anything unresolved). Under 200 words, markdown.\n\n{quarantined_mem}",
                                  model=BRIEF_MODEL)
         except Exception as e:
             summary = f"(synthesis unavailable: {e})"
@@ -1924,6 +1927,7 @@ def software_control(payload: dict = Body(...), request: Request = None):
     log_activity("software", f"software action: {action} {app_name}")
 # ---------- Hub card movement persistence ----------
 HUB_FILE = ROOT / "static" / "hub.json"
+HUB_LOCK = threading.Lock()
 
 @app.post("/api/hub/move")
 def hub_move(payload: dict = Body(...), request: Request = None):
@@ -1933,16 +1937,19 @@ def hub_move(payload: dict = Body(...), request: Request = None):
     lane = payload.get("lane")
     if not name or not lane:
         return JSONResponse({"error": "missing name or lane"}, status_code=400)
-    try:
-        data = json.loads(HUB_FILE.read_text())
-        for p in data.get("projects", []):
-            if p.get("name") == name:
-                p["lane"] = lane
-                break
-        HUB_FILE.write_text(json.dumps(data, indent=2))
-        return {"ok": True, "name": name, "lane": lane}
-    except Exception as e:
-        return JSONResponse({"error": str(e)}, status_code=500)
+    with HUB_LOCK:
+        try:
+            data = json.loads(HUB_FILE.read_text())
+            for p in data.get("projects", []):
+                if p.get("name") == name:
+                    p["lane"] = lane
+                    break
+            tmp_file = HUB_FILE.with_suffix(f".tmp.{secrets.token_hex(4)}")
+            tmp_file.write_text(json.dumps(data, indent=2))
+            tmp_file.replace(HUB_FILE)
+            return {"ok": True, "name": name, "lane": lane}
+        except Exception as e:
+            return JSONResponse({"error": str(e)}, status_code=500)
 
 # ---------- FileGraph rebuild ----------
 @app.post("/api/filegraph/rebuild")
@@ -2082,7 +2089,7 @@ def artifacts_content(path: str, request: Request = None):
     allowed_roots = [SWARM_DIR.resolve(), FLOW_DIR.resolve(), (ROOT / "sandbox").resolve()]
     try:
         res = p.resolve()
-        if not any(str(res).startswith(str(r)) for r in allowed_roots):
+        if not any(res.is_relative_to(r) for r in allowed_roots):
             return JSONResponse({"error": "access denied"}, status_code=403)
         name_lower = res.name.lower()
         if (name_lower.startswith(".env") or 
