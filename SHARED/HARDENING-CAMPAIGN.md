@@ -24,7 +24,7 @@ Rule: never touch server/backend code of an app whose README says so
 | claude-browser-agent | ✅ done | favicon, focus ring, 100dvh, title (sidepanel + options) |
 | agent-tracker | 🟡 partial | 100dvh + favicon done. **TODO:** replace glass/orb tokens + `0 0 12px` glow with nate-default-v2; 1.4k-line file — audit carefully, do NOT touch its :8444 server. |
 | Command Center (mission-control) | ⏸ deferred | LIVE tree, mid-migration (~260 uncommitted). Apply when stable: delete `.bg-orbs`, remove neon `box-shadow` glow on `.dot`, remove `.card::before` hover shimmer, drop `animation: rise`, add favicon to index.html, `tabular-nums` on numeric readouts, 5 accents → 1. |
-| hands-ai (web panel) | ⬜ todo | Backlog-tier / superseded by Command Center — low priority. favicon, focus, 100dvh, states. |
+| hands-ai (web panel) | ✅ done | Was already well-hardened (system font, single accent, focus rings, reduced-motion). Added favicon + 100dvh. Emoji header icons (⊘⚙✕↑) left — low value, invasive. |
 | agentdrop-workspace (*.html) | ⏭ skip | scratch/generated status pages, not a shipped UI |
 
 ## app-projects — SwiftUI (needs `xcodegen generate` + `xcodebuild` + screenshot per app)
