@@ -9,10 +9,12 @@
 /* Begin PBXBuildFile section */
 		4E486A216B6355D2B6E52E47 /* AgentRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD6BC637BF58F5F42015FDFB /* AgentRunner.swift */; };
 		6F9A4FBD5257638C0485239F /* AgentDropApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC8F93300BB28810D380ACF7 /* AgentDropApp.swift */; };
+		B1F2A75D393D4EC75C3DBA6A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4828F251A90CBB8E51CE56B1 /* Assets.xcassets */; };
 		B3ED4D6E7634B6536248A9EF /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B09CFF638BB1D73D7FDBAB78 /* ContentView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		4828F251A90CBB8E51CE56B1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		49E4760628D206CBE958F592 /* AgentDrop.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AgentDrop.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AD6BC637BF58F5F42015FDFB /* AgentRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentRunner.swift; sourceTree = "<group>"; };
 		B09CFF638BB1D73D7FDBAB78 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -41,6 +43,7 @@
 			children = (
 				EC8F93300BB28810D380ACF7 /* AgentDropApp.swift */,
 				AD6BC637BF58F5F42015FDFB /* AgentRunner.swift */,
+				4828F251A90CBB8E51CE56B1 /* Assets.xcassets */,
 				B09CFF638BB1D73D7FDBAB78 /* ContentView.swift */,
 			);
 			path = AgentDrop;
@@ -54,6 +57,7 @@
 			buildConfigurationList = 80359F527E85FA5B62734A53 /* Build configuration list for PBXNativeTarget "AgentDrop" */;
 			buildPhases = (
 				1CAF40ABA3EE3099A077A9C1 /* Sources */,
+				879DA371D799177280E270FA /* Resources */,
 			);
 			buildRules = (
 			);
@@ -95,6 +99,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		879DA371D799177280E270FA /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B1F2A75D393D4EC75C3DBA6A /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		1CAF40ABA3EE3099A077A9C1 /* Sources */ = {
