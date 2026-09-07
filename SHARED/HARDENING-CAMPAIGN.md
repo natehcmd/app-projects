@@ -1,3 +1,10 @@
+# App-hardening campaign — COMPLETE (2026-09-07)
+
+All non-excluded frontends hardened. Two items blocked on the user (visual
+verification / mid-migration): agent-tracker deep token refactor, Command
+Center os.css. NateH-Solutions PR #22 reviewed CLEAN. app-projects branch
+reviewed CLEAN across 4 subagent passes.
+
 # App-hardening campaign — worklist
 
 **Review of waves 1–2: CLEAN, no defects** (verified 2026-09-06 by subagent — HTML tag/brace balance, swiftc parse+typecheck, per-fix greps).
