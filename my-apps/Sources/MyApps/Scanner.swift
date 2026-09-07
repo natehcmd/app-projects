@@ -50,7 +50,7 @@ enum Category: String, CaseIterable {
         case .app: "Launch"
         case .skill: "View Skill"
         case .website: "Open Site"
-        case .project: "Open Code"
+        case .project: "Run"
         case .inspo: "Open"
         }
     }
@@ -113,14 +113,14 @@ enum AppScanner {
 
     static let scanRoots: [(dir: String, area: String)] = [
         ("\(home)/Projects", "Projects"),
-        ("\(home)/Projects/AI", "AI"),
-        ("\(home)/Projects/Human/Apps", "Human Apps"),
+        ("\(home)/Projects/app-projects", "App Projects"),
         (home, "Home"),
     ]
 
     static let markers = [".git", "package.json", "pyproject.toml",
                           "Package.swift", "manifest.json", "Cargo.toml",
-                          "requirements.txt", "Makefile"]
+                          "requirements.txt", "Makefile",
+                          "project.yml", "index.html", "run.sh"]
 
     static let homeExcludes: Set<String> = [
         "Applications", "Desktop", "Documents", "Downloads", "Library",
@@ -139,7 +139,9 @@ enum AppScanner {
                 if name.contains("Google Drive") || name.contains("Nexus-Vault") { continue }
                 if root.area == "Home", homeExcludes.contains(name) { continue }
                 // container dirs are scanned by their own root entries
-                if root.area == "Projects", ["AI", "Human"].contains(name) { continue }
+                if root.area == "Projects", ["AI", "Human", "app-projects"].contains(name) { continue }
+                // worktrees / build dirs inside the app-projects monorepo
+                if root.area == "App Projects", [".claude", "SHARED", "node_modules"].contains(name) { continue }
                 let path = "\(root.dir)/\(name)"
                 var isDir: ObjCBool = false
                 guard fm.fileExists(atPath: path, isDirectory: &isDir), isDir.boolValue else { continue }
@@ -202,8 +204,14 @@ enum AppScanner {
     
     private static func reelsBuildItems() -> [MadeApp] {
         let now = Date()
-        let manifestPath = "\(home)/Projects/mission-control/reels-build/tools_manifest.json"
-        guard let data = try? Data(contentsOf: URL(fileURLWithPath: manifestPath)),
+        let candidates = [
+            "\(home)/Projects/app-projects/command-center/mission-control/reels-build",
+            "\(home)/Projects/mission-control/reels-build",
+        ]
+        guard let reelsBase = candidates.first(where: {
+                  FileManager.default.fileExists(atPath: "\($0)/tools_manifest.json")
+              }),
+              let data = try? Data(contentsOf: URL(fileURLWithPath: "\(reelsBase)/tools_manifest.json")),
               let json = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
             return []
         }
@@ -214,7 +222,7 @@ enum AppScanner {
                   let script = dict["script"] as? String,
                   let desc = dict["desc"] as? String else { continue }
                         let rawUsage = dict["usage"] as? String ?? "python3 \(script) --help"
-            let path = "\(home)/Projects/mission-control/reels-build/\(id)"
+            let path = "\(reelsBase)/\(id)"
             let fullCmd = "cd \"\(path)\" && \(rawUsage)"
             
             // Look up matching Xcode .app bundle in ~/Applications
@@ -323,12 +331,70 @@ enum AppScanner {
             }
         }
 
-        // 3. Fallback launch
+        // 3. Explicit terminal command (Reels / Inspo entries)
         if let cmd = app.terminalCommand {
             runInTerminal(cmd, workingDir: app.path)
-        } else {
-            NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: app.path)])
+            return
         }
+
+        // 4. Actually run the project — detect how, don't just reveal a folder.
+        if fm.fileExists(atPath: app.path), launchProject(app.path) { return }
+
+        // 5. Last resort: reveal in Finder
+        NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: app.path)])
+    }
+
+    /// Figures out how a project starts and starts it. Returns false if it
+    /// can't tell (caller then reveals the folder in Finder).
+    static func launchProject(_ path: String) -> Bool {
+        let fm = FileManager.default
+        let has = { (f: String) in fm.fileExists(atPath: "\(path)/\(f)") }
+        let entries = (try? fm.contentsOfDirectory(atPath: path)) ?? []
+        let first = { (suffix: String) in entries.first { $0.hasSuffix(suffix) } }
+
+        // run scripts win — the author already said how to start it
+        for script in ["run.sh", "start.sh", "start.command", "dev.sh"] where has(script) {
+            runInTerminal("bash \"\(path)/\(script)\"", workingDir: path); return true
+        }
+        // Xcode / SwiftPM app
+        if let proj = first(".xcworkspace") ?? first(".xcodeproj") {
+            NSWorkspace.shared.open(URL(fileURLWithPath: "\(path)/\(proj)")); return true
+        }
+        if has("project.yml") {   // xcodegen — generate then open
+            runInTerminal("command -v xcodegen >/dev/null && xcodegen generate; open *.xcodeproj", workingDir: path)
+            return true
+        }
+        if has("Package.swift") {
+            let swiftUI = (try? String(contentsOfFile: "\(path)/Package.swift", encoding: .utf8))?.contains(".executable") ?? false
+            runInTerminal(swiftUI ? "swift run" : "open Package.swift", workingDir: path); return true
+        }
+        // Node — prefer an explicit script
+        if has("package.json"),
+           let pkg = try? String(contentsOfFile: "\(path)/package.json", encoding: .utf8) {
+            let script = ["dev", "start", "serve"].first { pkg.contains("\"\($0)\"") }
+            runInTerminal("npm install --silent; npm run \(script ?? "start")", workingDir: path); return true
+        }
+        // Rust
+        if has("Cargo.toml") { runInTerminal("cargo run", workingDir: path); return true }
+        // Python service
+        for py in ["server.py", "app.py", "main.py"] where has(py) {
+            runInTerminal("[ -d .venv ] && source .venv/bin/activate; python3 \(py)", workingDir: path); return true
+        }
+        if has("pyproject.toml") || has("requirements.txt") {
+            runInTerminal("python3 -m venv .venv 2>/dev/null; source .venv/bin/activate; pip install -q -e . 2>/dev/null || pip install -q -r requirements.txt; python3 -m \((path as NSString).lastPathComponent.replacingOccurrences(of: "-", with: "_")) 2>/dev/null || $SHELL", workingDir: path)
+            return true
+        }
+        // Chrome extension
+        if has("manifest.json") {
+            NSWorkspace.shared.open(URL(string: "chrome://extensions")!)
+            NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: path)])
+            return true
+        }
+        // Static site
+        if let html = has("index.html") ? "index.html" : first(".html") {
+            NSWorkspace.shared.open(URL(fileURLWithPath: "\(path)/\(html)")); return true
+        }
+        return false
     }
 
     static func runInTerminal(_ command: String, workingDir: String? = nil) {
