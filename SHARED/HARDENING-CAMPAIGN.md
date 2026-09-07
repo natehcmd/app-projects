@@ -47,15 +47,22 @@ Clone `git@github.com:NateH-Solutions/projects` to a scratch dir, run
 `daisy-layer`, and any dup of `mission-control` / `file-graph` / `gmail-sorter`.
 Each: audit → harden → commit to a branch on that repo → PR.
 
-| App | Status |
+**DONE — draft PR NateH-Solutions/projects#22 (branch `harden-frontends`, 8 commits).**
+The unique frontends were buried in `apps-and-skills/apps/human/`.
+
+| Project | Status |
 |---|---|
-| (clone repo) | ⬜ todo |
-| agent-fleet | ⬜ todo — audit first |
-| agentic-inbox-src | ⬜ todo — audit first |
-| claude-ads-clone | ⬜ todo — audit first |
-| jcode | ⬜ todo — audit first |
-| ruflo | ⬜ todo — audit first |
-| daisy-layer | ⬜ todo — audit first |
+| apps-and-skills/apps/human/sms-ai-web | ✅ hardened (de-orb, de-glass, flat buttons, favicon/og, 100dvh, focus ring) |
+| apps-and-skills/apps/human/model-terminal | ✅ hardened (+ tabular-nums) |
+| apps-and-skills/apps/human/nate-control | ✅ hardened (+ neon glow-pulse → calm border pulse) |
+| apps-and-skills/apps/human/machine-dashboard | ✅ hardened (+ tabular-nums; vendored novnc/ untouched) |
+| apps-and-skills/apps/human/openclaw | ✅ hardened (flattened via --surface tokens) |
+| apps-and-skills/apps/human/wall-skit | ✅ hardened (+ animated orb drift removed) |
+| apps-and-skills/apps/human/claw-machine | ✅ hardened (CRT/arcade FX kept as game identity) |
+| agent-fleet, codex-memories, daisy-layer, daisy-rust-kernel | ⏭ no UI (Markdown / Python service / Rust kernel) |
+| agentic-inbox-src, jcode, ruflo, claude-ads-clone | ⏭ third-party (Cloudflare / upstream forks / MIT clones) — nexus-class rule |
+| nexus | ⏭ never touch (hard rule) |
+| everything else in NateH-Solutions/projects | ⏭ duplicate of an already-hardened app-projects project |
 
 ## Excluded (deliberate)
 
