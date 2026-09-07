@@ -118,7 +118,8 @@
 <script>
 // Surface backend failures instead of dropping them in the console.
 addEventListener("unhandledrejection", e => {
-  if (String(e.reason).includes("fetch") || e.reason instanceof TypeError) {
+  const m = String(e.reason && e.reason.message || e.reason);
+  if (/fetch|NetworkError|Failed to fetch|Load failed/i.test(m)) {
     const t = document.getElementById("toast");
     if (t) { t.textContent = "Can't reach the File Graph service — is it running on :8437?"; t.style.opacity = 1;
       setTimeout(() => t.style.opacity = 0, 4000); }

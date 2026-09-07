@@ -78,14 +78,9 @@ private struct RailButton: View {
             .foregroundStyle(selected ? Theme.bg : Theme.inkDim)
             .background(
                 RoundedRectangle(cornerRadius: 15, style: .continuous)
-                    .fill(
-                        selected
-                        ? AnyShapeStyle(LinearGradient(colors: [Theme.mint, Theme.sky],
-                                                       startPoint: .topLeading, endPoint: .bottomTrailing))
-                        : AnyShapeStyle(Theme.glass)
-                    )
+                    .fill(selected ? AnyShapeStyle(Theme.mint)
+                                   : AnyShapeStyle(Color.white.opacity(0.04)))
             )
-            .shadow(color: selected ? Theme.mint.opacity(0.3) : .clear, radius: 8, y: 2)
         }
         .buttonStyle(.plain)
     }

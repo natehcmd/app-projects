@@ -1,5 +1,7 @@
 # App-hardening campaign — worklist
 
+**Review of waves 1–2: CLEAN, no defects** (verified 2026-09-06 by subagent — HTML tag/brace balance, swiftc parse+typecheck, per-fix greps).
+
 Started 2026-09-06. Branch: `worktree-harden-apps` (worktree at
 `.claude/worktrees/harden-apps`). Driven by `/loop`. Each item: harden per its
 plan → commit → push → tick here → spawn a review subagent to verify.
@@ -20,7 +22,7 @@ Rule: never touch server/backend code of an app whose README says so
 | nfc-card | ✅ done | full patch, browser-verified |
 | nfc-card-dyke | ✅ done | full patch |
 | nfc-card-sans | ✅ done | full patch |
-| file-graph (web) | ✅ done | favicon, 100dvh, empty state, error toast. **TODO:** stop rAF loop when graph settles (wake() on mousedown/wheel/expand/search/mindBtn). |
+| file-graph (web) | ✅ done | favicon, 100dvh, empty state, error toast (narrowed to fetch errors after review). **TODO:** stop rAF loop when graph settles. |
 | claude-browser-agent | ✅ done | favicon, focus ring, 100dvh, title (sidepanel + options) |
 | agent-tracker | 🟡 partial | 100dvh + favicon done. **TODO:** replace glass/orb tokens + `0 0 12px` glow with nate-default-v2; 1.4k-line file — audit carefully, do NOT touch its :8444 server. |
 | Command Center (mission-control) | ⏸ deferred | LIVE tree, mid-migration (~260 uncommitted). Apply when stable: delete `.bg-orbs`, remove neon `box-shadow` glow on `.dot`, remove `.card::before` hover shimmer, drop `animation: rise`, add favicon to index.html, `tabular-nums` on numeric readouts, 5 accents → 1. |
@@ -34,7 +36,7 @@ Rule: never touch server/backend code of an app whose README says so
 | net-worth | 🟡 partial | `tnum()` helper + note added. **TODO:** swap `Theme.swift` → `NateDefaultV2.swift`, `.monospacedDigit()` on currency Text, confirm empty/loading/Plaid-error states, build + screenshot. |
 | AgentDrop | ⬜ todo | adopt ThemeV2, focus, states; xcodegen + build + screenshot |
 | my-apps | ⬜ todo | Done-tier native launcher; adopt ThemeV2, tabular nums; build + screenshot |
-| unified-os | ⬜ todo | Backlog skeleton — low priority; adopt ThemeV2 |
+| unified-os | 🟡 partial | RailButton: gradient+glow selected state → flat Theme.mint. Build NOT attempted — Backlog skeleton, pulls the whole hands-ai-mac tree via a relative source path, may not compile (references ContentView that may not exist). Revisit if unified-os is revived. |
 | hands-ai-mac | ⏸ deferred | ships with Command Center; do together |
 
 ## NateH-Solutions/projects — needs clone first
