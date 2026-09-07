@@ -34,8 +34,8 @@ Rule: never touch server/backend code of an app whose README says so
 | App | Status | Plan |
 |---|---|---|
 | net-worth | 🟡 partial | `tnum()` helper + note added. **TODO:** swap `Theme.swift` → `NateDefaultV2.swift`, `.monospacedDigit()` on currency Text, confirm empty/loading/Plaid-error states, build + screenshot. |
-| AgentDrop | ⬜ todo | adopt ThemeV2, focus, states; xcodegen + build + screenshot |
-| my-apps | ⬜ todo | Done-tier native launcher; adopt ThemeV2, tabular nums; build + screenshot |
+| AgentDrop | ✅ done | Nothing to harden — already native/clean (system controls, SF Symbols, empty+running states, ⌘⏎ shortcut). Build verified. |
+| my-apps | ✅ done | OrbBackground → flat Theme.bg; GlassCard translucent → solid Theme.bg2 surface. Per-app palette kept (legit item differentiation, like category chips). Built + screenshot verified. |
 | unified-os | 🟡 partial | RailButton: gradient+glow selected state → flat Theme.mint. Build NOT attempted — Backlog skeleton, pulls the whole hands-ai-mac tree via a relative source path, may not compile (references ContentView that may not exist). Revisit if unified-os is revived. |
 | hands-ai-mac | ⏸ deferred | ships with Command Center; do together |
 

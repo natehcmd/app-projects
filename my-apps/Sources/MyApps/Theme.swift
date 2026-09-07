@@ -81,14 +81,17 @@ extension Color {
 struct GlassCard: ViewModifier {
     var radius: CGFloat = 14
     func body(content: Content) -> some View {
+        // Solid raised surface, not translucent "glass". (2026-09-06 audit:
+        // glass-on-everything reads Tier 1.) Elevation is the border + a
+        // single tinted-toward-ground shadow, not blur.
         content
             .background(
                 RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .fill(Theme.glass)
+                    .fill(Theme.bg2)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .strokeBorder(Theme.glassBrd, lineWidth: 1)
+                    .strokeBorder(Color.white.opacity(0.07), lineWidth: 1)
             )
     }
 }
@@ -99,20 +102,11 @@ extension View {
     }
 }
 
+/// Plain ground. The blurred pastel orb backdrop was removed 2026-09-06
+/// (audit: orb backdrop reads Tier 1). Kept as a named view so call sites
+/// don't change.
 struct OrbBackground: View {
     var body: some View {
-        ZStack {
-            Theme.bg.ignoresSafeArea()
-            orb(Theme.lav,  size: 340).offset(x: 150, y: -260)
-            orb(Theme.mint, size: 300).offset(x: -160, y: 220)
-            orb(Theme.rose, size: 240).offset(x: 120, y: 180)
-        }
-    }
-    private func orb(_ c: Color, size: CGFloat) -> some View {
-        Circle()
-            .fill(c)
-            .frame(width: size, height: size)
-            .blur(radius: 90)
-            .opacity(0.13)
+        Theme.bg.ignoresSafeArea()
     }
 }
