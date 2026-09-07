@@ -2,20 +2,30 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0a0a0a" />
   <title>Nate Howard — JOV AI</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <meta name="description" content="Digital business card for Nate Howard, AI Consultant at JOV AI. Call, email, LinkedIn, and save to contacts." />
+  <meta property="og:title" content="Nate Howard — JOV AI" />
+  <meta property="og:description" content="AI Consultant at JOV AI. Tap to call, email, or save the contact card." />
+  <meta property="og:type" content="profile" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0a0a'/%3E%3Ctext x='32' y='43' font-family='Georgia,serif' font-size='34' font-weight='700' fill='%23c9950a' text-anchor='middle'%3ENH%3C/text%3E%3C/svg%3E" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     html, body {
       min-height: 100%;
       background: #0a0a0a;
-      font-family: 'Inter', sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
       -webkit-font-smoothing: antialiased;
       color: #fff;
       overflow-x: hidden;
+    }
+
+    :focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 2px #0a0a0a, 0 0 0 4px #c9950a;
+      border-radius: 12px;
     }
 
     .page {
@@ -173,19 +183,19 @@
       padding: 17px;
       border: none;
       border-radius: 16px;
-      background: linear-gradient(135deg, #7a5500 0%, #c9950a 30%, #e8c050 55%, #c9950a 75%, #7a5500 100%);
-      font-family: 'Inter', sans-serif;
+      background: #c9950a;
+      font: inherit;
       font-size: 13px;
       font-weight: 700;
-      letter-spacing: 0.15em;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
       color: #111;
       cursor: pointer;
-      box-shadow: 0 4px 32px rgba(201,149,10,0.2);
-      transition: filter 0.15s, transform 0.1s;
+      transition: background 0.15s, transform 0.1s;
       -webkit-tap-highlight-color: transparent;
     }
-    .save-btn:active { transform: scale(0.98); filter: brightness(0.92); }
+    .save-btn:active { transform: scale(0.98); background: #b3840a; }
+    .save-btn.saved { background: #1e4620; color: #d7f0d9; }
 
     .footer {
       margin-top: 28px;
@@ -302,6 +312,14 @@
       a.href = url; a.download = 'Nate-Howard.vcf';
       document.body.appendChild(a); a.click();
       document.body.removeChild(a); URL.revokeObjectURL(url);
+
+      const btn = document.querySelector('.save-btn');
+      if (btn) {
+        const original = btn.textContent;
+        btn.textContent = 'Saved ✓';
+        btn.classList.add('saved');
+        setTimeout(() => { btn.textContent = original; btn.classList.remove('saved'); }, 2500);
+      }
     }
   </script>
 </body>

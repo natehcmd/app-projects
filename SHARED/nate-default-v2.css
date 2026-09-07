@@ -1,0 +1,76 @@
+/* nate-default v2 — restrained token set shared across app-projects.
+ *
+ * Replaces the "Premium Dark Glassmorphism" / v1 look flagged Tier 1 by the
+ * sellable-vs-slop audit (2026-09-06): glass on everything + blurred orb
+ * backdrop + 5 saturated accents + neon glow.
+ *
+ * v2 rules:
+ *   - ONE accent. Neutrals are ONE temperature (cool). No pure #000.
+ *   - No orb backdrop. No neon glow (box-shadow: 0 0 Npx currentColor).
+ *   - Glass only where elevation carries meaning — not the default surface.
+ *   - A real spacing scale (4 / 8 / 12 / 16 / 24 / 32 / 48).
+ *   - Tabular numerals wherever digits line up.
+ *   - Motion is feedback: 120–200ms, ease toward rest. No decorative loops.
+ *
+ * Per-project accent: override --accent (and --accent-ink for text on it).
+ */
+:root {
+  /* Ground + surfaces — cool neutrals, single temperature */
+  --bg:        #0d0f13;   /* not #000 */
+  --surface-1: #14171d;   /* raised panel */
+  --surface-2: #1b1f27;   /* input / inset */
+  --border:    #262b35;   /* 1px structural line — solid, not translucent */
+  --border-strong: #333a47;
+
+  /* Ink — one gray family */
+  --ink:       #e9ebf0;
+  --ink-dim:   #9ba1af;
+  --ink-faint: #6b7280;
+
+  /* One accent. Default = calm blue-cyan, saturation ~65%. Override per app. */
+  --accent:      #4aa3d4;
+  --accent-ink:  #06121a;   /* text/icon sitting on --accent */
+  --accent-weak: #4aa3d41f; /* 12% — hover wash, focus ring base */
+
+  /* Semantic status — separate from accent, used sparingly */
+  --ok:    #4ea87b;
+  --warn:  #d9a441;
+  --err:   #d96a6a;
+
+  /* Spacing scale */
+  --s-1: 4px;  --s-2: 8px;  --s-3: 12px; --s-4: 16px;
+  --s-6: 24px; --s-8: 32px; --s-12: 48px;
+
+  /* Radius — two steps, not one-size-fits-all */
+  --r-sm: 8px;
+  --r-md: 12px;
+
+  /* One shadow, tinted toward the ground (not pure black), used only on
+     genuinely-elevated things (menus, modals, dragged items). */
+  --shadow: 0 6px 24px -8px #05070bcc;
+
+  /* Motion */
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --dur:  160ms;
+}
+
+/* Digits that line up in tables / readouts / counters */
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* Elevation helper — apply to the *few* things that are actually raised. */
+.raised {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+
+/* Visible keyboard focus — every interactive element, both themes. */
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+  border-radius: var(--r-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

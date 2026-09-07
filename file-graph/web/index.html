@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>File Graph</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0d12'/%3E%3Ccircle cx='20' cy='24' r='6' fill='%239fe8c9'/%3E%3Ccircle cx='44' cy='18' r='5' fill='%23c3b8f5'/%3E%3Ccircle cx='40' cy='44' r='6' fill='%23a8d8f5'/%3E%3Cpath d='M20 24 44 18M20 24 40 44' stroke='%23ffffff' stroke-opacity='.35' stroke-width='2'/%3E%3C/svg%3E">
 <style>
   :root {
     --bg: #0b0d12;
@@ -32,7 +33,12 @@
   *::-webkit-scrollbar-track { background: transparent; }
   :focus { outline: none; }
   :focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(165,180,252,.55); }
-  body { background: radial-gradient(circle at 15% 50%, rgba(195, 184, 245, 0.15), transparent 25%), radial-gradient(circle at 85% 30%, rgba(159, 232, 201, 0.15), transparent 25%), radial-gradient(circle at 50% 80%, rgba(242, 169, 196, 0.15), transparent 25%), var(--bg); color: var(--text); font: 14px/1.5 "Avenir Next", -apple-system, "SF Pro Text", sans-serif; overflow: hidden; height: 100vh; }
+  body { background: radial-gradient(circle at 15% 50%, rgba(195, 184, 245, 0.15), transparent 25%), radial-gradient(circle at 85% 30%, rgba(159, 232, 201, 0.15), transparent 25%), radial-gradient(circle at 50% 80%, rgba(242, 169, 196, 0.15), transparent 25%), var(--bg); color: var(--text); font: 14px/1.5 "Avenir Next", -apple-system, "SF Pro Text", sans-serif; overflow: hidden; height: 100dvh; }
+  #empty { position: fixed; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 24px; z-index: 5; }
+  #empty h2 { font-size: 16px; font-weight: 600; }
+  #empty p { color: var(--dim); font-size: 13px; max-width: 340px; }
+  #empty button { margin-top: 4px; }
+  body.is-empty #empty { display: flex; }
   canvas { position: fixed; inset: 0; }
   .panel { position: fixed; background: var(--glass); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border: 1px solid var(--glass-brd); border-radius: var(--r); padding: 14px; box-shadow: var(--shadow); }
   #topbar { top: 16px; left: 16px; right: 16px; display: flex; gap: 10px; align-items: center; }
@@ -104,7 +110,20 @@
   <div id="addrule"><input id="newprefix" placeholder="/Users/you/private-folder"><button id="deny">Block</button></div>
 </div>
 <div id="toast"></div>
+<div id="empty">
+  <h2>No files indexed yet</h2>
+  <p>File Graph builds a private, local map of your files so you can search them by meaning. Scan your home folder to get started — nothing leaves this machine.</p>
+  <button onclick="$('rescan').click()">Scan my files</button>
+</div>
 <script>
+// Surface backend failures instead of dropping them in the console.
+addEventListener("unhandledrejection", e => {
+  if (String(e.reason).includes("fetch") || e.reason instanceof TypeError) {
+    const t = document.getElementById("toast");
+    if (t) { t.textContent = "Can't reach the File Graph service — is it running on :8437?"; t.style.opacity = 1;
+      setTimeout(() => t.style.opacity = 0, 4000); }
+  }
+});
 const HOME = null; // resolved from first tree call
 const KIND_COLORS = { folder:"#a5b4fc", code:"#86efac", doc:"#f9a8d4", data:"#fcd34d", image:"#67e8f9", video:"#c4b5fd", audio:"#fda4af", archive:"#d6d3d1", other:"#8b90a0" };
 const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
@@ -335,6 +354,7 @@ async function refreshStats(){
   if (s.scan.state === "scanning") txt = `scanning… ${s.scan.scanned.toLocaleString()}`;
   else if (s.embed.state === "embedding") txt = `embedding… ${s.embed.done}/${s.embed.total}`;
   $("stats").textContent = txt;
+  document.body.classList.toggle("is-empty", s.files === 0 && s.scan.state === "idle");
   if (s.scan.state !== "idle" || s.embed.state !== "idle") setTimeout(refreshStats, 1500);
   else setTimeout(refreshStats, 15000);
 }

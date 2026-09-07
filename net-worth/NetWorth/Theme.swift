@@ -2,6 +2,12 @@ import SwiftUI
 
 /// nate-default design tokens — dark-first, pastel accents, glass surfaces.
 /// Copied from Hands AI so every app Nate ships shares one look.
+///
+/// NOTE (2026-09-06 sellable-vs-slop audit): this v1 look (glass everywhere +
+/// OrbBackground + 5 pastel accents) scores Tier 1 ("premium cosplay").
+/// Migrate to ../../SHARED/NateDefaultV2.swift (one accent, no orbs, no glow,
+/// real spacing scale) and re-audit States/Motion/Copy after a build.
+/// Keep the `palette` array only for distinct *category* chips — never as CTA accents.
 enum Theme {
     // Base
     static let bg       = Color(hex: 0x0b0d12)
@@ -61,6 +67,9 @@ extension View {
     func glassCard(radius: CGFloat = 14) -> some View {
         modifier(GlassCard(radius: radius))
     }
+    /// Apply to every Text showing a number that lines up in a column
+    /// (balances, deltas, dates). Fixes proportional-figure jitter.
+    func tnum() -> some View { self.monospacedDigit() }
 }
 
 /// Soft pastel orb-blur backdrop behind the window.
