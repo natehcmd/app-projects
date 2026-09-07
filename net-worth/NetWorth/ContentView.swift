@@ -43,6 +43,7 @@ struct ContentView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .foregroundStyle(Theme.ink)
+        .monospacedDigit()   // balances / deltas / dates line up in columns
     }
 }
 
@@ -81,13 +82,13 @@ struct FloatingDock: View {
         .padding(6)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(.ultraThinMaterial)
+                .fill(Theme.bg2)
                 .overlay(
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .strokeBorder(Theme.glassBrd, lineWidth: 1)
+                        .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
                 )
         )
-        .shadow(color: .black.opacity(0.4), radius: 18, y: 8)
+        .shadow(color: .black.opacity(0.35), radius: 12, y: 4)
     }
 }
 

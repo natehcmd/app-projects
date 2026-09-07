@@ -47,14 +47,14 @@ extension Color {
     }
 }
 
-/// Glass card surface.
+/// Raised card surface — solid, not translucent (2026-09-06 audit).
 struct GlassCard: ViewModifier {
     var radius: CGFloat = 14
     func body(content: Content) -> some View {
         content
             .background(
                 RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .fill(Theme.glass)
+                    .fill(Theme.bg2)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: radius, style: .continuous)
@@ -72,22 +72,11 @@ extension View {
     func tnum() -> some View { self.monospacedDigit() }
 }
 
-/// Soft pastel orb-blur backdrop behind the window.
+/// Plain ground. The blurred pastel orb backdrop was removed 2026-09-06
+/// (audit: orb backdrop reads Tier 1). Name kept so call sites don't change.
 struct OrbBackground: View {
     var body: some View {
-        ZStack {
-            Theme.bg.ignoresSafeArea()
-            orb(Theme.lav,  size: 340).offset(x: 150, y: -260)
-            orb(Theme.mint, size: 300).offset(x: -160, y: 220)
-            orb(Theme.rose, size: 240).offset(x: 120, y: 180)
-        }
-    }
-    private func orb(_ c: Color, size: CGFloat) -> some View {
-        Circle()
-            .fill(c)
-            .frame(width: size, height: size)
-            .blur(radius: 90)
-            .opacity(0.13)
+        Theme.bg.ignoresSafeArea()
     }
 }
 
