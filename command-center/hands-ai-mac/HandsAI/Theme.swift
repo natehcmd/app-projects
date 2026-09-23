@@ -1,32 +1,34 @@
 import SwiftUI
 
+// Stark HUD palette — same values as command-center/mission-control/static/stark.css.
+
 /// nate-default design tokens — dark-first, pastel accents, glass surfaces.
 /// This is the canonical copy: the same token set is mirrored into
 /// net-worth, my-apps, and unified-os so every app shares one look. If you
 /// change a value here, it's worth carrying the change to those too.
 enum Theme {
     // Base
-    static let bg       = Color(hex: 0x0b0d12)
-    static let bg2      = Color(hex: 0x11141c)
-    static let ink      = Color(hex: 0xe8eaf2)
-    static let inkDim   = Color(hex: 0x9aa0b4)
-    static let inkFaint = Color(hex: 0x5c6275)
+    static let bg       = Color(hex: 0x02070d)
+    static let bg2      = Color(hex: 0x06121e)
+    static let ink      = Color(hex: 0xdff6ff)
+    static let inkDim   = Color(hex: 0x86a9bf)
+    static let inkFaint = Color(hex: 0x4d6a7e)
     // Pastel accents
-    static let mint  = Color(hex: 0x9fe8c9)
-    static let lav   = Color(hex: 0xc3b8f5)
-    static let peach = Color(hex: 0xf5c9a8)
-    static let rose  = Color(hex: 0xf2a9c4)
-    static let sky   = Color(hex: 0xa8d8f5)
+    static let mint  = Color(hex: 0x39e6ff)
+    static let lav   = Color(hex: 0x6fa8ff)
+    static let peach = Color(hex: 0xffb347)
+    static let rose  = Color(hex: 0xff4d6d)
+    static let sky   = Color(hex: 0x39c4ff)
     // Glass
-    static let glass    = Color.white.opacity(0.045)
-    static let glassBrd = Color.white.opacity(0.09)
+    static let glass    = Color(hex: 0x0a2238).opacity(0.55)
+    static let glassBrd = Color(hex: 0x39c4ff).opacity(0.22)
 
-    static let radius: CGFloat = 18
+    static let radius: CGFloat = 8   // Stark HUD: tight corners, shared with stark.css (--r)
 
     /// Not part of the shared palette (the pastels read as too soft for an
     /// error state) — a warmer, more saturated coral kept in the same
     /// light/pastel range so it still feels like part of the family.
-    static let alert = Color(hex: 0xf28a8a)
+    static let alert = Color(hex: 0xff4d6d)
 }
 
 extension Color {
