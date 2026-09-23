@@ -1,0 +1,93 @@
+name: HandsAI
+options:
+  bundleIdPrefix: com.natehoward
+  deploymentTarget:
+    macOS: "14.0"
+    iOS: "17.0"
+  createIntermediateGroups: true
+  generateEmptyDirectories: true
+
+packages:
+  FlyingFox:
+    url: https://github.com/swhitty/FlyingFox
+    from: 0.27.1
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MARKETING_VERSION: "0.6.0"
+    CURRENT_PROJECT_VERSION: "5"
+    CODE_SIGN_STYLE: Automatic
+    CODE_SIGN_IDENTITY: "-"
+    ENABLE_HARDENED_RUNTIME: YES
+
+targets:
+  HandsAI:
+    type: application
+    platform: macOS
+    sources:
+      - path: HandsAI
+        excludes:
+          - "Info.plist"
+          - "HandsAI.entitlements"
+    dependencies:
+      - package: FlyingFox
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.natehoward.handsai
+        PRODUCT_NAME: "Hands AI"
+        INFOPLIST_FILE: HandsAI/Info.plist
+        CODE_SIGN_ENTITLEMENTS: HandsAI/HandsAI.entitlements
+        GENERATE_INFOPLIST_FILE: NO
+        ENABLE_PREVIEWS: YES
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        COMBINE_HIDPI_IMAGES: YES
+
+  CommandCenterApp:
+    type: application
+    platform: macOS
+    sources:
+      - path: CommandCenterApp
+        excludes:
+          - "Info.plist"
+          - "CommandCenterApp.entitlements"
+      - path: HandsAI/Theme.swift
+      - path: HandsAI/Services/CommandCenterLauncher.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.natehoward.commandcenter
+        PRODUCT_NAME: "Command Center"
+        INFOPLIST_FILE: CommandCenterApp/Info.plist
+        CODE_SIGN_ENTITLEMENTS: CommandCenterApp/CommandCenterApp.entitlements
+        GENERATE_INFOPLIST_FILE: NO
+        ENABLE_PREVIEWS: YES
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+        COMBINE_HIDPI_IMAGES: YES
+
+  HandsAIMobile:
+    type: application
+    platform: iOS
+    sources:
+      - path: HandsAIMobile/HandsAIMobileApp.swift
+      - path: HandsAIMobile/RemoteAgentClient.swift
+      - path: HandsAIMobile/MobileChatView.swift
+      - path: HandsAIMobile/ConnectionSettingsView.swift
+      - path: HandsAIMobile/Assets.xcassets
+      - path: HandsAI/Theme.swift
+      - path: HandsAI/Models/AgentState.swift
+      - path: HandsAI/Models/ToolCall.swift
+      - path: HandsAI/Models/RemoteProtocol.swift
+      - path: HandsAI/Views/OrbView.swift
+      - path: HandsAI/Views/ToolFeedView.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.natehoward.handsaimobile
+        PRODUCT_NAME: "Hands AI Remote"
+        INFOPLIST_FILE: HandsAIMobile/Info.plist
+        CODE_SIGN_ENTITLEMENTS: HandsAIMobile/HandsAIMobile.entitlements
+        GENERATE_INFOPLIST_FILE: NO
+        ENABLE_PREVIEWS: YES
+        TARGETED_DEVICE_FAMILY: "1"
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
