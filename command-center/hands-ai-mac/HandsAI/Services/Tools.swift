@@ -11,6 +11,8 @@ struct Tools {
 
     /// Set at launch so use_skill / list_skills can reach the skill library.
     static weak var skills: SkillsStore?
+    /// Set at launch so the memory tools can reach the persistent store.
+    static weak var memory: MemoryStore?
 
     static let all: [Spec] = [
         readFileSpec, listDirSpec, writeFileSpec, runBashSpec, getStatsSpec,
@@ -19,6 +21,7 @@ struct Tools {
         clipboardReadSpec, clipboardWriteSpec,
         useSkillSpec, listSkillsSpec,
         runClaudeCLISpec, runAgySpec,
+        rememberSpec, recallSpec, forgetSpec,
     ] + macSpecs
 
     static func run(toolCall: OllamaClient.ToolCallReq) async -> String {
@@ -44,6 +47,9 @@ struct Tools {
             case "list_skills":     return listSkills(args: args)
             case "run_claude_cli":  return try await runClaudeCLI(args: args)
             case "run_agy":         return try await runAgy(args: args)
+            case "remember":        return remember(args: args)
+            case "recall":          return recall(args: args)
+            case "forget":          return forget(args: args)
             default:
                 if let result = await runMac(name: name, args: args) { return result }
                 return "error: unknown tool \(name)"
@@ -600,5 +606,52 @@ struct Tools {
         // and it silently produces no output at all.
         return await runProcess(path, ["-p", prompt, "--dangerously-skip-permissions",
                                        "--print-timeout", "4m"], cwd: cwd, timeoutSeconds: 260)
+    }
+
+    // MARK: - Memory
+
+    static let rememberSpec = Spec(function: .init(
+        name: "remember",
+        description: "Save a durable fact so it is available in every future conversation. "
+            + "Use when the user states a preference, a detail about themselves or their "
+            + "projects, or gives you a standing instruction. Don't ask permission — just remember.",
+        parameters: .init(properties: [
+            "text": .init(type: "string", description: "The fact, in one short sentence."),
+            "tier": .init(type: "string",
+                          description: "'user' (about the person), 'work' (their projects), "
+                              + "or 'policy' (a standing rule you must always follow)."),
+        ], required: ["text"])
+    ))
+
+    static let recallSpec = Spec(function: .init(
+        name: "recall",
+        description: "Search your durable memories. Pass an empty query to list everything.",
+        parameters: .init(properties: [
+            "query": .init(type: "string", description: "Substring to match; empty for all."),
+        ], required: [])
+    ))
+
+    static let forgetSpec = Spec(function: .init(
+        name: "forget",
+        description: "Delete durable memories matching a substring. Only when the user asks.",
+        parameters: .init(properties: [
+            "query": .init(type: "string", description: "Substring identifying what to forget."),
+        ], required: ["query"])
+    ))
+
+    static func remember(args: Args) -> String {
+        guard let store = memory else { return "error: memory unavailable" }
+        guard let text = args.string("text") else { return "error: missing 'text'" }
+        return store.remember(tier: args.string("tier") ?? "user", text: text)
+    }
+
+    static func recall(args: Args) -> String {
+        guard let store = memory else { return "error: memory unavailable" }
+        return store.recall(query: args.string("query") ?? "")
+    }
+
+    static func forget(args: Args) -> String {
+        guard let store = memory else { return "error: memory unavailable" }
+        return store.forget(query: args.string("query") ?? "")
     }
 }
