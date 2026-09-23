@@ -17,8 +17,10 @@ class RateLimiter:
             req_time for req_time in self.requests[ip_address] 
             if current_time - req_time < self.time_window
         ]
+        if not self.requests[ip_address]:
+            del self.requests[ip_address]
         
-        if len(self.requests[ip_address]) < self.max_requests:
+        if len(self.requests.get(ip_address, [])) < self.max_requests:
             self.requests[ip_address].append(current_time)
             return True
         else:
