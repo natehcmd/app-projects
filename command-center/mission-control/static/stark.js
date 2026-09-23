@@ -50,7 +50,7 @@
     const reactor = $("#stark-reactor"), status = $("#stark-status"), box = $("#stark-steps");
     if (!reactor) return;
     reactor.dataset.state = !connected ? "offline" : running ? "working" : "idle";
-    status.innerHTML = !connected ? "Not connected to Hands AI"
+    status.innerHTML = !connected ? "Not connected to Hammond"
       : running ? `<b>${esc(say(running))}</b> ${esc(running.detail || "")}`
       : "Ready";
 

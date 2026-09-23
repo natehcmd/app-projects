@@ -46,7 +46,7 @@ struct SettingsView: View {
     private var remoteTab: some View {
         Form {
             Section("iPhone remote control") {
-                Toggle("Let the Hands AI Remote app connect", isOn: $remote.enabled)
+                Toggle("Let the Hammond Remote app connect", isOn: $remote.enabled)
                 HStack {
                     Circle()
                         .fill(remote.isRunning ? .green : .secondary.opacity(0.4))
@@ -102,7 +102,7 @@ struct SettingsView: View {
                 Toggle("Listen for a wake phrase", isOn: $wake.wakeEnabled)
                 TextField("Phrase", text: $wake.wakePhrase)
                     .disabled(!wake.wakeEnabled)
-                Text("Say it any time to bring Hands AI up and start talking. "
+                Text("Say it any time to bring Hammond up and start talking. "
                      + "Recognition runs on-device — nothing leaves the Mac while idle.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -122,7 +122,7 @@ struct SettingsView: View {
 
             Section("Conversation") {
                 Toggle("Hands-free follow-ups", isOn: $handsFree)
-                Text("After Hands AI finishes speaking, the microphone re-arms so "
+                Text("After Hammond finishes speaking, the microphone re-arms so "
                      + "you can simply reply — no tapping, no wake phrase.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -145,7 +145,7 @@ struct SettingsView: View {
 
             Section("Microphone") {
                 Toggle("Mute microphone", isOn: $wake.micMuted)
-                Text("While muted, Hands AI never listens on its own — no wake word, "
+                Text("While muted, Hammond never listens on its own — no wake word, "
                      + "no claps, no hands-free re-arm. Also in the menu-bar right-click menu.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -216,13 +216,13 @@ struct SettingsView: View {
                 }
                 .pickerStyle(.menu)
                 if provider == "claude" && !claude.isConfigured {
-                    Label("Add an API key below — until then, Hands AI stays on Ollama.",
+                    Label("Add an API key below — until then, Hammond stays on Ollama.",
                           systemImage: "exclamationmark.triangle.fill")
                         .font(.system(size: 11))
                         .foregroundStyle(.yellow)
                 }
                 if provider == "claude-cli" && !claudeCLI.isConfigured {
-                    Label(claudeCLI.resolveError ?? "claude CLI not found — until then, Hands AI stays on Ollama.",
+                    Label(claudeCLI.resolveError ?? "claude CLI not found — until then, Hammond stays on Ollama.",
                           systemImage: "exclamationmark.triangle.fill")
                         .font(.system(size: 11))
                         .foregroundStyle(.yellow)
@@ -439,7 +439,7 @@ struct SettingsView: View {
 
     // MARK: - Skills
 
-    /// What Hands AI has remembered, grouped by tier, with delete.
+    /// What Hammond has remembered, grouped by tier, with delete.
     private struct MemoryTab: View {
         @EnvironmentObject var memory: MemoryStore
         @State private var newText = ""
@@ -461,7 +461,7 @@ struct SettingsView: View {
                             .foregroundStyle(.secondary)
                         Text("Nothing remembered yet.")
                             .foregroundStyle(.secondary)
-                        Text("Tell Hands AI something about yourself — it saves it on its own.")
+                        Text("Tell Hammond something about yourself — it saves it on its own.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -558,7 +558,7 @@ struct SettingsView: View {
                     }
                 }
                 Section {
-                    Text("Ask Hands AI to \"use the daily briefing skill\" — or just ask for a briefing; it loads matching skills on its own via the use_skill tool.")
+                    Text("Ask Hammond to \"use the daily briefing skill\" — or just ask for a briefing; it loads matching skills on its own via the use_skill tool.")
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                 }
@@ -570,7 +570,7 @@ struct SettingsView: View {
     private var aboutTab: some View {
         VStack(spacing: 14) {
             LogoView().frame(width: 110, height: 110)
-            Text("Hands AI")
+            Text("Hammond")
                 .font(.system(size: 18, weight: .semibold, design: .rounded))
             Text("Local-first agent engine for macOS")
                 .font(.system(size: 12, design: .rounded))

@@ -30,7 +30,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Silence macOS framework log spam (linkd / nw_* / Process Instance Registry chatter).
         setenv("OS_ACTIVITY_MODE", "disable", 1)
 
-        // Single-instance enforcement: if another Hands AI is already running,
+        // Single-instance enforcement: if another Hammond is already running,
         // activate it and quit this copy.
         let me = NSRunningApplication.current
         let bundleID = Bundle.main.bundleIdentifier ?? "com.natehoward.handsai"
@@ -53,7 +53,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         setupAmbientVoice()
         // A real window on the Mac too, alongside the menu bar icon — it
         // binds to the same AgentStore RemoteServer drives, so it stays in
-        // sync with Command Center's Hands AI tab and the iOS app.
+        // sync with Command Center's Hammond tab and the iOS app.
         showChatWindow()
 
         // Warm the briefing in the background so the first "hey jarvis" of the
@@ -132,11 +132,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let appMenu = NSMenu()
         appMenuItem.submenu = appMenu
 
-        appMenu.addItem(withTitle: "About Hands AI",
+        appMenu.addItem(withTitle: "About Hammond",
                         action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)),
                         keyEquivalent: "")
         appMenu.addItem(NSMenuItem.separator())
-        appMenu.addItem(withTitle: "Show Hands AI",
+        appMenu.addItem(withTitle: "Show Hammond",
                         action: #selector(showChatWindow),
                         keyEquivalent: "h").target = self
         appMenu.addItem(withTitle: "Open Command Center",
@@ -146,7 +146,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                         action: #selector(openSettings),
                         keyEquivalent: ",").target = self
         appMenu.addItem(NSMenuItem.separator())
-        appMenu.addItem(withTitle: "Quit Hands AI",
+        appMenu.addItem(withTitle: "Quit Hammond",
                         action: #selector(NSApplication.terminate(_:)),
                         keyEquivalent: "q")
 
@@ -161,7 +161,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // for a long stretch of this app's history; plain text is simple
         // and confirmed to actually render in the real menu bar.
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        item.button?.title = "🖐 Hands"
+        item.button?.title = "🖐 Hammond"
         // Built on open so the mute check mark and "Start Listening" enablement
         // reflect the current state rather than whatever it was at launch.
         let menu = NSMenu()
@@ -177,7 +177,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     fileprivate func rebuildStatusMenu(_ menu: NSMenu) {
         menu.removeAllItems()
         menu.autoenablesItems = false
-        menu.addItem(withTitle: "Show Hands AI",
+        menu.addItem(withTitle: "Show Hammond",
                      action: #selector(showChatWindow),
                      keyEquivalent: "h").target = self
         menu.addItem(withTitle: "Open Command Center",
@@ -209,7 +209,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                      action: #selector(openSettings),
                      keyEquivalent: ",").target = self
         menu.addItem(NSMenuItem.separator())
-        menu.addItem(withTitle: "Quit Hands AI",
+        menu.addItem(withTitle: "Quit Hammond",
                      action: #selector(NSApplication.terminate(_:)),
                      keyEquivalent: "q")
     }
@@ -235,7 +235,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 contentRect: NSRect(x: 0, y: 0, width: 720, height: 580),
                 styleMask: [.titled, .closable, .miniaturizable, .resizable],
                 backing: .buffered, defer: false)
-            window.title = "Hands AI"
+            window.title = "Hammond"
             window.center()
             // Keep the window around when closed rather than deallocating —
             // this is an accessory (menu-bar) app, so re-showing it later

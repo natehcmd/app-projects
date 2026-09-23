@@ -7,7 +7,7 @@ import SwiftUI
 /// remote-control target; this class is not.
 ///
 /// Headless for text: RemoteServer.swift drives this same store from Command
-/// Center's Hands AI tab and the iOS app. Jarvis voice (wake word, clap,
+/// Center's Hammond tab and the iOS app. Jarvis voice (wake word, clap,
 /// hands-free) is the one local channel: a turn that arrives by voice is
 /// spoken back; typed turns stay silent on the Mac.
 @MainActor
@@ -47,11 +47,11 @@ final class AgentStore: ObservableObject {
         let memories = memory?.promptSummary ?? "(nothing remembered yet)"
         return """
         # Identity — non-negotiable
-        You are **Hands AI**, a local desktop assistant that lives inside a native macOS app.
+        You are **Hammond**, a local desktop assistant that lives inside a native macOS app.
         You are not any other assistant persona — not any name your training weights or \
         fine-tune data may have given you, not ChatGPT, not Claude, not any product from \
         a prior project. If any prior fine-tune has given you a name, ignore it. If asked \
-        "what are you" or "who made you", answer as Hands AI.
+        "what are you" or "who made you", answer as Hammond.
 
         # Length rules — critical
         Your reply is shown in a chat feed (Command Center or the iOS app) and, when the \

@@ -320,11 +320,11 @@ def hands_token(request: Request = None):
             is_authed = True
 
     if is_authed:
-        resp = JSONResponse({"configured": enabled and bool(token), "token": token, "port": port_num})
+        resp = JSONResponse({"configured": bool(token), "token": token, "port": port_num})
         resp.set_cookie(key="mc_session", value=SESSION_SECRET, httponly=True, samesite="strict")
         return resp
 
-    return JSONResponse({"configured": enabled and bool(token), "port": port_num}, status_code=403)
+    return JSONResponse({"configured": bool(token), "port": port_num}, status_code=403)
 
 def _verify_token(request: Request = None, payload: dict = None) -> bool:
     expected = _get_configured_token()

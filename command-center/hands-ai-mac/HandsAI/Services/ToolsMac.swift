@@ -583,7 +583,7 @@ extension Tools {
         let message = args.string("message") ?? "Time's up, sir."
         Task { @MainActor in
             try? await Task.sleep(nanoseconds: UInt64(minutes * 60 * 1_000_000_000))
-            _ = osascript("display notification \"\(escAS(message))\" with title \"Hands AI Timer\" sound name \"Glass\"")
+            _ = osascript("display notification \"\(escAS(message))\" with title \"Hammond Timer\" sound name \"Glass\"")
         }
         let mins = minutes == floor(minutes) ? String(Int(minutes)) : String(minutes)
         return "timer set: \(mins) min — \"\(message)\" (fires while the app is running)"
