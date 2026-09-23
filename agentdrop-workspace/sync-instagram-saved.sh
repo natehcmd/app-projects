@@ -37,9 +37,9 @@ for f in instagram-saved/*.mp4(N); do
   if (( MINDIM > 0 && MINDIM < 1080 )); then
     SHORTCODE=$(python3 -c "
 alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'
-n=int('$ID'); s=''
+import sys; n=int(sys.argv[1]); s=''
 while n: s=alphabet[n%64]+s; n//=64
-print(s)")
+print(s)" "$ID")
     echo "  ⬆️  ${f:t} (${WIDTH}x${HEIGHT}) → fetching HD…"
     if yt-dlp --quiet --no-warnings --cookies .ig-cookies.txt \
         -f "bv*+ba/b" --merge-output-format mp4 \

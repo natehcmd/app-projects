@@ -6,8 +6,8 @@ DANGEROUS_PATTERNS = [
     r'os\.system\(.*curl.*\|.*bash',
     r'rm\s+-rf',
     r'subprocess\.Popen\(.*shell=True',
-    r'eval\(',
-    r'exec\('
+    r'\beval\(',
+    r'\bexec\('
 ]
 
 def audit_skill_script(filepath):
