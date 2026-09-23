@@ -22,6 +22,7 @@ struct Tools {
         useSkillSpec, listSkillsSpec,
         runClaudeCLISpec, runAgySpec,
         rememberSpec, recallSpec, forgetSpec,
+        searchReelsSpec, latestReelsSpec,
     ] + macSpecs
 
     static func run(toolCall: OllamaClient.ToolCallReq) async -> String {
@@ -50,6 +51,8 @@ struct Tools {
             case "remember":        return remember(args: args)
             case "recall":          return recall(args: args)
             case "forget":          return forget(args: args)
+            case "search_reels":    return quarantine(searchReels(args: args), source: "instagram")
+            case "latest_reels":    return quarantine(latestReels(args: args), source: "instagram")
             default:
                 if let result = await runMac(name: name, args: args) { return result }
                 return "error: unknown tool \(name)"
@@ -606,6 +609,77 @@ struct Tools {
         // and it silently produces no output at all.
         return await runProcess(path, ["-p", prompt, "--dangerously-skip-permissions",
                                        "--print-timeout", "4m"], cwd: cwd, timeoutSeconds: 260)
+    }
+
+    // MARK: - Instagram reel library
+    //
+    // Reads the library ig-curate.py maintains (every 10 min, from Nate's saved
+    // posts and the reels he DMs the bot account): reels/<code>.mp4 plus a
+    // <code>.txt caption sidecar. Read-only; always current because the
+    // launchd job keeps the folder current.
+
+    static let reelsDir = URL(fileURLWithPath: NSHomeDirectory())
+        .appendingPathComponent("AgentDrop-Workspace/reels")
+
+    static let searchReelsSpec = Spec(function: .init(
+        name: "search_reels",
+        description: "Search Nate's Instagram reel library (saved posts + reels he DM'd himself) by keyword in caption/uploader. Returns code, uploader, caption and link.",
+        parameters: .init(properties: [
+            "query": .init(type: "string", description: "Words to look for, e.g. 'jarvis', 'claude code', 'n8n'."),
+            "limit": .init(type: "integer", description: "Max results (default 8)."),
+        ], required: ["query"])
+    ))
+
+    static let latestReelsSpec = Spec(function: .init(
+        name: "latest_reels",
+        description: "List the most recently added reels in Nate's Instagram library, newest first.",
+        parameters: .init(properties: [
+            "limit": .init(type: "integer", description: "How many (default 5)."),
+        ], required: [])
+    ))
+
+    private struct Reel { let code: String; let caption: String; let added: Date }
+
+    private static func loadReels() -> [Reel] {
+        let fm = FileManager.default
+        guard let names = try? fm.contentsOfDirectory(atPath: reelsDir.path) else { return [] }
+        return names.filter { $0.hasSuffix(".txt") }.map { name in
+            let url = reelsDir.appendingPathComponent(name)
+            let text = (try? String(contentsOf: url, encoding: .utf8)) ?? ""
+            let added = (try? fm.attributesOfItem(atPath: url.path))?[.modificationDate] as? Date
+            return Reel(code: String(name.dropLast(4)), caption: text, added: added ?? .distantPast)
+        }
+    }
+
+    private static func describe(_ r: Reel) -> String {
+        let oneLine = r.caption.replacingOccurrences(of: "\n", with: " ")
+        let short = oneLine.count > 220 ? String(oneLine.prefix(220)) + "…" : oneLine
+        // DM "xma" shares arrive with no reel code and usually no title, so
+        // there is no public link to build — point at the local video instead.
+        if r.code.hasPrefix("dm_") {
+            let what = short.isEmpty ? "shared in DM, no caption saved" : short
+            return "• \(what)\n  local video: \(reelsDir.appendingPathComponent(r.code + ".mp4").path)"
+        }
+        return "• \(r.code) — \(short)\n  https://www.instagram.com/reel/\(r.code)/"
+    }
+
+    static func searchReels(args: Args) -> String {
+        let query = (args.string("query") ?? "").lowercased()
+        let words = query.split(separator: " ").map(String.init)
+        guard !words.isEmpty else { return "error: missing 'query'" }
+        let limit = max(1, min(25, Int(args.string("limit") ?? "") ?? 8))
+        let hits = loadReels()
+            .filter { r in let c = r.caption.lowercased(); return words.allSatisfy { c.contains($0) } }
+            .sorted { $0.added > $1.added }
+        if hits.isEmpty { return "No reels match '\(query)'." }
+        return "\(hits.count) reel(s) match; newest first:\n" + hits.prefix(limit).map(describe).joined(separator: "\n")
+    }
+
+    static func latestReels(args: Args) -> String {
+        let limit = max(1, min(25, Int(args.string("limit") ?? "") ?? 5))
+        let all = loadReels().sorted { $0.added > $1.added }
+        if all.isEmpty { return "The reel library is empty or missing at \(reelsDir.path)." }
+        return "\(all.count) reels in library. Newest:\n" + all.prefix(limit).map(describe).joined(separator: "\n")
     }
 
     // MARK: - Memory

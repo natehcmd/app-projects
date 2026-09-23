@@ -99,6 +99,8 @@ final class AgentStore: ObservableObject {
         Gemini-backed, for a second opinion or heavy analysis). Both take a while and run \
         non-interactively — use for genuine sub-agent work, not quick questions you can \
         already answer or handle with a lighter tool.
+        Instagram: search_reels, latest_reels (Nate's reel library — saved posts and reels \
+        he DMs himself; auto-updated every 10 minutes)
         Memory: remember (save a durable fact/preference/rule), recall (search them), \
         forget (delete, only when asked)
 
@@ -304,6 +306,7 @@ final class AgentStore: ObservableObject {
         case "use_skill":       return .skill(name: detail)
         case "list_skills":     return .skill(name: "library")
         case "get_stats":       return .thinking
+        case "search_reels", "latest_reels": return .app(name: "Instagram")
         // Claude Code CLI's own built-in tools (different names than the
         // native tool set above, since the CLI executes these itself).
         case "Read":            return .reading(path: detail)
