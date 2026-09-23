@@ -116,6 +116,12 @@ const server = http.createServer((req, res) => {
         let m;
         try { m = JSON.parse(body); } catch { res.writeHead(400); return res.end(); }
         const id = m.id || ('wf' + Date.now());
+        // id lands in a filesystem path below, so it must not be able to walk out
+        // of WORKFLOWS_DIR (e.g. "../../../../tmp/PWNED" would escape to /tmp).
+        if (!/^[A-Za-z0-9_-]+$/.test(id)) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          return res.end(JSON.stringify({ error: 'invalid id' }));
+        }
         fs.writeFile(path.join(WORKFLOWS_DIR, `${id}.json`), JSON.stringify({ ...m, id }), () => {
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ id }));
@@ -133,7 +139,9 @@ const server = http.createServer((req, res) => {
     file = path.join(ROOT, urlPath);
   }
   const resolved = path.resolve(file);
-  if (!resolved.startsWith(ROOT)) { res.writeHead(403); return res.end(); }
+  // Compare with a trailing separator: a bare startsWith(ROOT) also accepts
+  // sibling directories that merely share the prefix (e.g. "<ROOT>-secrets/").
+  if (resolved !== ROOT && !resolved.startsWith(ROOT + path.sep)) { res.writeHead(403); return res.end(); }
   fs.readFile(resolved, (err, data) => {
     if (err) { res.writeHead(404); return res.end('not found'); }
     res.writeHead(200, { 'Content-Type': MIME[path.extname(resolved)] || 'application/octet-stream' });

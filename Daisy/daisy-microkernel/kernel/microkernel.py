@@ -183,6 +183,15 @@ class DaisyKernel:
     def _alloc_task(self, name: str, parent_id: int, priority: int) -> int:
         if len(self._tasks) >= self._max_tasks:
             raise KernelError("Task limit reached", Err.RESOURCE_LIMIT)
+        # Validate before mutating any state. Indexing _ready_queues with an
+        # out-of-range priority used to raise a bare KeyError *after* the task
+        # was already recorded in _tasks, leaving a task that no queue holds -
+        # unschedulable forever, yet still counted against _max_tasks.
+        if priority not in self._ready_queues:
+            raise KernelError(
+                f"Invalid priority {priority}: must be 0..{len(self._ready_queues) - 1}",
+                Err.INVALID_TASK,
+            )
         tid = self._next_task_id
         self._next_task_id += 1
         self._tasks[tid] = Task(id=tid, name=name, parent_id=parent_id, priority=priority)

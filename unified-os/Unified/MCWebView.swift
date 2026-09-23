@@ -33,6 +33,24 @@ struct MCWebView: NSViewRepresentable {
             retry()
         }
 
+        // Mission Control's own page embeds third-party content (e.g. Instagram reel
+        // iframes), so without this the whole app window could be replaced by an
+        // arbitrary site if the user ever clicks a link inside embedded content —
+        // with no address bar to show they've left the app. Only restrict top-level
+        // (main frame) navigation; subframes keep loading whatever they normally do.
+        func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+            let isMainFrame = navigationAction.targetFrame?.isMainFrame ?? false
+            let sameHost = navigationAction.request.url?.host == url?.host
+            if isMainFrame && !sameHost {
+                if let targetURL = navigationAction.request.url {
+                    NSWorkspace.shared.open(targetURL)
+                }
+                decisionHandler(.cancel)
+            } else {
+                decisionHandler(.allow)
+            }
+        }
+
         private func retry() {
             guard retries < 10, let url else { return }
             retries += 1

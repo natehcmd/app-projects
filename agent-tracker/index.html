@@ -1365,10 +1365,16 @@ async function loadWorkflowRuns() {
   wfRuns = await r.json();
   const el = $('wf-runs');
   if (!el) return;
-  el.innerHTML = wfRuns.map(w => `<div class="wf-run-item" onclick="openWorkflowRun('${w.id}')">
+  // The id is carried in a data attribute and read back on click, rather than
+  // interpolated into an inline onclick="...('id')". HTML-escaping alone would
+  // not make that safe: the parser decodes &#39; back to a quote before the JS
+  // in the attribute is parsed, so an id like  x');alert(1);//  would still run.
+  el.innerHTML = wfRuns.map(w => `<div class="wf-run-item" data-wf-id="${wfEsc(w.id)}">
     <div class="wf-run-goal">${wfEsc((w.goal || '(no goal)').slice(0, 70))}</div>
     <div class="wf-run-meta">${(w.transcript || []).length} turns</div></div>`).join('')
     || '<p class="wf-empty">No workflows yet.</p>';
+  el.querySelectorAll('.wf-run-item[data-wf-id]').forEach(node =>
+    node.addEventListener('click', () => openWorkflowRun(node.dataset.wfId)));
 }
 
 window.openWorkflowRun = id => {
