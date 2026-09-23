@@ -1,5 +1,6 @@
 node_modules/
 credentials.json
+client_secret_*.json
 token.json
 token.pickle
 *.tmp

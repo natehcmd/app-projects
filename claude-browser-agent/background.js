@@ -158,6 +158,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   if (message.type === 'STOP') {
     isRunning = false;
+    // Deny anything still waiting, so a stopped run can't execute later.
+    for (const id of [...pendingApprovals.keys()]) settleApproval(id, false);
+    sendResponse({ ok: true });
+    return true;
+  }
+
+  if (message.type === 'APPROVAL_RESPONSE') {
+    // Only the side panel may answer. Scripts injected into a tab (including a
+    // previously approved run_script) run in the extension's isolated world and
+    // can call sendMessage too — they arrive with sender.tab set.
+    if (sender.tab || sender.id !== chrome.runtime.id) {
+      sendResponse({ ok: false });
+      return true;
+    }
+    settleApproval(message.id, message.approved);
     sendResponse({ ok: true });
     return true;
   }
@@ -274,7 +289,41 @@ async function callClaude(apiKey, messages) {
   return response.json();
 }
 
+/* ---------- approval gate for dangerous tools ----------
+   Page text reaches the model via get_page_content, so a hostile page can try to
+   steer it (prompt injection). run_script eval()s model-supplied JS in the page
+   and navigate can move to an authenticated origin first, so together they are a
+   cross-origin code-execution path. Require an explicit human OK for those two.  */
+const TOOLS_REQUIRING_APPROVAL = new Set(['run_script', 'navigate']);
+const APPROVAL_TIMEOUT_MS = 120000;
+
+let approvalSeq = 0;
+const pendingApprovals = new Map(); // id -> {resolve, timer}
+
+function requestApproval(name, input) {
+  return new Promise(resolve => {
+    const id = `ap${++approvalSeq}`;
+    const timer = setTimeout(() => {
+      if (pendingApprovals.delete(id)) resolve(false); // fail closed
+    }, APPROVAL_TIMEOUT_MS);
+    pendingApprovals.set(id, { resolve, timer });
+    notifySidePanel({ type: 'APPROVAL_REQUEST', id, name, input });
+  });
+}
+
+function settleApproval(id, approved) {
+  const entry = pendingApprovals.get(id);
+  if (!entry) return;
+  clearTimeout(entry.timer);
+  pendingApprovals.delete(id);
+  entry.resolve(!!approved);
+}
+
 async function executeTool(name, input, tabId) {
+  if (TOOLS_REQUIRING_APPROVAL.has(name)) {
+    const approved = await requestApproval(name, input);
+    if (!approved) return `Denied by user: ${name} was not run.`;
+  }
   switch (name) {
     case 'navigate': {
       let url = input.url;

@@ -72,6 +72,54 @@ function appendUserMessage(text) {
   scrollBottom();
 }
 
+// Escapes text for use inside an HTML element. renderMarkdown() is not usable
+// here: it emits markup by design, and this content originates from the model,
+// which a hostile page can influence via get_page_content.
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// Shows exactly what the model wants to do and waits for a human decision.
+// The gate lives in background.js; this only renders it and reports the answer.
+function appendApprovalRequest(id, name, input) {
+  hideEmpty();
+  const detail = name === 'run_script'
+    ? (input && input.script) || ''
+    : (input && input.url) || JSON.stringify(input || {});
+
+  const el = document.createElement('div');
+  el.className = 'msg assistant';
+  el.innerHTML = `
+    <div class="msg-label">Approval needed</div>
+    <div class="msg-bubble msg-text">
+      <div><strong>${escapeHtml(formatToolName(name))}</strong> wants to run:</div>
+      <pre style="white-space:pre-wrap;word-break:break-word;background:#111;color:#ddd;padding:8px;border-radius:6px;margin:8px 0;max-height:200px;overflow:auto;font-size:11px">${escapeHtml(detail)}</pre>
+      <div style="display:flex;gap:8px">
+        <button data-approve="1" style="flex:1;padding:6px 10px;cursor:pointer">Allow</button>
+        <button data-approve="0" style="flex:1;padding:6px 10px;cursor:pointer">Deny</button>
+      </div>
+    </div>`;
+
+  const answer = (approved) => {
+    el.querySelectorAll('button').forEach(b => { b.disabled = true; });
+    const note = document.createElement('div');
+    note.style.cssText = 'font-size:11px;color:#888;margin-top:6px';
+    note.textContent = approved ? 'Allowed' : 'Denied';
+    el.querySelector('.msg-bubble').appendChild(note);
+    chrome.runtime.sendMessage({ type: 'APPROVAL_RESPONSE', id, approved });
+  };
+  el.querySelector('[data-approve="1"]').addEventListener('click', () => answer(true));
+  el.querySelector('[data-approve="0"]').addEventListener('click', () => answer(false));
+
+  messagesEl.appendChild(el);
+  scrollBottom();
+}
+
 function appendToolCall(name, input) {
   hideEmpty();
   const label = formatToolName(name);
@@ -220,6 +268,11 @@ chrome.runtime.onMessage.addListener((message) => {
     case 'ASSISTANT_TEXT':
       removeTyping();
       appendAssistantChunk(message.text);
+      break;
+
+    case 'APPROVAL_REQUEST':
+      removeTyping();
+      appendApprovalRequest(message.id, message.name, message.input);
       break;
 
     case 'TOOL_START': {

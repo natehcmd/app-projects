@@ -331,12 +331,29 @@ enum AppScanner {
         }
     }
 
+    /// Wraps a string as a single POSIX shell word. Paths come from scanning the
+    /// filesystem, and a directory name may legally contain quotes or spaces.
+    private static func shellQuote(_ value: String) -> String {
+        "'" + value.replacingOccurrences(of: "'", with: "'\\''") + "'"
+    }
+
+    /// Escapes a string for an AppleScript double-quoted literal. Backslash must
+    /// be escaped first, otherwise it silently eats the following escape.
+    private static func appleScriptQuote(_ value: String) -> String {
+        value
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "\"", with: "\\\"")
+    }
+
     static func runInTerminal(_ command: String, workingDir: String? = nil) {
         var execCmd = command
         if let workingDir = workingDir, !command.contains("cd ") {
-            execCmd = "cd \"\(workingDir)\" && \(command)"
+            // Quoted as one shell word: previously a directory containing a double
+            // quote closed the `cd "..."` early and the rest of the name ran as
+            // shell commands.
+            execCmd = "cd \(shellQuote(workingDir)) && \(command)"
         }
-        let cleanCmd = execCmd.replacingOccurrences(of: "\"", with: "\\\"")
+        let cleanCmd = appleScriptQuote(execCmd)
         let script = "tell application \"Terminal\" to activate\ntell application \"Terminal\" to do script \"\(cleanCmd)\""
         let p = Process()
         p.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")

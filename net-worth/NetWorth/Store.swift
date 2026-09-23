@@ -50,7 +50,14 @@ final class Store: ObservableObject {
         let dir = FileManager.default
             .urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("NetWorth", isDirectory: true)
-        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        // data.json holds account balances and net worth. The app is not
+        // sandboxed, so this lands at the real ~/Library/Application Support
+        // path where default perms (dir 755 / file 644) leave it readable by
+        // every other user and process on the machine.
+        try? FileManager.default.createDirectory(
+            at: dir,
+            withIntermediateDirectories: true,
+            attributes: [.posixPermissions: 0o700])
         url = dir.appendingPathComponent("data.json")
 
         if let data = try? Data(contentsOf: url),
@@ -176,6 +183,10 @@ final class Store: ObservableObject {
     func save() {
         if let data = try? JSONEncoder.iso.encode(db) {
             try? data.write(to: url, options: .atomic)
+            // Applied after every write: an atomic write to a path that does not
+            // yet exist creates a fresh file with default (0644) permissions.
+            try? FileManager.default.setAttributes(
+                [.posixPermissions: 0o600], ofItemAtPath: url.path)
         }
     }
 
