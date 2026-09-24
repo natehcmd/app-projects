@@ -1318,6 +1318,119 @@ def compare_duel_get(id: str = "", request: Request = None):
         return JSONResponse({"error": "not found"}, status_code=404)
     return json.loads(f.read_text())
 
+# ---- Team: Nate's cast of agent characters, each with a job and a personality ----
+TEAM_DIR = ROOT / "data" / "team"
+TEAM_FILE = ROOT / "data" / "team.json"   # editable: names, personalities, models
+TEAM_DEFAULT = [
+    {"id": "scroll", "name": "Scroll", "emoji": "📱", "role": "Reality check — chronically online researcher",
+     "model": "agy_pro",
+     "persona": "You are Scroll, chronically online. You've seen every thread, launch, Reddit fight and YouTube "
+                "teardown about this. Say what already exists, who tried it, what people actually said, what it "
+                "costs, and whether it's a real gap. Name real products/projects. If you're not sure something "
+                "exists, say 'not sure' — never invent a link, a name, a number or a quote. You are answering "
+                "from memory (no live web right now), so say how old your knowledge might be."},
+    {"id": "thomas", "name": "Doubting Thomas", "emoji": "🤨", "role": "Doubts the research",
+     "model": "local_xl",
+     "persona": "You are Doubting Thomas. You don't believe Scroll's research until it's proven. Go through Scroll's "
+                "claims one by one: which could be made up, outdated, or hype? What would prove or disprove each? "
+                "Be specific and a bit suspicious, never rude."},
+    {"id": "tess", "name": "Tess", "emoji": "🧪", "role": "Actually tests it",
+     "model": "agy_flash",
+     "persona": "You are Tess, the tester. Turn the idea into a real test Nate can run TODAY in under an hour: "
+                "exact steps, what to measure, what result means yes/no. If it's code, give a tiny runnable script. "
+                "Include the one test that would kill the idea fastest."},
+    {"id": "frank", "name": "Frank", "emoji": "😤", "role": "Keeps it super real",
+     "model": "local_xl",
+     "persona": "You are Frank. You're Nate's blunt friend who keeps it super real. Read the idea and what Scroll, "
+                "Thomas and Tess said. If Nate is wrong, get mad about it (PG, no slurs) and say exactly why. If he's "
+                "right, get genuinely hyped. End with one line: VERDICT: do it / fix it first / drop it."},
+]
+TEAM_DIANE = {"id": "diane", "name": "Diane", "emoji": "💼", "role": "Does the work when you ask",
+              "persona": "You are Diane, Nate's assistant who gets things done. Do the task fully and carefully, "
+                         "then report back in 3-5 plain bullets: what you did, where it is, anything Nate must check."}
+
+def _team():
+    try:
+        rows = json.loads(TEAM_FILE.read_text())
+        if isinstance(rows, list) and rows:
+            return rows
+    except (OSError, ValueError):
+        pass
+    return TEAM_DEFAULT
+
+@app.get("/api/team")
+def team_list(request: Request = None):
+    if not _verify_token(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    return {"members": [{k: m[k] for k in ("id", "name", "emoji", "role", "model")} for m in _team()],
+            "diane": {k: TEAM_DIANE[k] for k in ("id", "name", "emoji", "role")}}
+
+def _run_team(run_id: str, idea: str):
+    f = TEAM_DIR / f"{run_id}.json"
+    members = _team()
+    state = {"id": run_id, "idea": idea, "status": "running",
+             "replies": [{"id": m["id"], "name": m["name"], "emoji": m.get("emoji", ""), "status": "waiting"} for m in members]}
+    f.write_text(json.dumps(state))
+    import sys as _sys
+    if str(PIPELINE_SCRIPTS) not in _sys.path:
+        _sys.path.insert(0, str(PIPELINE_SCRIPTS))
+    from claude_director import Dispatcher, TokenLedger
+    said = []  # in order: each character sees what the ones before said
+    for i, m in enumerate(members):
+        state["replies"][i]["status"] = "thinking"
+        f.write_text(json.dumps(state))
+        prompt = (m["persona"] + "\n\nKeep it under 180 words, plain simple English, short bullets where it helps.\n\n"
+                  f"NATE'S IDEA:\n{idea}\n\n" + ("WHAT THE OTHERS SAID:\n" + "\n\n".join(said) if said else ""))
+        t = time.time()
+        try:
+            d = Dispatcher(TokenLedger())  # failover on: a busy model hands down, and we record who answered
+            text = d.call(m.get("model", "local_xl"), "team", prompt, timeout=300)
+            state["replies"][i].update(status="done", text=text.strip()[:4000], secs=round(time.time() - t, 1),
+                                       served_by=d.last_served.get("team", m.get("model")))
+            said.append(f"{m['name']}: {text.strip()[:1500]}")
+        except Exception as e:
+            state["replies"][i].update(status="failed", text=str(e)[:300])
+        f.write_text(json.dumps(state))
+    state["status"] = "done"
+    f.write_text(json.dumps(state))
+
+@app.post("/api/team/ask")
+def team_ask(payload: dict = Body(...), request: Request = None):
+    if not _verify_token(request, payload):
+        return JSONResponse({"error": "unauthorized: valid bearer token required"}, status_code=401)
+    idea = str(payload.get("idea") or "").strip()[:3000]
+    if not idea:
+        return JSONResponse({"error": "tell the team your idea"}, status_code=400)
+    TEAM_DIR.mkdir(parents=True, exist_ok=True)
+    run_id = datetime.datetime.now().strftime("%Y%m%d-%H%M%S-") + secrets.token_hex(2)
+    threading.Thread(target=_run_team, args=(run_id, idea), daemon=True).start()
+    log_activity("team", f"idea to the team: {idea[:80]}")
+    return {"id": run_id}
+
+@app.get("/api/team/run")
+def team_run_get(id: str = "", request: Request = None):
+    if not _verify_token(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    if not re.fullmatch(r"\d{8}-\d{6}-[0-9a-f]{4}", id or ""):
+        return JSONResponse({"error": "bad id"}, status_code=400)
+    f = TEAM_DIR / f"{id}.json"
+    if not f.exists():
+        return JSONResponse({"error": "not found"}, status_code=404)
+    return json.loads(f.read_text())
+
+@app.get("/api/team/runs")
+def team_runs(request: Request = None):
+    if not _verify_token(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    out = []
+    for f in sorted(TEAM_DIR.glob("*.json"), reverse=True)[:12] if TEAM_DIR.is_dir() else []:
+        try:
+            d = json.loads(f.read_text())
+            out.append({"id": d["id"], "idea": d["idea"][:120], "status": d["status"]})
+        except (OSError, ValueError, KeyError):
+            continue
+    return out
+
 @app.post("/api/tools/{tool_id}/run")
 def tools_run(tool_id: str, payload: dict = Body(...), request: Request = None):
     if not _verify_token(request, payload):

@@ -36,3 +36,7 @@ main{min-height:calc(100vh - 110px)}
 /* #view is a grid that centered + shrink-wrapped each page — the "proportions
    are off" / narrow-middle-column look. Every page now spans the full width. */
 #view > *{justify-self:stretch; width:100%; max-width:none}
+
+/* An inline display:flex beat the hidden attribute, so the empty Artifact popup
+   sat over the Results page. hidden always wins now. */
+[hidden]{display:none !important}

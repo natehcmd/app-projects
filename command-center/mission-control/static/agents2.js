@@ -3,7 +3,7 @@
 (() => {
   const AGENT_TABS = [
     ["term", "Jobs", "one agent does one task in the background"],
-    ["swarm", "Team", "one big goal, split across agents working at the same time"],
+    ["swarm", "Team", "your crew: research, doubt, test, keep it real, and Diane does the work"],
     ["flows", "Steps", "a recipe: step 1's answer feeds step 2, and so on"],
     ["artifacts", "Results", "the reports and files those agents made"],
   ];
