@@ -29,9 +29,11 @@ export function isTrustedSender(email, prefs) {
 export function isSpamPattern(from, subject, body, prefs) {
   const sp = prefs.spamPatterns;
   const fromLower = from.toLowerCase();
-  const domain = (fromLower.match(/@([^>]+)/)?.[1] || '').replace('>', '');
-  if (sp.domains.some(d => domain.includes(d.toLowerCase()))) return true;
-  if (sp.emails.some(e => fromLower.includes(e.toLowerCase()))) return true;
+  const emailMatch = fromLower.match(/<([^>]+)>/);
+  const email = emailMatch ? emailMatch[1] : fromLower;
+  const domain = email.split('@')[1] || '';
+  if (sp.domains.some(d => domain === d.toLowerCase() || domain.endsWith('.' + d.toLowerCase()))) return true;
+  if (sp.emails.some(e => email === e.toLowerCase())) return true;
   if (sp.subjectPatterns.some(p => new RegExp(p, 'i').test(subject))) return true;
   if (sp.bodyPatterns.some(p => new RegExp(p, 'i').test(body || ''))) return true;
   return false;
