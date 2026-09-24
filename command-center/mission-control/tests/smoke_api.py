@@ -24,7 +24,7 @@ import urllib.parse
 import urllib.request
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SENSITIVE = ["/api/compare/models", "/api/reels/board", "/api/briefs/short", "/api/learn/card", "/api/activity", "/api/briefs", "/api/lifehq", "/api/plaid/accounts",
+SENSITIVE = ["/api/filegraph/file", "/api/compare/models", "/api/reels/board", "/api/briefs/short", "/api/learn/card", "/api/activity", "/api/briefs", "/api/lifehq", "/api/plaid/accounts",
              "/api/roadmap", "/api/search", "/api/swarm/runs", "/api/term/jobs",
              "/api/artifacts", "/api/flows/runs"]
 SLOW_BUDGET_S = {"/api/projects": 4.0, "/api/term/snapshot": 4.0}
@@ -69,7 +69,7 @@ def main():
         src = open(os.path.join(tmp, "server.py")).read()
         gets = sorted(set(re.findall(r'@app\.get\("(/api/[^"{]+)"\)', src)) - {"/api/artifacts/content", "/api/apps/icon", "/api/reels/thumb", "/api/reels/video",
                                                                                  "/api/briefs/short", "/api/learn/card",
-                                                                                 "/api/compare/duel"})
+                                                                                 "/api/compare/duel", "/api/filegraph/file"})
 
         print("GET endpoints with a session:")
         for path in gets:

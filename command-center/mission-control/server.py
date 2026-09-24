@@ -2222,6 +2222,44 @@ def get_filegraph_relations():
     c.close()
     return {"nodes": node_list, "links": links}
 
+@app.get("/api/filegraph/file")
+def get_filegraph_file(id: int = 0, request: Request = None):
+    """One indexed file: what it is, a preview of what's in it, and what it connects to."""
+    if not _verify_token(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    db_path = Path.home() / ".filegraph" / "filegraph.db"
+    if not db_path.exists():
+        return JSONResponse({"error": "no filegraph db"}, status_code=404)
+    c = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    c.row_factory = sqlite3.Row
+    try:
+        f = c.execute("SELECT id, path, name, ext, size, mtime, kind, preview FROM files WHERE id=?", (id,)).fetchone()
+        if not f:
+            return JSONResponse({"error": "not found"}, status_code=404)
+        links = [{"id": r["id"], "name": r["name"], "kind": r["rk"], "dir": r["d"]} for r in c.execute(
+            "SELECT f.id, f.name, r.kind AS rk, 'out' AS d FROM relations r JOIN files f ON f.id=r.target_id WHERE r.source_id=? "
+            "UNION ALL SELECT f.id, f.name, r.kind, 'in' FROM relations r JOIN files f ON f.id=r.source_id WHERE r.target_id=? LIMIT 60",
+            (id, id))]
+    finally:
+        c.close()
+    preview = (f["preview"] or "")[:4000]
+    if not preview:
+        # FileGraph stores no previews here, so read the start of text files ourselves:
+        # read-only, only under the home folder, only text-like extensions, 4 KB.
+        p = Path(f["path"])
+        try:
+            if (p.resolve().is_relative_to(Path.home()) and p.is_file()
+                    and p.suffix.lower() in _FG_TEXT_EXT and ".env" not in p.name):
+                preview = p.read_bytes()[:4000].decode("utf-8", errors="replace")
+        except OSError:
+            pass
+    return {"id": f["id"], "name": f["name"], "path": f["path"], "ext": f["ext"], "size": f["size"],
+            "modified": datetime.datetime.fromtimestamp(f["mtime"] or 0).isoformat(timespec="minutes"),
+            "kind": f["kind"], "preview": preview, "links": links}
+
+_FG_TEXT_EXT = {".md", ".txt", ".py", ".js", ".ts", ".tsx", ".jsx", ".swift", ".html", ".css", ".json",
+                ".yml", ".yaml", ".toml", ".sh", ".rs", ".go", ".sql", ".csv"}
+
 def _save_flow_run(rid):
     d = FLOW_DIR / rid
     d.mkdir(exist_ok=True)
