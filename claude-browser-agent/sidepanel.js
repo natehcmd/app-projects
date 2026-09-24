@@ -171,7 +171,8 @@ function appendErrorMessage(text) {
   el.className = 'msg error';
   el.innerHTML = `
     <div class="msg-label">Error</div>
-    <div class="msg-bubble">${text}</div>`;
+    <div class="msg-bubble"></div>`;
+  el.querySelector('.msg-bubble').textContent = text;
   messagesEl.appendChild(el);
   scrollBottom();
 }
