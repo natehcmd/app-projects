@@ -17,6 +17,10 @@ struct RemoteRequest: Codable {
     /// Settings on the Mac" (the iOS app's current behavior, unchanged).
     var engine: String? = nil
     var model: String? = nil
+    /// Run one read-only tool directly (no chat turn) — how Command Center's
+    /// Life HQ reads Calendar and Reminders through Hammond's existing
+    /// permissions. Only names in RemoteServer's allow-list are honoured.
+    var tool: String? = nil
 }
 
 struct ChatHistoryItem: Codable {
@@ -36,9 +40,11 @@ struct RemoteEvent: Codable {
         case history    // conversation transcript snapshot — `history` is set
         case state      // AgentState changed — `state` is set
         case error      // auth failure or server-side problem — `text` is set
+        case toolResult // answer to a request's `tool` — `tool` + `text` are set
     }
     var type: Kind
     var text: String? = nil
+    var tool: String? = nil
     var history: [ChatHistoryItem]? = nil
     /// Full snapshot, not a diff — simpler and avoids missed-update edge
     /// cases (e.g. the Claude CLI backend can update an entry that isn't at

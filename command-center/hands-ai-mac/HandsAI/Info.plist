@@ -33,6 +33,14 @@
 	<string>Hands AI controls other apps (Calendar, Notes, Music, Finder…) on your behalf when you ask it to.</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>© 2026 Nate Howard</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Hammond reads today's events for you and Command Center's Life HQ, and adds events when you ask.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Hammond reads today's events for you and Command Center's Life HQ, and adds events when you ask.</string>
+	<key>NSRemindersFullAccessUsageDescription</key>
+	<string>Hammond lists your open reminders for you and Command Center's Life HQ, and adds reminders when you ask.</string>
+	<key>NSRemindersUsageDescription</key>
+	<string>Hammond lists your open reminders for you and Command Center's Life HQ, and adds reminders when you ask.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Hammond listens for your wake word, double clap and voice commands. Recognition runs on this Mac.</string>
 	<key>NSPrincipalClass</key>

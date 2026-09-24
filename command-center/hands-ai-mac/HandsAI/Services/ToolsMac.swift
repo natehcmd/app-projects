@@ -238,7 +238,7 @@ extension Tools {
         case "copy_file":             return copyFile(args: args)
         case "trash_file":            return trashFile(args: args)
         case "screenshot":            return screenshot(args: args)
-        case "calendar_today":        return calendarToday()
+        case "calendar_today":        return await calendarToday()
         case "calendar_add_event":    return calendarAddEvent(args: args)
         case "reminders_add":         return remindersAdd(args: args)
         case "reminders_list":        return remindersList()
@@ -327,7 +327,32 @@ extension Tools {
 
     // MARK: - Calendar / Reminders / Notes / Messages
 
-    static func calendarToday() -> String {
+    static func calendarToday() async -> String {
+        // EventKit first: works without Calendar.app running (AppleScript
+        // failed with -600 "Application isn't running" under the hardened runtime).
+        // Async on purpose: blocking the main thread on a semaphore while
+        // macOS needs it to show the permission prompt meant the prompt never
+        // appeared and access was never granted.
+        let store = EKEventStore()
+        var granted = false
+        if #available(macOS 14.0, *) {
+            granted = (try? await store.requestFullAccessToEvents()) ?? false
+        } else {
+            granted = (try? await store.requestAccess(to: .event)) ?? false
+        }
+        if granted {
+            let cal = Calendar.current
+            let start = cal.startOfDay(for: Date())
+            let end = cal.date(byAdding: .day, value: 2, to: start) ?? start.addingTimeInterval(172_800)
+            let events = store.events(matching: store.predicateForEvents(withStart: start, end: end, calendars: nil))
+                .sorted { $0.startDate < $1.startDate }
+            if events.isEmpty { return "no events today or tomorrow" }
+            let fmt = DateFormatter()
+            fmt.dateFormat = "EEE h:mm a"
+            return events.prefix(30).map { e in
+                "- \(e.isAllDay ? "all day" : fmt.string(from: e.startDate)) · \(e.title ?? "(no title)")"
+            }.joined(separator: "\n")
+        }
         let script = """
         set out to ""
         tell application "Calendar"

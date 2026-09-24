@@ -51,7 +51,7 @@ final class BriefingService: ObservableObject {
 
         var parts: [String] = [Self.greeting()]
 
-        let events = Tools.calendarToday()
+        let events = await Tools.calendarToday()
         parts.append(Self.summarizeCalendar(events))
 
         let reminders = Tools.remindersList()

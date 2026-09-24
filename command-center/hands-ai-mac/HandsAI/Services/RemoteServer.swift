@@ -168,6 +168,17 @@ private struct AgentWSHandler: WSMessageHandler {
                             emit(RemoteEvent(type: .history, history: history))
                         }
                     }
+                    if let tool = req.tool {
+                        // Read-only tools only: a remote client can look, never act.
+                        let remoteReadOnly: Set<String> = ["calendar_today", "reminders_list"]
+                        guard remoteReadOnly.contains(tool) else {
+                            emit(RemoteEvent(type: .error, text: "Tool not available remotely: \(tool)"))
+                            continue
+                        }
+                        let out = await Tools.runMac(name: tool, args: Tools.Args([:])) ?? "error: unknown tool"
+                        emit(RemoteEvent(type: .toolResult, text: out, tool: tool))
+                        continue
+                    }
                     let text = req.text.trimmingCharacters(in: .whitespacesAndNewlines)
                     if !text.isEmpty {
                         agent.send(text, engineOverride: req.engine, modelOverride: req.model)
