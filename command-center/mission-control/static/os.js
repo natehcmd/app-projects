@@ -1277,7 +1277,15 @@ window.connectHands = () => {
   const ws = new WebSocket(`ws://${wsHost}:${wsPort}/agent`);
   handsSocket = ws;
 
-  ws.onopen = () => ws.send(JSON.stringify({type: "message", text: "", token}));
+  ws.onopen = () => {
+    ws.send(JSON.stringify({type: "message", text: "", token}));
+    // Hammond answers a bad token with an error event, but (for now) sends
+    // nothing back for a good one until something happens — the status sat
+    // on "connecting" with the socket open. Open + no error = authenticated.
+    setTimeout(() => {
+      if (ws.readyState === WebSocket.OPEN && state.handsStatus === "connecting") setHandsStatus("connected", "connected");
+    }, 1500);
+  };
 
   ws.onmessage = ev => {
     let msg; try { msg = JSON.parse(ev.data); } catch (e) { return; }

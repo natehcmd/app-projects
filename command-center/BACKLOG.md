@@ -13,7 +13,7 @@ _2026-09-24: old July copy in iCloud/Applications (no remote server) trashed; en
 
 ## P1 — app-wide
 - [~] **Theme switcher** — change the whole app theme anytime; each tab keeps its own accent within the theme.
-- [ ] **Quick-note button, top-left, on every page** — voice or keyboard; notes saved where Claude/Hammond can read and act on them.
+- [~] **Quick-note button, top-left, on every page** — voice or keyboard; notes saved where Claude/Hammond can read and act on them.
 - [ ] **Plain English everywhere** — brief bullet points, no slop; explain what each tab is for in one line.
 
 ## P2 — per tab
@@ -37,3 +37,6 @@ _2026-09-24: old July copy in iCloud/Applications (no remote server) trashed; en
 
 ## Method
 Each item: build on `cc-v2` → smoke test (`tests/smoke_api.py`) → screenshot → Nate checks → only then `[x]`.
+
+## Found while working
+- [ ] Hammond: auth-only socket frame should reply with a state snapshot (code is there, nothing arrives) — CC now treats open+no-error as connected.
