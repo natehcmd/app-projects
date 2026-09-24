@@ -26,7 +26,7 @@ struct ConnectionSettingsView: View {
                         .autocorrectionDisabled()
                 }
                 Section {
-                    Text("On the Mac: Settings → Remote → turn on \"Let the Hands AI Remote app connect\", then copy the IP/port/token shown there.")
+                    Text("On the Mac: Settings → Remote → turn on \"Let the Hammond Remote app connect\", then copy the IP/port/token shown there.")
                         .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                 }

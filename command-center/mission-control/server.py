@@ -46,7 +46,9 @@ def _is_local_request(request: Request) -> bool:
     # DNS rebinding: a public page can re-point its own hostname at 127.0.0.1,
     # after which its requests arrive from loopback, same-origin, and (with
     # Referrer-Policy: no-referrer) with no Origin or Referer to reject. The Host
-    # header still names the attacker's domain.
+    # header is the one thing it cannot fake — it still names the attacker's
+    # domain. Verified: before this check, Host: evil.example got the Hands
+    # token and a session cookie.
     if not _is_private_or_local_host(request.headers.get("host", "")):
         return False
 

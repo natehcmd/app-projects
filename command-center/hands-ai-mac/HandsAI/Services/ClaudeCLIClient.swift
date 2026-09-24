@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 
 /// Backend that shells out to the real `claude` CLI (Claude Code) in
-/// non-interactive `--print --output-format stream-json` mode, so Hands AI's
+/// non-interactive `--print --output-format stream-json` mode, so Hammond's
 /// agent gets actual Claude Code tool use (Bash, Read, Edit, WebFetch,
 /// WebSearch) instead of just chat-with-custom-tools.
 ///

@@ -11,6 +11,8 @@ struct Tools {
 
     /// Set at launch so use_skill / list_skills can reach the skill library.
     static weak var skills: SkillsStore?
+    /// Set at launch so the memory tools can reach the persistent store.
+    static weak var memory: MemoryStore?
 
     static let all: [Spec] = [
         readFileSpec, listDirSpec, writeFileSpec, runBashSpec, getStatsSpec,
@@ -19,6 +21,8 @@ struct Tools {
         clipboardReadSpec, clipboardWriteSpec,
         useSkillSpec, listSkillsSpec,
         runClaudeCLISpec, runAgySpec,
+        rememberSpec, recallSpec, forgetSpec,
+        searchReelsSpec, latestReelsSpec,
     ] + macSpecs
 
     static func run(toolCall: OllamaClient.ToolCallReq) async -> String {
@@ -44,6 +48,11 @@ struct Tools {
             case "list_skills":     return listSkills(args: args)
             case "run_claude_cli":  return try await runClaudeCLI(args: args)
             case "run_agy":         return try await runAgy(args: args)
+            case "remember":        return remember(args: args)
+            case "recall":          return recall(args: args)
+            case "forget":          return forget(args: args)
+            case "search_reels":    return quarantine(await searchReels(args: args), source: "instagram")
+            case "latest_reels":    return quarantine(latestReels(args: args), source: "instagram")
             default:
                 if let result = await runMac(name: name, args: args) { return result }
                 return "error: unknown tool \(name)"
@@ -600,5 +609,153 @@ struct Tools {
         // and it silently produces no output at all.
         return await runProcess(path, ["-p", prompt, "--dangerously-skip-permissions",
                                        "--print-timeout", "4m"], cwd: cwd, timeoutSeconds: 260)
+    }
+
+    // MARK: - Instagram reel library
+    //
+    // Reads the library ig-curate.py maintains (every 10 min, from Nate's saved
+    // posts and the reels he DMs the bot account): reels/<code>.mp4 plus a
+    // <code>.txt caption sidecar. Read-only; always current because the
+    // launchd job keeps the folder current.
+
+    static let reelsDir = URL(fileURLWithPath: NSHomeDirectory())
+        .appendingPathComponent("AgentDrop-Workspace/reels")
+
+    static let searchReelsSpec = Spec(function: .init(
+        name: "search_reels",
+        description: "Search Nate's Instagram reel library (saved posts + reels he DM'd himself) by keyword in caption/uploader. Returns code, uploader, caption and link.",
+        parameters: .init(properties: [
+            "query": .init(type: "string", description: "Words to look for, e.g. 'jarvis', 'claude code', 'n8n'."),
+            "limit": .init(type: "integer", description: "Max results (default 8)."),
+        ], required: ["query"])
+    ))
+
+    static let latestReelsSpec = Spec(function: .init(
+        name: "latest_reels",
+        description: "List the most recently added reels in Nate's Instagram library, newest first.",
+        parameters: .init(properties: [
+            "limit": .init(type: "integer", description: "How many (default 5)."),
+        ], required: [])
+    ))
+
+    private struct Reel { let code: String; let caption: String; let added: Date }
+
+    private static func loadReels() -> [Reel] {
+        let fm = FileManager.default
+        guard let names = try? fm.contentsOfDirectory(atPath: reelsDir.path) else { return [] }
+        return names.filter { $0.hasSuffix(".txt") }.map { name in
+            let url = reelsDir.appendingPathComponent(name)
+            let text = (try? String(contentsOf: url, encoding: .utf8)) ?? ""
+            let added = (try? fm.attributesOfItem(atPath: url.path))?[.modificationDate] as? Date
+            return Reel(code: String(name.dropLast(4)), caption: text, added: added ?? .distantPast)
+        }
+    }
+
+    private static func describe(_ r: Reel) -> String {
+        let oneLine = r.caption.replacingOccurrences(of: "\n", with: " ")
+        let short = oneLine.count > 220 ? String(oneLine.prefix(220)) + "…" : oneLine
+        // DM "xma" shares arrive with no reel code and usually no title, so
+        // there is no public link to build — point at the local video instead.
+        if r.code.hasPrefix("dm_") {
+            let what = short.isEmpty ? "shared in DM, no caption saved" : short
+            return "• \(what)\n  local video: \(reelsDir.appendingPathComponent(r.code + ".mp4").path)"
+        }
+        return "• \(r.code) — \(short)\n  https://www.instagram.com/reel/\(r.code)/"
+    }
+
+    /// Command Center's reel table carries whisper transcripts and a topic for
+    /// every reel (DM shares have no caption, so the transcript is the only
+    /// text they have). Nil when Command Center isn't running.
+    private struct CCReel: Decodable {
+        let id: String; let uploader: String?; let caption: String?
+        let transcript: String?; let topic: String?; let url: String?
+    }
+
+    private static func commandCenterReels() async -> [CCReel]? {
+        guard let url = URL(string: "http://127.0.0.1:8450/api/reels") else { return nil }
+        var req = URLRequest(url: url); req.timeoutInterval = 2
+        guard let (data, resp) = try? await URLSession.shared.data(for: req),
+              (resp as? HTTPURLResponse)?.statusCode == 200 else { return nil }
+        return try? JSONDecoder().decode([CCReel].self, from: data)
+    }
+
+    static func searchReels(args: Args) async -> String {
+        let query = (args.string("query") ?? "").lowercased()
+        let words = query.split(separator: " ").map(String.init)
+        guard !words.isEmpty else { return "error: missing 'query'" }
+        let limit = max(1, min(25, Int(args.string("limit") ?? "") ?? 8))
+        if let cc = await commandCenterReels() {
+            let hits = cc.filter { r in
+                let hay = [r.uploader, r.caption, r.transcript, r.topic].compactMap { $0 }.joined(separator: " ").lowercased()
+                return words.allSatisfy { hay.contains($0) }
+            }
+            if hits.isEmpty { return "No reels match '\(query)' (searched captions and transcripts)." }
+            return "\(hits.count) reel(s) match (captions + transcripts):\n" + hits.prefix(limit).map { r in
+                let text = (r.caption?.isEmpty == false ? r.caption! : (r.transcript ?? ""))
+                    .replacingOccurrences(of: "\n", with: " ")
+                let short = text.count > 220 ? String(text.prefix(220)) + "…" : text
+                let where_ = (r.url?.isEmpty == false) ? r.url! : "local video: " + reelsDir.appendingPathComponent(r.id + ".mp4").path
+                return "• [\(r.topic ?? "?")] @\(r.uploader ?? "?") — \(short)\n  \(where_)"
+            }.joined(separator: "\n")
+        }
+        let hits = loadReels()
+            .filter { r in let c = r.caption.lowercased(); return words.allSatisfy { c.contains($0) } }
+            .sorted { $0.added > $1.added }
+        if hits.isEmpty { return "No reels match '\(query)'." }
+        return "\(hits.count) reel(s) match; newest first:\n" + hits.prefix(limit).map(describe).joined(separator: "\n")
+    }
+
+    static func latestReels(args: Args) -> String {
+        let limit = max(1, min(25, Int(args.string("limit") ?? "") ?? 5))
+        let all = loadReels().sorted { $0.added > $1.added }
+        if all.isEmpty { return "The reel library is empty or missing at \(reelsDir.path)." }
+        return "\(all.count) reels in library. Newest:\n" + all.prefix(limit).map(describe).joined(separator: "\n")
+    }
+
+    // MARK: - Memory
+
+    static let rememberSpec = Spec(function: .init(
+        name: "remember",
+        description: "Save a durable fact so it is available in every future conversation. "
+            + "Use when the user states a preference, a detail about themselves or their "
+            + "projects, or gives you a standing instruction. Don't ask permission — just remember.",
+        parameters: .init(properties: [
+            "text": .init(type: "string", description: "The fact, in one short sentence."),
+            "tier": .init(type: "string",
+                          description: "'user' (about the person), 'work' (their projects), "
+                              + "or 'policy' (a standing rule you must always follow)."),
+        ], required: ["text"])
+    ))
+
+    static let recallSpec = Spec(function: .init(
+        name: "recall",
+        description: "Search your durable memories. Pass an empty query to list everything.",
+        parameters: .init(properties: [
+            "query": .init(type: "string", description: "Substring to match; empty for all."),
+        ], required: [])
+    ))
+
+    static let forgetSpec = Spec(function: .init(
+        name: "forget",
+        description: "Delete durable memories matching a substring. Only when the user asks.",
+        parameters: .init(properties: [
+            "query": .init(type: "string", description: "Substring identifying what to forget."),
+        ], required: ["query"])
+    ))
+
+    static func remember(args: Args) -> String {
+        guard let store = memory else { return "error: memory unavailable" }
+        guard let text = args.string("text") else { return "error: missing 'text'" }
+        return store.remember(tier: args.string("tier") ?? "user", text: text)
+    }
+
+    static func recall(args: Args) -> String {
+        guard let store = memory else { return "error: memory unavailable" }
+        return store.recall(query: args.string("query") ?? "")
+    }
+
+    static func forget(args: Args) -> String {
+        guard let store = memory else { return "error: memory unavailable" }
+        return store.forget(query: args.string("query") ?? "")
     }
 }

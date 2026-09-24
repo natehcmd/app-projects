@@ -6,7 +6,9 @@ import SwiftUI
 /// (qwen2.5-coder, llama3.1+, devstral, hermes, etc.).
 @MainActor
 final class OllamaClient: ObservableObject {
-    @Published var baseURL: URL = URL(string: "http://127.0.0.1:11434")!
+    static let defaultBaseURL = URL(string: "http://127.0.0.1:11434")!
+
+    @Published var baseURL: URL = OllamaClient.defaultBaseURL
     @Published var isReachable: Bool = false
     @Published var availableModels: [Model] = []
     @AppStorage("ollama.model") var selectedModel: String = "devstral:latest"
@@ -33,7 +35,41 @@ final class OllamaClient: ObservableObject {
     }()
 
     init() {
+        if let saved = UserDefaults.standard.string(forKey: "ollama.baseURL"),
+           let url = Self.parseBaseURL(saved) {
+            baseURL = url
+        }
         Task { await self.pingLoop() }
+    }
+
+    /// Point the client at a different Ollama server (e.g. another machine on
+    /// the LAN). Persists across launches. Returns false if the string isn't a
+    /// usable http(s) URL; an empty string restores the default.
+    @discardableResult
+    func setBaseURL(_ string: String) -> Bool {
+        let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty {
+            baseURL = Self.defaultBaseURL
+            UserDefaults.standard.removeObject(forKey: "ollama.baseURL")
+            Task { await refresh() }
+            return true
+        }
+        guard let url = Self.parseBaseURL(trimmed) else { return false }
+        baseURL = url
+        UserDefaults.standard.set(url.absoluteString, forKey: "ollama.baseURL")
+        Task { await refresh() }
+        return true
+    }
+
+    private static func parseBaseURL(_ string: String) -> URL? {
+        var s = string.trimmingCharacters(in: .whitespacesAndNewlines)
+        if s.hasSuffix("/") { s = String(s.dropLast()) }
+        guard let url = URL(string: s),
+              let scheme = url.scheme?.lowercased(),
+              scheme == "http" || scheme == "https",
+              url.host != nil
+        else { return nil }
+        return url
     }
 
     private func pingLoop() async {

@@ -204,6 +204,27 @@ extension Tools {
                 "action": .init(type: "string", description: "lock | sleep | dark_mode | empty_trash"),
             ], required: ["action"])
         )),
+        Spec(function: .init(
+            name: "contacts_find",
+            description: "Look up people in Contacts by name, company or email. Returns names, phones, emails.",
+            parameters: .init(properties: [
+                "query": .init(type: "string", description: "Name, company or email fragment."),
+            ], required: ["query"])
+        )),
+        Spec(function: .init(
+            name: "notes_search",
+            description: "Search Apple Notes by title or body text. Returns matching note titles with the first part of each note.",
+            parameters: .init(properties: [
+                "query": .init(type: "string", description: "Words to find in notes."),
+            ], required: ["query"])
+        )),
+        Spec(function: .init(
+            name: "mail_unread",
+            description: "List unread emails in Apple Mail's inboxes (sender, subject, date), newest first.",
+            parameters: .init(properties: [
+                "limit": .init(type: "integer", description: "Max emails (default 10)."),
+            ], required: [])
+        )),
     ]
 
     // MARK: - Dispatch
@@ -221,6 +242,9 @@ extension Tools {
         case "calendar_add_event":    return calendarAddEvent(args: args)
         case "reminders_add":         return remindersAdd(args: args)
         case "reminders_list":        return remindersList()
+        case "contacts_find":         return Tools.quarantine(contactsFind(args: args), source: "Contacts")
+        case "notes_search":          return Tools.quarantine(notesSearch(args: args), source: "Notes")
+        case "mail_unread":           return Tools.quarantine(mailUnread(args: args), source: "Mail")
         case "add_note":              return addNote(args: args)
         case "send_imessage":         return sendIMessage(args: args)
         case "music":                 return music(args: args)
@@ -424,6 +448,77 @@ extension Tools {
         return r.ok ? "reminder added: \(title)" : "error: \(r.out)"
     }
 
+    // MARK: - Reading from apps (Siri-style lookups)
+
+    /// For interpolating user text into an AppleScript string literal.
+    private static func asLiteral(_ s: String) -> String {
+        s.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
+    }
+
+    static func contactsFind(args: Args) -> String {
+        guard let q = args.string("query"), !q.isEmpty else { return "error: missing 'query'" }
+        let r = osascript("""
+        tell application "Contacts"
+            set q to "\(asLiteral(q))"
+            set out to ""
+            set hits to (people whose name contains q or organization contains q)
+            repeat with p in hits
+                set out to out & "- " & (name of p)
+                try
+                    set out to out & " · " & (value of first phone of p)
+                end try
+                try
+                    set out to out & " · " & (value of first email of p)
+                end try
+                set out to out & linefeed
+            end repeat
+            return out
+        end tell
+        """)
+        if !r.ok { return "error: \(r.out)" }
+        return r.out.isEmpty ? "no contacts match '\(q)'" : String(r.out.prefix(3000))
+    }
+
+    static func notesSearch(args: Args) -> String {
+        guard let q = args.string("query"), !q.isEmpty else { return "error: missing 'query'" }
+        let r = osascript("""
+        tell application "Notes"
+            set q to "\(asLiteral(q))"
+            set out to ""
+            set n to 0
+            repeat with nt in (notes whose name contains q or plaintext contains q)
+                set n to n + 1
+                if n > 8 then exit repeat
+                set body to plaintext of nt
+                if (length of body) > 240 then set body to text 1 thru 240 of body
+                set out to out & "## " & (name of nt) & linefeed & body & linefeed & linefeed
+            end repeat
+            return out
+        end tell
+        """)
+        if !r.ok { return "error: \(r.out)" }
+        return r.out.isEmpty ? "no notes match '\(q)'" : r.out
+    }
+
+    static func mailUnread(args: Args) -> String {
+        let limit = max(1, min(30, Int(args.string("limit") ?? "") ?? 10))
+        let r = osascript("""
+        tell application "Mail"
+            set out to ""
+            set msgs to (messages of inbox whose read status is false)
+            set n to 0
+            repeat with m in msgs
+                set n to n + 1
+                if n > \(limit) then exit repeat
+                set out to out & "- " & (sender of m) & " — " & (subject of m) & " (" & ((date received of m) as string) & ")" & linefeed
+            end repeat
+            return out
+        end tell
+        """)
+        if !r.ok { return "error: \(r.out)" }
+        return r.out.isEmpty ? "no unread mail" : r.out
+    }
+
     static func remindersList() -> String {
         let r = osascript("""
         tell application "Reminders"
@@ -583,7 +678,7 @@ extension Tools {
         let message = args.string("message") ?? "Time's up, sir."
         Task { @MainActor in
             try? await Task.sleep(nanoseconds: UInt64(minutes * 60 * 1_000_000_000))
-            _ = osascript("display notification \"\(escAS(message))\" with title \"Hands AI Timer\" sound name \"Glass\"")
+            _ = osascript("display notification \"\(escAS(message))\" with title \"Hammond Timer\" sound name \"Glass\"")
         }
         let mins = minutes == floor(minutes) ? String(Int(minutes)) : String(minutes)
         return "timer set: \(mins) min — \"\(message)\" (fires while the app is running)"

@@ -14,16 +14,23 @@ settings:
     CODE_SIGN_IDENTITY: "-"
     ENABLE_HARDENED_RUNTIME: YES
 
+packages:
+  FlyingFox:
+    url: https://github.com/swhitty/FlyingFox
+    from: 0.27.1
+
 targets:
   UnifiedOS:
     type: application
     platform: macOS
+    dependencies:
+      - package: FlyingFox
     sources:
       - path: Unified
         excludes:
           - "Info.plist"
           - "Unified.entitlements"
-      - path: ../hands-ai-mac/HandsAI
+      - path: ../command-center/hands-ai-mac/HandsAI
         excludes:
           - "HandsAIApp.swift"
           - "Info.plist"

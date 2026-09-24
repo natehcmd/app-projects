@@ -45,6 +45,7 @@ final class UnifiedDelegate: NSObject, NSApplicationDelegate {
     let stats = StatsService()
     let ollama = OllamaClient()
     let claude = ClaudeClient()
+    let claudeCLI = ClaudeCLIClient()
     let voice = VoiceService()
     let hotkey = HotkeyService()
     let profiles = ProfileStore()
@@ -58,8 +59,8 @@ final class UnifiedDelegate: NSObject, NSApplicationDelegate {
         setenv("OS_ACTIVITY_MODE", "disable", 1)
         NSApp.setActivationPolicy(.regular)
         stats.start()
-        agent.attach(ollama: ollama, claude: claude, voice: voice, profiles: profiles,
-                     skills: skills, memory: memory, history: history)
+        agent.attach(ollama: ollama, claude: claude, claudeCLI: claudeCLI, profiles: profiles,
+                     skills: skills, voice: voice, memory: memory, history: history)
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
