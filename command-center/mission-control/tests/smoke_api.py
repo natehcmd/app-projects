@@ -95,6 +95,24 @@ def main():
                 code = e.code
             check(code in (401, 403), "%s refuses anonymous cross-site (%s)" % (path, code))
 
+        print("Hub: only Nate moves cards to Done:")
+        hub = json.load(open(os.path.join(tmp, "static", "hub.json")))
+        card = hub["projects"][0]["name"]
+        tok = json.loads(sess.open(base + "/api/hands/token", timeout=10).read()).get("token", "")
+        def move(opener, lane, headers):
+            req = urllib.request.Request(base + "/api/hub/move", method="POST",
+                                         data=json.dumps({"name": card, "lane": lane, "token": tok}).encode(),
+                                         headers={"Content-Type": "application/json", **headers})
+            try:
+                return opener.open(req, timeout=10).status
+            except urllib.error.HTTPError as e:
+                return e.code
+        agent = urllib.request.build_opener()          # no cookie: token only, like Hammond/agents
+        check(move(agent, "done", {"Authorization": "Bearer " + tok}) == 403, "agent with token cannot move a card to Done")
+        check(move(sess, "done", {}) == 200, "Nate's browser session can move a card to Done")
+        moved = [p for p in json.load(open(os.path.join(tmp, "static", "hub.json")))["projects"] if p["name"] == card][0]
+        check(moved.get("moved_by") == "nate", "move records who made it (%s)" % moved.get("moved_by"))
+
         print("DNS rebinding:")
         req = urllib.request.Request(base + "/api/hands/token",
                                      headers={"Host": "evil.example:%d" % port, "Sec-Fetch-Site": "same-origin"})

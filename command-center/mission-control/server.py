@@ -2039,12 +2039,22 @@ def hub_move(payload: dict = Body(...), request: Request = None):
     lane = payload.get("lane")
     if not name or not lane:
         return JSONResponse({"error": "missing name or lane"}, status_code=400)
+    # Only Nate decides what's Done. His browser carries the session cookie;
+    # agents/Hammond/scripts authenticate with the bearer token and are
+    # refused for this lane (the Sep 2 generator had put 9 cards in Done).
+    by_nate = bool(request) and hmac.compare_digest(
+        request.cookies.get("mc_session", ""), SESSION_SECRET) and _is_local_request(request)
+    if lane == "done" and not by_nate:
+        return JSONResponse({"error": "only Nate can move a card to Done (drag it in the Hub)"},
+                            status_code=403)
     with HUB_LOCK:
         try:
             data = json.loads(HUB_FILE.read_text())
             for p in data.get("projects", []):
                 if p.get("name") == name:
                     p["lane"] = lane
+                    p["moved_by"] = "nate" if by_nate else "agent"
+                    p["moved_at"] = datetime.datetime.now().isoformat(timespec="minutes")
                     break
             tmp_file = HUB_FILE.with_suffix(f".tmp.{secrets.token_hex(4)}")
             tmp_file.write_text(json.dumps(data, indent=2))

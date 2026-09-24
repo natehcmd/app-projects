@@ -136,7 +136,7 @@
     },
     {
       "name": "NotebookLM reels pipeline",
-      "lane": "done",
+      "lane": "review",
       "kind": "pipeline",
       "tone": "mint",
       "path": "~/AgentDrop-Workspace",
@@ -152,7 +152,7 @@
         "Monitor scheduled runs",
         "11 DM-only reels have no public link \u2014 expected, no action"
       ],
-      "note": "Marked COMPLETE 2026-09-02."
+      "note": "Marked COMPLETE 2026-09-02. [Was auto-placed in Done by the generator on 2026-09-02; moved to review until Nate says it's done.]"
     },
     {
       "name": "file-graph (Understand Anything)",
@@ -409,7 +409,7 @@
     },
     {
       "name": "japan-trip",
-      "lane": "done",
+      "lane": "review",
       "kind": "web",
       "tone": "mint",
       "path": "~/Projects/app-projects/japan-trip",
@@ -421,11 +421,12 @@
       ],
       "next": [
         "A pages.yml workflow tweak is pending \u2014 cosmetic"
-      ]
+      ],
+      "note": "[Was auto-placed in Done by the generator on 2026-09-02; moved to review until Nate says it's done.]"
     },
     {
       "name": "gmail-sorter v5.2",
-      "lane": "done",
+      "lane": "review",
       "kind": "skill",
       "tone": "mint",
       "path": "~/Projects/app-projects/gmail-sorter-v5.2",
@@ -437,11 +438,12 @@
       ],
       "next": [
         "(Housekeeping) rotate the v5.1 OAuth client \u2014 flagged, tracked under GitHub cleanup"
-      ]
+      ],
+      "note": "[Was auto-placed in Done by the generator on 2026-09-02; moved to review until Nate says it's done.]"
     },
     {
       "name": "agent-tracker (Agent Deck)",
-      "lane": "done",
+      "lane": "review",
       "kind": "app",
       "tone": "mint",
       "path": "~/Projects/app-projects/agent-tracker",
@@ -453,11 +455,12 @@
       ],
       "next": [
         "DO NOT touch its server on port 8444 (its own README says so)"
-      ]
+      ],
+      "note": "[Was auto-placed in Done by the generator on 2026-09-02; moved to review until Nate says it's done.]"
     },
     {
       "name": "my-apps launcher",
-      "lane": "done",
+      "lane": "review",
       "kind": "native",
       "tone": "mint",
       "path": "~/Projects/app-projects/my-apps",
@@ -467,11 +470,12 @@
         "Native macOS launcher that scans project folders and lists every app you've built",
         "make-app.sh build script, 'it works' README"
       ],
-      "next": []
+      "next": [],
+      "note": "[Was auto-placed in Done by the generator on 2026-09-02; moved to review until Nate says it's done.]"
     },
     {
       "name": "NFC digital business card (\u00d73)",
-      "lane": "done",
+      "lane": "review",
       "kind": "web",
       "tone": "mint",
       "path": "~/Projects/app-projects/nfc-card, nfc-card-dyke, nfc-card-sans",
@@ -481,11 +485,12 @@
         "Deployed pure-HTML NFC business card (JOV AI) on GitHub Pages, linked to a physical NFC card",
         "Two styling variants (dyke, sans) also deployed"
       ],
-      "next": []
+      "next": [],
+      "note": "[Was auto-placed in Done by the generator on 2026-09-02; moved to review until Nate says it's done.]"
     },
     {
       "name": "Projects hardening pipeline",
-      "lane": "done",
+      "lane": "review",
       "kind": "infra",
       "tone": "mint",
       "path": "job / project_projects_hardening_pipeline",
@@ -496,11 +501,12 @@
       ],
       "next": [
         "Distinct from the 44 harden/* skill PRs still in review"
-      ]
+      ],
+      "note": "[Was auto-placed in Done by the generator on 2026-09-02; moved to review until Nate says it's done.]"
     },
     {
       "name": "macOS service discovery + launchd hardening",
-      "lane": "done",
+      "lane": "review",
       "kind": "infra",
       "tone": "mint",
       "path": "job 3722c444",
@@ -511,11 +517,12 @@
       ],
       "next": [
         "Residual: the redundant Ollama LaunchAgent (its own card in 'Need to work on')"
-      ]
+      ],
+      "note": "[Was auto-placed in Done by the generator on 2026-09-02; moved to review until Nate says it's done.]"
     },
     {
       "name": "llm-model-routers-research",
-      "lane": "done",
+      "lane": "review",
       "kind": "research",
       "tone": "mint",
       "path": "github.com/NateH-Solutions/llm-model-routers-research",
@@ -524,7 +531,8 @@
       "done": [
         "Deep research report on LLM model routers and selection CLI tools"
       ],
-      "next": []
+      "next": [],
+      "note": "[Was auto-placed in Done by the generator on 2026-09-02; moved to review until Nate says it's done.]"
     },
     {
       "name": "AgentDrop (macOS app)",

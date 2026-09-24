@@ -7,7 +7,7 @@ _2026-09-24: old July copy in iCloud/Applications (no remote server) trashed; en
 - [~] **Hammond is the old build in places** — installed app must match `cc-v2`; one build, one install path.
 - [~] **Can't choose the model in Hammond** — visible model picker (local / Claude / Claude Code / agy) in the chat window.
 - [~] **Can't connect Hammond ↔ Mission Control** — must connect with zero setup, show connected state clearly.
-- [ ] **"Done" only when Nate moves it** — no item auto-marks done anywhere (projects, reels, to-dos, build queue).
+- [~] **"Done" only when Nate moves it** — no item auto-marks done anywhere (projects, reels, to-dos, build queue).
 - [ ] **Views cut off when swiping** — every tab fills the window; full-screen / fill-window mode.
 - [ ] **Tab bar too small, scrolls** — bigger nav that fits all tabs without horizontal scroll (group or two rows / sidebar).
 
