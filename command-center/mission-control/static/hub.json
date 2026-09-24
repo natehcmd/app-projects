@@ -2,321 +2,772 @@
   "generated": "2026-09-02",
   "note": "Project + agent status board. Hand-edit this file to move cards between lanes (change \"lane\"), or drag cards in the Hub tab (drag overrides persist in this browser's localStorage; 'Reset' clears them). Lanes: backlog | todo | doing | review | testing | done.",
   "lanes": [
-    { "id": "backlog",  "name": "Backlog",             "tone": "lav",   "blurb": "Parked / superseded / archive candidates" },
-    { "id": "todo",     "name": "Need to work on",     "tone": "rose",  "blurb": "Known next actions, mostly blocked on one thing" },
-    { "id": "doing",    "name": "Working on it",       "tone": "peach", "blurb": "Actively being built right now" },
-    { "id": "review",   "name": "In review",           "tone": "sky",   "blurb": "Built, waiting on a review / merge decision" },
-    { "id": "testing",  "name": "Alpha / Beta testing","tone": "sky",   "blurb": "Runs, in real use, being validated" },
-    { "id": "done",     "name": "Done",                "tone": "mint",  "blurb": "Shipped / complete / live" }
+    {
+      "id": "backlog",
+      "name": "Backlog",
+      "tone": "lav",
+      "blurb": "Parked / superseded / archive candidates"
+    },
+    {
+      "id": "todo",
+      "name": "Need to work on",
+      "tone": "rose",
+      "blurb": "Known next actions, mostly blocked on one thing"
+    },
+    {
+      "id": "doing",
+      "name": "Working on it",
+      "tone": "peach",
+      "blurb": "Actively being built right now"
+    },
+    {
+      "id": "review",
+      "name": "In review",
+      "tone": "sky",
+      "blurb": "Built, waiting on a review / merge decision"
+    },
+    {
+      "id": "testing",
+      "name": "Alpha / Beta testing",
+      "tone": "sky",
+      "blurb": "Runs, in real use, being validated"
+    },
+    {
+      "id": "done",
+      "name": "Done",
+      "tone": "mint",
+      "blurb": "Shipped / complete / live"
+    }
   ],
   "projects": [
     {
       "name": "Command Center / mission-control",
-      "lane": "doing", "kind": "app", "tone": "peach",
+      "lane": "doing",
+      "kind": "app",
+      "tone": "peach",
       "path": "~/Projects/app-projects/command-center/mission-control",
-      "repo": "natehcmd/app-projects", "touched": "2026-08-31",
-      "done": ["FastAPI + vanilla-JS dashboard, ~15 tabs, live at :8450", "Running reboot-safe as launchd com.natehoward.mission-control", "Plaid (sandbox) bank linking live, briefs/swarm/flows pipelines real"],
-      "next": ["Commit the command-center/ folder move (~264 uncommitted changes, never committed)", "Finish relocating hands-ai-mac under command-center/", "This Hub tab"],
+      "repo": "natehcmd/app-projects",
+      "touched": "2026-08-31",
+      "done": [
+        "FastAPI + vanilla-JS dashboard, ~15 tabs, live at :8450",
+        "Running reboot-safe as launchd com.natehoward.mission-control",
+        "Plaid (sandbox) bank linking live, briefs/swarm/flows pipelines real"
+      ],
+      "next": [
+        "Commit the command-center/ folder move (~264 uncommitted changes, never committed)",
+        "Finish relocating hands-ai-mac under command-center/",
+        "This Hub tab"
+      ],
       "note": "Flagship. Whole command-center/ reorg + ~500 lines of os.js work is uncommitted in the working tree."
     },
     {
       "name": "hands-ai-mac (native Hands AI Mac/iOS)",
-      "lane": "doing", "kind": "native", "tone": "peach",
+      "lane": "doing",
+      "kind": "native",
+      "tone": "peach",
       "path": "~/Projects/app-projects/command-center/hands-ai-mac",
-      "repo": "natehcmd/app-projects", "touched": "2026-08-25",
-      "done": ["SwiftUI macOS + iOS agent-engine client", "Headless-by-design menu-bar service, Remote server (ws :8787) shared with iOS", "New ChatWindowView / CommandCenterLauncher"],
-      "next": ["Finish git mv into command-center/hands-ai-mac/", "Commit uncommitted Swift files, drop scratch test_*.swift"],
+      "repo": "natehcmd/app-projects",
+      "touched": "2026-08-25",
+      "done": [
+        "SwiftUI macOS + iOS agent-engine client",
+        "Headless-by-design menu-bar service, Remote server (ws :8787) shared with iOS",
+        "New ChatWindowView / CommandCenterLauncher"
+      ],
+      "next": [
+        "Finish git mv into command-center/hands-ai-mac/",
+        "Commit uncommitted Swift files, drop scratch test_*.swift"
+      ],
       "note": "Mid-migration; part of the same project as Command Center."
     },
     {
       "name": "agent-conductor (Control Tower)",
-      "lane": "doing", "kind": "app", "tone": "peach",
+      "lane": "doing",
+      "kind": "app",
+      "tone": "peach",
       "path": "~/Projects/app-projects/agent-conductor",
-      "repo": null, "touched": "2026-09-02",
-      "done": ["TS daemon + React 18/Tailwind UI orchestrating cmux + Chrome + a Critic→Router→Workers swarm", "Daemon + UI verified in browser, builds clean"],
-      "next": ["Commit it — entirely untracked, 0 files in git", "Wire real worker model calls (currently stubbed)"],
+      "repo": null,
+      "touched": "2026-09-02",
+      "done": [
+        "TS daemon + React 18/Tailwind UI orchestrating cmux + Chrome + a Critic\u2192Router\u2192Workers swarm",
+        "Daemon + UI verified in browser, builds clean"
+      ],
+      "next": [
+        "Commit it \u2014 entirely untracked, 0 files in git",
+        "Wire real worker model calls (currently stubbed)"
+      ],
       "note": "Built by job 874daf82; edited again today."
     },
     {
       "name": "Family Filter iOS (porn-blocker)",
-      "lane": "doing", "kind": "native", "tone": "peach",
+      "lane": "doing",
+      "kind": "native",
+      "tone": "peach",
       "path": "~/Projects/porn-blocker",
-      "repo": null, "touched": "2026-08-24",
-      "done": ["30 commits of real feature work: DNS filter, NEFilterDataProvider content filter, CloudKit Parent Mode + lock code, onboarding wizard, Safari blocker for IG feed/Reels", "3 UI smoke tests (tab load, toggle+kill-switch, onboarding)"],
-      "next": ["Decide the FamilyControls / FamilyActivityPicker experiment (pending task)", "Add a git remote (local-only right now)", "On-device testing"],
-      "note": "~1 week idle. README still says 'just scaffolded' — history says otherwise."
+      "repo": null,
+      "touched": "2026-08-24",
+      "done": [
+        "30 commits of real feature work: DNS filter, NEFilterDataProvider content filter, CloudKit Parent Mode + lock code, onboarding wizard, Safari blocker for IG feed/Reels",
+        "3 UI smoke tests (tab load, toggle+kill-switch, onboarding)"
+      ],
+      "next": [
+        "Decide the FamilyControls / FamilyActivityPicker experiment (pending task)",
+        "Add a git remote (local-only right now)",
+        "On-device testing"
+      ],
+      "note": "~1 week idle. README still says 'just scaffolded' \u2014 history says otherwise."
     },
     {
       "name": "claude-local-models (MCP server)",
-      "lane": "doing", "kind": "infra", "tone": "peach",
+      "lane": "doing",
+      "kind": "infra",
+      "tone": "peach",
       "path": "~/Projects/claude-local-models",
-      "repo": null, "touched": "2026-09-02",
-      "done": ["Single-file zero-dep MCP server exposing Ollama + LM Studio + Antigravity (agy) as tools to Claude Code / Desktop", "Runnable, self-announces tools"],
-      "next": ["Finish the `agy --print` flag fix (job a30663a0, incomplete)", "README + tests", "Register in Claude config as an MCP server"]
+      "repo": null,
+      "touched": "2026-09-02",
+      "done": [
+        "Single-file zero-dep MCP server exposing Ollama + LM Studio + Antigravity (agy) as tools to Claude Code / Desktop",
+        "Runnable, self-announces tools"
+      ],
+      "next": [
+        "Finish the `agy --print` flag fix (job a30663a0, incomplete)",
+        "README + tests",
+        "Register in Claude config as an MCP server"
+      ]
     },
     {
       "name": "NotebookLM reels pipeline",
-      "lane": "done", "kind": "pipeline", "tone": "mint",
+      "lane": "done",
+      "kind": "pipeline",
+      "tone": "mint",
       "path": "~/AgentDrop-Workspace",
-      "repo": null, "touched": "2026-09-02",
-      "done": ["103/103 captions, 103/103 videos, 92/92 links pushed to the NotebookLM notebook — verified live, not just via tracking", "Runs live every 10 min via launchd com.natehoward.ig-curate", "Push-failure root cause fixed: NotebookLM RPC throttling → PACING_SECONDS=5, MAX_RETRIES=3 w/ backoff, split per-source-type tracking", "nblm_reconcile.py cleaned ~20 stray sources + renamed 35 videos"],
-      "next": ["Monitor scheduled runs", "11 DM-only reels have no public link — expected, no action"],
+      "repo": null,
+      "touched": "2026-09-02",
+      "done": [
+        "103/103 captions, 103/103 videos, 92/92 links pushed to the NotebookLM notebook \u2014 verified live, not just via tracking",
+        "Runs live every 10 min via launchd com.natehoward.ig-curate",
+        "Push-failure root cause fixed: NotebookLM RPC throttling \u2192 PACING_SECONDS=5, MAX_RETRIES=3 w/ backoff, split per-source-type tracking",
+        "nblm_reconcile.py cleaned ~20 stray sources + renamed 35 videos"
+      ],
+      "next": [
+        "Monitor scheduled runs",
+        "11 DM-only reels have no public link \u2014 expected, no action"
+      ],
       "note": "Marked COMPLETE 2026-09-02."
     },
     {
       "name": "file-graph (Understand Anything)",
-      "lane": "testing", "kind": "app", "tone": "sky",
+      "lane": "testing",
+      "kind": "app",
+      "tone": "sky",
       "path": "~/Projects/app-projects/file-graph",
-      "repo": "natehcmd/app-projects", "touched": "2026-08-25",
-      "done": ["Local file knowledge-graph + semantic search (SQLite + Ollama), web UI :8437, SwiftUI app, MCP server", "Running reboot-safe as launchd com.natehoward.filegraph, HTTP 200 verified", "Detailed README + quick start"],
-      "next": ["No test suite", "Not self-described as done"]
+      "repo": "natehcmd/app-projects",
+      "touched": "2026-08-25",
+      "done": [
+        "Local file knowledge-graph + semantic search (SQLite + Ollama), web UI :8437, SwiftUI app, MCP server",
+        "Running reboot-safe as launchd com.natehoward.filegraph, HTTP 200 verified",
+        "Detailed README + quick start"
+      ],
+      "next": [
+        "No test suite",
+        "Not self-described as done"
+      ]
     },
     {
       "name": "claude-browser-agent",
-      "lane": "testing", "kind": "extension", "tone": "sky",
+      "lane": "testing",
+      "kind": "extension",
+      "tone": "sky",
       "path": "~/Projects/app-projects/claude-browser-agent",
-      "repo": "natehcmd/app-projects", "touched": "2026-08-23",
-      "done": ["MV3 Chrome extension — sidepanel agent (manifest + background + sidepanel + options), structurally complete"],
-      "next": ["No README, no tests", "Real-use trial"]
+      "repo": "natehcmd/app-projects",
+      "touched": "2026-08-23",
+      "done": [
+        "MV3 Chrome extension \u2014 sidepanel agent (manifest + background + sidepanel + options), structurally complete"
+      ],
+      "next": [
+        "No README, no tests",
+        "Real-use trial"
+      ]
     },
     {
       "name": "net-worth",
-      "lane": "testing", "kind": "native", "tone": "sky",
+      "lane": "testing",
+      "kind": "native",
+      "tone": "sky",
       "path": "~/Projects/app-projects/net-worth",
-      "repo": "natehcmd/app-projects", "touched": "2026-08-23",
-      "done": ["SwiftUI personal-finance app — Dashboard / Budget views, DESIGN.md", "Builds via XcodeGen"],
-      "next": ["No README / tests", "Confirm the flows actually work end to end"]
+      "repo": "natehcmd/app-projects",
+      "touched": "2026-08-23",
+      "done": [
+        "SwiftUI personal-finance app \u2014 Dashboard / Budget views, DESIGN.md",
+        "Builds via XcodeGen"
+      ],
+      "next": [
+        "No README / tests",
+        "Confirm the flows actually work end to end"
+      ]
     },
     {
       "name": "Kickbacks",
-      "lane": "testing", "kind": "venture", "tone": "sky",
+      "lane": "testing",
+      "kind": "venture",
+      "tone": "sky",
       "path": "~/.kickbacks",
-      "repo": null, "touched": "2026-09-02",
-      "done": ["In-IDE 'earn tier' ad extension — cli-ad.json, vibe-ads-statusline, offline views, presence", "Live and serving (earnTier: tier1, serveV2 enabled); writing state continuously today"],
-      "next": ["Decide Kickbacks vs WaitLine", "This is a live monetization experiment — watch the numbers"]
+      "repo": null,
+      "touched": "2026-09-02",
+      "done": [
+        "In-IDE 'earn tier' ad extension \u2014 cli-ad.json, vibe-ads-statusline, offline views, presence",
+        "Live and serving (earnTier: tier1, serveV2 enabled); writing state continuously today"
+      ],
+      "next": [
+        "Decide Kickbacks vs WaitLine",
+        "This is a live monetization experiment \u2014 watch the numbers"
+      ]
     },
     {
       "name": "WaitLine",
-      "lane": "testing", "kind": "venture", "tone": "sky",
+      "lane": "testing",
+      "kind": "venture",
+      "tone": "sky",
       "path": "~/.waitline  (+ plugin v0.1.11)",
-      "repo": null, "touched": "2026-09-02",
-      "done": ["Sponsored statusLine / spinner-verb Claude Code plugin", "Installed v0.1.11, ledger.jsonl accruing impression events, self-healed today"],
-      "next": ["Decide Kickbacks vs WaitLine", "Compare earnings / annoyance vs Kickbacks"]
+      "repo": null,
+      "touched": "2026-09-02",
+      "done": [
+        "Sponsored statusLine / spinner-verb Claude Code plugin",
+        "Installed v0.1.11, ledger.jsonl accruing impression events, self-healed today"
+      ],
+      "next": [
+        "Decide Kickbacks vs WaitLine",
+        "Compare earnings / annoyance vs Kickbacks"
+      ]
     },
     {
       "name": "44 harden/* skill-hardening PRs",
-      "lane": "review", "kind": "infra", "tone": "sky",
-      "path": "~/.claude/skills", "repo": "natehcmd/skills", "touched": "2026-07-25",
-      "done": ["One draft PR per skill (#1–#44) from the 192-repo security scan — 34 ads-* + 10 others", "All opened Jul 23–25, all still open, untouched since"],
-      "next": ["Review / merge / close them one by one — they're just sitting there"]
+      "lane": "review",
+      "kind": "infra",
+      "tone": "sky",
+      "path": "~/.claude/skills",
+      "repo": "natehcmd/skills",
+      "touched": "2026-07-25",
+      "done": [
+        "One draft PR per skill (#1\u2013#44) from the 192-repo security scan \u2014 34 ads-* + 10 others",
+        "All opened Jul 23\u201325, all still open, untouched since"
+      ],
+      "next": [
+        "Review / merge / close them one by one \u2014 they're just sitting there"
+      ]
     },
     {
       "name": "code-review-pipeline hardening",
-      "lane": "review", "kind": "skill", "tone": "sky",
-      "path": "~/.claude/skills/code-review-pipeline", "repo": "natehcmd/skills", "touched": "2026-09-02",
-      "done": ["69 tests pass, retrieval-degradation detection + lesson persistence shipped", "natehcmd/skills#45 MERGED"],
-      "next": ["natehcmd/projects#9 + NateH-Solutions/projects#9 still open", "Blocked: stale agy lock + wedged Ollama block the precision measurement (job 86961665)"]
+      "lane": "review",
+      "kind": "skill",
+      "tone": "sky",
+      "path": "~/.claude/skills/code-review-pipeline",
+      "repo": "natehcmd/skills",
+      "touched": "2026-09-02",
+      "done": [
+        "69 tests pass, retrieval-degradation detection + lesson persistence shipped",
+        "natehcmd/skills#45 MERGED"
+      ],
+      "next": [
+        "natehcmd/projects#9 + NateH-Solutions/projects#9 still open",
+        "Blocked: stale agy lock + wedged Ollama block the precision measurement (job 86961665)"
+      ]
     },
     {
       "name": "Multi-computer pipeline (Tailscale mesh)",
-      "lane": "todo", "kind": "infra", "tone": "rose",
-      "path": "~/Projects/pipeline", "repo": null, "touched": "2026-08-21",
-      "done": ["MacBook side done: tailscaled LaunchDaemon, SSH, Ollama exposed via LaunchAgent"],
-      "next": ["natespc (Windows) side: run natespc-setup.ps1 — written, never executed", "Blocked: natespc offline + needs PowerShell/SSH pubkey auth, needs Nate physically at that machine"]
+      "lane": "todo",
+      "kind": "infra",
+      "tone": "rose",
+      "path": "~/Projects/pipeline",
+      "repo": null,
+      "touched": "2026-08-21",
+      "done": [
+        "MacBook side done: tailscaled LaunchDaemon, SSH, Ollama exposed via LaunchAgent"
+      ],
+      "next": [
+        "natespc (Windows) side: run natespc-setup.ps1 \u2014 written, never executed",
+        "Blocked: natespc offline + needs PowerShell/SSH pubkey auth, needs Nate physically at that machine"
+      ]
     },
     {
       "name": "Claude daemon re-auth",
-      "lane": "todo", "kind": "automation", "tone": "rose",
-      "path": "~/.claude/daemon", "repo": null, "touched": "2026-09-02",
-      "done": ["Supervisor running (v2.1.258)"],
-      "next": ["daemon-auth-status = auth_required for ~9+ hours → NO scheduled Claude work runs (briefs, session-monitor, daily-morning-briefing, weekly-email-cleanup)", "Blocked: Nate runs `claude` login"]
+      "lane": "todo",
+      "kind": "automation",
+      "tone": "rose",
+      "path": "~/.claude/daemon",
+      "repo": null,
+      "touched": "2026-09-02",
+      "done": [
+        "Supervisor running (v2.1.258)"
+      ],
+      "next": [
+        "daemon-auth-status = auth_required for ~9+ hours \u2192 NO scheduled Claude work runs (briefs, session-monitor, daily-morning-briefing, weekly-email-cleanup)",
+        "Blocked: Nate runs `claude` login"
+      ]
     },
     {
       "name": "GitHub consolidation cleanup",
-      "lane": "todo", "kind": "infra", "tone": "rose",
-      "path": "job f7f1187d", "repo": null, "touched": "2026-08-31",
-      "done": ["Audit done — 194 archived repos confirmed safe to delete"],
-      "next": ["Blocked: `gh auth refresh -s delete_repo` then bulk-delete", "Also: rotate the OAuth client for gmail-sorter-v5.1"]
+      "lane": "todo",
+      "kind": "infra",
+      "tone": "rose",
+      "path": "job f7f1187d",
+      "repo": null,
+      "touched": "2026-08-31",
+      "done": [
+        "Audit done \u2014 194 archived repos confirmed safe to delete"
+      ],
+      "next": [
+        "Blocked: `gh auth refresh -s delete_repo` then bulk-delete",
+        "Also: rotate the OAuth client for gmail-sorter-v5.1"
+      ]
     },
     {
       "name": "Security-scan credential rotation",
-      "lane": "todo", "kind": "infra", "tone": "rose",
-      "path": "job 22ffa971", "repo": null, "touched": "2026-09-02",
-      "done": ["192-repo secret scan complete — all skills clean"],
-      "next": ["1 live credential in NateH-Solutions/projects history + the archived backups repo", "Blocked: rotate it in Google Cloud, then decide what to do with the backups repo"]
+      "lane": "todo",
+      "kind": "infra",
+      "tone": "rose",
+      "path": "job 22ffa971",
+      "repo": null,
+      "touched": "2026-09-02",
+      "done": [
+        "192-repo secret scan complete \u2014 all skills clean"
+      ],
+      "next": [
+        "1 live credential in NateH-Solutions/projects history + the archived backups repo",
+        "Blocked: rotate it in Google Cloud, then decide what to do with the backups repo"
+      ]
     },
     {
       "name": "Remove redundant Ollama LaunchAgent",
-      "lane": "todo", "kind": "infra", "tone": "rose",
-      "path": "~/Library/LaunchAgents/com.natehoward.ollama.plist", "repo": null, "touched": "2026-08-31",
-      "done": ["Identified: 3 Ollama instances running at once (com.natehoward.ollama + com.ollama.ollama + Ollama.app)"],
-      "next": ["Unload + delete com.natehoward.ollama.plist (job 3722c444 recommended this; not done)"]
+      "lane": "todo",
+      "kind": "infra",
+      "tone": "rose",
+      "path": "~/Library/LaunchAgents/com.natehoward.ollama.plist",
+      "repo": null,
+      "touched": "2026-08-31",
+      "done": [
+        "Identified: 3 Ollama instances running at once (com.natehoward.ollama + com.ollama.ollama + Ollama.app)"
+      ],
+      "next": [
+        "Unload + delete com.natehoward.ollama.plist (job 3722c444 recommended this; not done)"
+      ]
     },
     {
       "name": "agentdrop-workspace copy divergence",
-      "lane": "todo", "kind": "infra", "tone": "rose",
+      "lane": "todo",
+      "kind": "infra",
+      "tone": "rose",
       "path": "~/Projects/app-projects/agentdrop-workspace  vs  ~/AgentDrop-Workspace",
-      "repo": "natehcmd/app-projects", "touched": "2026-09-02",
-      "done": ["Confirmed: monorepo copy is a stale 2026-08-23 partial snapshot; live work happens in ~/AgentDrop-Workspace; someone hand-copies script updates across"],
-      "next": ["Pick the canonical copy, merge, stop the hand-copying"]
+      "repo": "natehcmd/app-projects",
+      "touched": "2026-09-02",
+      "done": [
+        "Confirmed: monorepo copy is a stale 2026-08-23 partial snapshot; live work happens in ~/AgentDrop-Workspace; someone hand-copies script updates across"
+      ],
+      "next": [
+        "Pick the canonical copy, merge, stop the hand-copying"
+      ]
     },
     {
-      "name": "NateH-Solutions/projects — triage",
-      "lane": "todo", "kind": "misc", "tone": "rose",
-      "path": "github.com/NateH-Solutions/projects", "repo": "NateH-Solutions/projects", "touched": "2026-08-19",
-      "done": ["Monorepo of ~19 standalone projects; many entries are just cloned learning repos (developer-roadmap, build-your-own-x, system-design-primer, coding-interview-university, anthropic-courses, claude-cookbooks…) — not yours"],
-      "next": ["Assess the actually-Nate ones not checked out locally: agent-fleet, agentic-inbox-src, claude-ads-clone, codex-memories, jcode, ruflo, apps-and-skills, daisy-layer, daisy-rust-kernel"]
+      "name": "NateH-Solutions/projects \u2014 triage",
+      "lane": "todo",
+      "kind": "misc",
+      "tone": "rose",
+      "path": "github.com/NateH-Solutions/projects",
+      "repo": "NateH-Solutions/projects",
+      "touched": "2026-08-19",
+      "done": [
+        "Monorepo of ~19 standalone projects; many entries are just cloned learning repos (developer-roadmap, build-your-own-x, system-design-primer, coding-interview-university, anthropic-courses, claude-cookbooks\u2026) \u2014 not yours"
+      ],
+      "next": [
+        "Assess the actually-Nate ones not checked out locally: agent-fleet, agentic-inbox-src, claude-ads-clone, codex-memories, jcode, ruflo, apps-and-skills, daisy-layer, daisy-rust-kernel"
+      ]
     },
     {
       "name": "prompt-macros skill doc fix",
-      "lane": "todo", "kind": "skill", "tone": "rose",
-      "path": "~/.claude/skills/prompt-macros", "repo": "natehcmd/skills", "touched": "2026-07-24",
+      "lane": "todo",
+      "kind": "skill",
+      "tone": "rose",
+      "path": "~/.claude/skills/prompt-macros",
+      "repo": "natehcmd/skills",
+      "touched": "2026-07-24",
       "done": [],
-      "next": ["Frontmatter says '13 macros', body only lists 5 — reconcile"]
+      "next": [
+        "Frontmatter says '13 macros', body only lists 5 \u2014 reconcile"
+      ]
     },
     {
       "name": "gmail-sorter-np cleanup",
-      "lane": "todo", "kind": "cleanup", "tone": "rose",
-      "path": "~/Projects/app-projects/gmail-sorter-np", "repo": "natehcmd/app-projects", "touched": "2026-08-23",
+      "lane": "todo",
+      "kind": "cleanup",
+      "tone": "rose",
+      "path": "~/Projects/app-projects/gmail-sorter-np",
+      "repo": "natehcmd/app-projects",
+      "touched": "2026-08-23",
       "done": [],
-      "next": ["Near-duplicate of gmail-sorter-v5.2 minus the docs — decide keep or delete"]
+      "next": [
+        "Near-duplicate of gmail-sorter-v5.2 minus the docs \u2014 decide keep or delete"
+      ]
     },
     {
       "name": "japan-trip",
-      "lane": "done", "kind": "web", "tone": "mint",
-      "path": "~/Projects/app-projects/japan-trip", "repo": "natehcmd/app-projects (+ natehcmd/japan-trip)", "touched": "2026-08-23",
-      "done": ["Live GitHub Pages father-son Japan 2026 trip planner (HTML/CSS/JS + Leaflet)", "Only project with post-consolidation commits — all additive polish (Skytree spots, schedule presets)"],
-      "next": ["A pages.yml workflow tweak is pending — cosmetic"]
+      "lane": "done",
+      "kind": "web",
+      "tone": "mint",
+      "path": "~/Projects/app-projects/japan-trip",
+      "repo": "natehcmd/app-projects (+ natehcmd/japan-trip)",
+      "touched": "2026-08-23",
+      "done": [
+        "Live GitHub Pages father-son Japan 2026 trip planner (HTML/CSS/JS + Leaflet)",
+        "Only project with post-consolidation commits \u2014 all additive polish (Skytree spots, schedule presets)"
+      ],
+      "next": [
+        "A pages.yml workflow tweak is pending \u2014 cosmetic"
+      ]
     },
     {
       "name": "gmail-sorter v5.2",
-      "lane": "done", "kind": "skill", "tone": "mint",
-      "path": "~/Projects/app-projects/gmail-sorter-v5.2", "repo": "natehcmd/app-projects", "touched": "2026-08-23",
-      "done": ["Polished, fully documented Gmail inbox classifier, shipped as a Claude skill", "npm setup / test-batch / sort scripts"],
-      "next": ["(Housekeeping) rotate the v5.1 OAuth client — flagged, tracked under GitHub cleanup"]
+      "lane": "done",
+      "kind": "skill",
+      "tone": "mint",
+      "path": "~/Projects/app-projects/gmail-sorter-v5.2",
+      "repo": "natehcmd/app-projects",
+      "touched": "2026-08-23",
+      "done": [
+        "Polished, fully documented Gmail inbox classifier, shipped as a Claude skill",
+        "npm setup / test-batch / sort scripts"
+      ],
+      "next": [
+        "(Housekeeping) rotate the v5.1 OAuth client \u2014 flagged, tracked under GitHub cleanup"
+      ]
     },
     {
       "name": "agent-tracker (Agent Deck)",
-      "lane": "done", "kind": "app", "tone": "mint",
-      "path": "~/Projects/app-projects/agent-tracker", "repo": "natehcmd/app-projects", "touched": "2026-08-23",
-      "done": ["Complete, documented local PTY / agent-session tracker with a spelled-out WebSocket protocol", "Runs via npm start / start.command"],
-      "next": ["DO NOT touch its server on port 8444 (its own README says so)"]
+      "lane": "done",
+      "kind": "app",
+      "tone": "mint",
+      "path": "~/Projects/app-projects/agent-tracker",
+      "repo": "natehcmd/app-projects",
+      "touched": "2026-08-23",
+      "done": [
+        "Complete, documented local PTY / agent-session tracker with a spelled-out WebSocket protocol",
+        "Runs via npm start / start.command"
+      ],
+      "next": [
+        "DO NOT touch its server on port 8444 (its own README says so)"
+      ]
     },
     {
       "name": "my-apps launcher",
-      "lane": "done", "kind": "native", "tone": "mint",
-      "path": "~/Projects/app-projects/my-apps", "repo": "natehcmd/app-projects", "touched": "2026-08-23",
-      "done": ["Native macOS launcher that scans project folders and lists every app you've built", "make-app.sh build script, 'it works' README"],
+      "lane": "done",
+      "kind": "native",
+      "tone": "mint",
+      "path": "~/Projects/app-projects/my-apps",
+      "repo": "natehcmd/app-projects",
+      "touched": "2026-08-23",
+      "done": [
+        "Native macOS launcher that scans project folders and lists every app you've built",
+        "make-app.sh build script, 'it works' README"
+      ],
       "next": []
     },
     {
-      "name": "NFC digital business card (×3)",
-      "lane": "done", "kind": "web", "tone": "mint",
-      "path": "~/Projects/app-projects/nfc-card, nfc-card-dyke, nfc-card-sans", "repo": "natehcmd/app-projects (+ natehcmd/nfc-card*)", "touched": "2026-08-23",
-      "done": ["Deployed pure-HTML NFC business card (JOV AI) on GitHub Pages, linked to a physical NFC card", "Two styling variants (dyke, sans) also deployed"],
+      "name": "NFC digital business card (\u00d73)",
+      "lane": "done",
+      "kind": "web",
+      "tone": "mint",
+      "path": "~/Projects/app-projects/nfc-card, nfc-card-dyke, nfc-card-sans",
+      "repo": "natehcmd/app-projects (+ natehcmd/nfc-card*)",
+      "touched": "2026-08-23",
+      "done": [
+        "Deployed pure-HTML NFC business card (JOV AI) on GitHub Pages, linked to a physical NFC card",
+        "Two styling variants (dyke, sans) also deployed"
+      ],
       "next": []
     },
     {
       "name": "Projects hardening pipeline",
-      "lane": "done", "kind": "infra", "tone": "mint",
-      "path": "job / project_projects_hardening_pipeline", "repo": "multiple", "touched": "2026-08",
-      "done": ["All 33 repos processed — 18 draft hardening PRs shipped, 11 clean, 3 excluded as third-party"],
-      "next": ["Distinct from the 44 harden/* skill PRs still in review"]
+      "lane": "done",
+      "kind": "infra",
+      "tone": "mint",
+      "path": "job / project_projects_hardening_pipeline",
+      "repo": "multiple",
+      "touched": "2026-08",
+      "done": [
+        "All 33 repos processed \u2014 18 draft hardening PRs shipped, 11 clean, 3 excluded as third-party"
+      ],
+      "next": [
+        "Distinct from the 44 harden/* skill PRs still in review"
+      ]
     },
     {
       "name": "macOS service discovery + launchd hardening",
-      "lane": "done", "kind": "infra", "tone": "mint",
-      "path": "job 3722c444", "repo": null, "touched": "2026-08-31",
-      "done": ["filegraph (:8437) + mission-control (:8450) installed as reboot-safe com.natehoward.* LaunchAgents, HTTP 200 verified"],
-      "next": ["Residual: the redundant Ollama LaunchAgent (its own card in 'Need to work on')"]
+      "lane": "done",
+      "kind": "infra",
+      "tone": "mint",
+      "path": "job 3722c444",
+      "repo": null,
+      "touched": "2026-08-31",
+      "done": [
+        "filegraph (:8437) + mission-control (:8450) installed as reboot-safe com.natehoward.* LaunchAgents, HTTP 200 verified"
+      ],
+      "next": [
+        "Residual: the redundant Ollama LaunchAgent (its own card in 'Need to work on')"
+      ]
     },
     {
       "name": "llm-model-routers-research",
-      "lane": "done", "kind": "research", "tone": "mint",
-      "path": "github.com/NateH-Solutions/llm-model-routers-research", "repo": "NateH-Solutions/llm-model-routers-research", "touched": "2026-07-24",
-      "done": ["Deep research report on LLM model routers and selection CLI tools"],
+      "lane": "done",
+      "kind": "research",
+      "tone": "mint",
+      "path": "github.com/NateH-Solutions/llm-model-routers-research",
+      "repo": "NateH-Solutions/llm-model-routers-research",
+      "touched": "2026-07-24",
+      "done": [
+        "Deep research report on LLM model routers and selection CLI tools"
+      ],
       "next": []
     },
     {
       "name": "AgentDrop (macOS app)",
-      "lane": "backlog", "kind": "native", "tone": "lav",
-      "path": "~/AgentDrop  (mirror: app-projects/AgentDrop)", "repo": "natehcmd/AgentDrop", "touched": "2026-07-29",
-      "done": ["Working XcodeGen SwiftUI macOS app — drop a video/file/link + an instruction, it shells to the claude CLI in ~/AgentDrop-Workspace", "Integrations wired: Firecrawl, Apify, Composio, Playwright, Higgsfield, WISPR Flow, Purpose AI"],
-      "next": ["No commits since Jul 29", "Draft PR #1 open, never merged", "Active effort moved to the workspace/pipeline side"]
+      "lane": "backlog",
+      "kind": "native",
+      "tone": "lav",
+      "path": "~/AgentDrop  (mirror: app-projects/AgentDrop)",
+      "repo": "natehcmd/AgentDrop",
+      "touched": "2026-07-29",
+      "done": [
+        "Working XcodeGen SwiftUI macOS app \u2014 drop a video/file/link + an instruction, it shells to the claude CLI in ~/AgentDrop-Workspace",
+        "Integrations wired: Firecrawl, Apify, Composio, Playwright, Higgsfield, WISPR Flow, Purpose AI"
+      ],
+      "next": [
+        "No commits since Jul 29",
+        "Draft PR #1 open, never merged",
+        "Active effort moved to the workspace/pipeline side"
+      ]
     },
     {
       "name": "hands-ai (standalone daemon)",
-      "lane": "backlog", "kind": "app", "tone": "lav",
-      "path": "~/Projects/app-projects/hands-ai", "repo": "natehcmd/app-projects", "touched": "2026-08-23",
-      "done": ["Functional local AI-orchestration daemon (FastAPI :7721) + Electron panel + CLI with Ollama/Claude/OpenAI fallback routing, solid README"],
-      "next": ["Superseded — it's the early standalone version of the Command Center / Hands AI line"]
+      "lane": "backlog",
+      "kind": "app",
+      "tone": "lav",
+      "path": "~/Projects/app-projects/hands-ai",
+      "repo": "natehcmd/app-projects",
+      "touched": "2026-08-23",
+      "done": [
+        "Functional local AI-orchestration daemon (FastAPI :7721) + Electron panel + CLI with Ollama/Claude/OpenAI fallback routing, solid README"
+      ],
+      "next": [
+        "Superseded \u2014 it's the early standalone version of the Command Center / Hands AI line"
+      ]
     },
     {
       "name": "CommandCenter (native Swift prototype)",
-      "lane": "backlog", "kind": "native", "tone": "lav",
-      "path": "~/CommandCenter", "repo": null, "touched": "2026-08-18",
-      "done": ["Small SwiftUI menubar app — Today / Ventures / Leads / Actions / Habits / Apps tabs, ~548 LOC, builds"],
-      "next": ["Abandoned early native stab — replaced by the mission-control web app"]
+      "lane": "backlog",
+      "kind": "native",
+      "tone": "lav",
+      "path": "~/CommandCenter",
+      "repo": null,
+      "touched": "2026-08-18",
+      "done": [
+        "Small SwiftUI menubar app \u2014 Today / Ventures / Leads / Actions / Habits / Apps tabs, ~548 LOC, builds"
+      ],
+      "next": [
+        "Abandoned early native stab \u2014 replaced by the mission-control web app"
+      ]
     },
     {
       "name": "myagent (Jax)",
-      "lane": "backlog", "kind": "app", "tone": "lav",
-      "path": "~/Projects/app-projects/myagent", "repo": "natehcmd/app-projects", "touched": "2026-08-23",
-      "done": ["Early personal AI agent — single agent.mjs: multi-model routing, memory, skills, iMessage"],
-      "next": ["Predates the hands-ai / command-center stack — superseded"]
+      "lane": "backlog",
+      "kind": "app",
+      "tone": "lav",
+      "path": "~/Projects/app-projects/myagent",
+      "repo": "natehcmd/app-projects",
+      "touched": "2026-08-23",
+      "done": [
+        "Early personal AI agent \u2014 single agent.mjs: multi-model routing, memory, skills, iMessage"
+      ],
+      "next": [
+        "Predates the hands-ai / command-center stack \u2014 superseded"
+      ]
     },
     {
       "name": "unified-os",
-      "lane": "backlog", "kind": "native", "tone": "lav",
-      "path": "~/Projects/app-projects/unified-os", "repo": "natehcmd/app-projects", "touched": "2026-08-23",
-      "done": ["SwiftUI Xcode skeleton — 3 Swift files, DESIGN.md"],
-      "next": ["Design-stage only, untouched — likely an early precursor to command-center"]
+      "lane": "backlog",
+      "kind": "native",
+      "tone": "lav",
+      "path": "~/Projects/app-projects/unified-os",
+      "repo": "natehcmd/app-projects",
+      "touched": "2026-08-23",
+      "done": [
+        "SwiftUI Xcode skeleton \u2014 3 Swift files, DESIGN.md"
+      ],
+      "next": [
+        "Design-stage only, untouched \u2014 likely an early precursor to command-center"
+      ]
     },
     {
       "name": "Daisy (experimental OS)",
-      "lane": "backlog", "kind": "experiment", "tone": "lav",
-      "path": "~/Projects/app-projects/Daisy", "repo": "natehcmd/app-projects", "touched": "2026-08-23",
-      "done": ["Python microkernel simulator works — 35 pytest pass"],
-      "next": ["Rust kernel unverified", "daisy-layer submodule missing (broken)", "audit-report.json lists 112 open issues", "Explicitly experimental, no recent work"]
+      "lane": "backlog",
+      "kind": "experiment",
+      "tone": "lav",
+      "path": "~/Projects/app-projects/Daisy",
+      "repo": "natehcmd/app-projects",
+      "touched": "2026-08-23",
+      "done": [
+        "Python microkernel simulator works \u2014 35 pytest pass"
+      ],
+      "next": [
+        "Rust kernel unverified",
+        "daisy-layer submodule missing (broken)",
+        "audit-report.json lists 112 open issues",
+        "Explicitly experimental, no recent work"
+      ]
     },
     {
       "name": "hands-ai-skills",
-      "lane": "backlog", "kind": "skill", "tone": "lav",
-      "path": "~/hands-ai-skills", "repo": null, "touched": "2026-08-25",
-      "done": ["5 Markdown skill definitions for Hands AI — daily-briefing, focus-mode, quick-note, research-summary, system-checkup"],
-      "next": ["Prompt text only, not wired into anything, no movement since creation"]
+      "lane": "backlog",
+      "kind": "skill",
+      "tone": "lav",
+      "path": "~/hands-ai-skills",
+      "repo": null,
+      "touched": "2026-08-25",
+      "done": [
+        "5 Markdown skill definitions for Hands AI \u2014 daily-briefing, focus-mode, quick-note, research-summary, system-checkup"
+      ],
+      "next": [
+        "Prompt text only, not wired into anything, no movement since creation"
+      ]
     },
     {
       "name": "3 README-only app placeholders",
-      "lane": "backlog", "kind": "placeholder", "tone": "lav",
-      "path": "~/Projects/app-projects/app-DanS4w5..., app-DaqdIkR..., app-DZ5H6F1...", "repo": "natehcmd/app-projects", "touched": "2026-08-23",
+      "lane": "backlog",
+      "kind": "placeholder",
+      "tone": "lav",
+      "path": "~/Projects/app-projects/app-DanS4w5..., app-DaqdIkR..., app-DZ5H6F1...",
+      "repo": "natehcmd/app-projects",
+      "touched": "2026-08-23",
       "done": [],
-      "next": ["Each is a README recording an empty .app bundle — delete or fill in"]
+      "next": [
+        "Each is a README recording an empty .app bundle \u2014 delete or fill in"
+      ]
     },
     {
       "name": "mac-dotfiles-backup",
-      "lane": "backlog", "kind": "reference", "tone": "lav",
-      "path": "~/Projects/app-projects/mac-dotfiles-backup", "repo": "natehcmd/app-projects", "touched": "2026-08-23",
-      "done": ["Dotfiles + misc scripts dump (mindmap notes, patch_css.py, web-search/scrape scripts)"],
-      "next": ["A reference backup, not really a project"]
+      "lane": "backlog",
+      "kind": "reference",
+      "tone": "lav",
+      "path": "~/Projects/app-projects/mac-dotfiles-backup",
+      "repo": "natehcmd/app-projects",
+      "touched": "2026-08-23",
+      "done": [
+        "Dotfiles + misc scripts dump (mindmap notes, patch_css.py, web-search/scrape scripts)"
+      ],
+      "next": [
+        "A reference backup, not really a project"
+      ]
     },
     {
       "name": "NateH-Solutions/apps archive",
-      "lane": "backlog", "kind": "archive", "tone": "lav",
-      "path": "github.com/NateH-Solutions/apps", "repo": "NateH-Solutions/apps", "touched": "2026-07-23",
-      "done": ["110 former natehcmd/app-* repos consolidated into one monorepo — mostly 'Nothing to build' placeholders from an old bulk experiment"],
-      "next": ["Archive; mine for anything real if ever bored"]
+      "lane": "backlog",
+      "kind": "archive",
+      "tone": "lav",
+      "path": "github.com/NateH-Solutions/apps",
+      "repo": "NateH-Solutions/apps",
+      "touched": "2026-07-23",
+      "done": [
+        "110 former natehcmd/app-* repos consolidated into one monorepo \u2014 mostly 'Nothing to build' placeholders from an old bulk experiment"
+      ],
+      "next": [
+        "Archive; mine for anything real if ever bored"
+      ]
+    },
+    {
+      "name": "Evaluate browser-use as a local-model browsing engine",
+      "lane": "todo",
+      "kind": "research",
+      "tone": "rose",
+      "path": "github.com/browser-use/browser-use",
+      "repo": "external (MIT)",
+      "touched": "2026-09-04",
+      "done": [
+        "Safety analysis done \u2014 see CEO Briefs \u2192 2026-09-04-browser-use-safety-analysis",
+        "Verdict: duplicates claude-in-chrome for interactive use; candidate as a local (Ollama-driven) unattended browsing engine"
+      ],
+      "next": [
+        "Set ANONYMIZED_TELEMETRY=false, verify credential-field handling before any real use",
+        "If adopted: wire as a 4th engine in ~/Projects/claude-local-models/server.mjs, not into anything Plaid/credential-adjacent"
+      ],
+      "note": "Requested via chat 2026-09-04; routed to direct analysis since Hands AI's Remote server was off."
+    },
+    {
+      "name": "Harden apps to Tier 2 (from audit)",
+      "lane": "doing",
+      "kind": "research",
+      "tone": "peach",
+      "path": "~/.claude/skills/sellable-vs-slop-audit",
+      "repo": "natehcmd/skills (untracked)",
+      "touched": "2026-09-06",
+      "done": [
+        "nate-default v2 token set written (SHARED/: css + swift + README)",
+        "japan-trip: 100dvh, flat buttons, softened empty copy",
+        "nfc-card: favicon+OG+desc, system font, focus ring, 'Saved' confirmation, flat gold btn, removed maximum-scale=1 \u2014 verified in browser",
+        "file-graph: favicon, 100dvh, designed empty state, backend-error toast",
+        "net-worth: tnum() helper + migration note",
+        "Branch worktree-harden-apps @ c9865be (pushed)"
+      ],
+      "next": [
+        "Merge worktree-harden-apps (japan-trip Pages redeploys from main \u2014 review first)",
+        "Command Center os.css: kill .bg-orbs + neon glow + hover shimmer + rise anim, add favicon, tabular-nums \u2014 held off the live mid-migration tree",
+        "file-graph: stop rAF loop when graph settles (needs wake() wiring)",
+        "net-worth: swap to NateDefaultV2.swift + build + re-audit states"
+      ],
+      "note": "Command Center changes deliberately NOT applied to the live tree (mid-migration)."
     }
   ],
   "agents": [
-    { "name": "com.natehoward.mission-control", "status": "ok",       "detail": ":8450 · Command Center dashboard · launchd RunAtLoad+KeepAlive · pid live" },
-    { "name": "com.natehoward.filegraph",       "status": "ok",       "detail": ":8437 · file-graph service · launchd RunAtLoad+KeepAlive · pid live" },
-    { "name": "com.natehoward.ig-curate",       "status": "ok",       "detail": "every 10 min · mirrors IG reels for the NotebookLM pipeline · exits 0" },
-    { "name": "com.natehoward.ollama",          "status": "warn",     "detail": ":11434 · running but REDUNDANT — 3 Ollama instances at once, remove this one" },
-    { "name": "Claude daemon (supervisor v2.1.258)", "status": "warn", "detail": "running but auth_required ~9h · 0 workers · scheduled Claude skills are NOT firing until re-auth" },
-    { "name": "Scheduled skills", "status": "warn", "detail": "daily-morning-briefing (8am), weekly-email-cleanup (Mon 8am), session-monitor (/10min) — all depend on the Claude daemon → currently stalled" },
-    { "name": "natehcmd/skills repo", "status": "ok", "detail": "49 skills, main clean · 44 harden/* draft PRs awaiting review (own card)" },
-    { "name": "~/.claude/agents", "status": "ok", "detail": "empty — no custom subagent definitions; all agent behavior is skills + launchd + the daemon" },
-    { "name": "Installed plugins", "status": "ok", "detail": "swift-lsp · waitline v0.1.11 (sponsored statusline) — neither ships subagents" }
+    {
+      "name": "com.natehoward.mission-control",
+      "status": "ok",
+      "detail": ":8450 \u00b7 Command Center dashboard \u00b7 launchd RunAtLoad+KeepAlive \u00b7 pid live"
+    },
+    {
+      "name": "com.natehoward.filegraph",
+      "status": "ok",
+      "detail": ":8437 \u00b7 file-graph service \u00b7 launchd RunAtLoad+KeepAlive \u00b7 pid live"
+    },
+    {
+      "name": "com.natehoward.ig-curate",
+      "status": "ok",
+      "detail": "every 10 min \u00b7 mirrors IG reels for the NotebookLM pipeline \u00b7 exits 0"
+    },
+    {
+      "name": "com.natehoward.ollama",
+      "status": "warn",
+      "detail": ":11434 \u00b7 running but REDUNDANT \u2014 3 Ollama instances at once, remove this one"
+    },
+    {
+      "name": "Claude daemon (supervisor v2.1.258)",
+      "status": "warn",
+      "detail": "running but auth_required ~9h \u00b7 0 workers \u00b7 scheduled Claude skills are NOT firing until re-auth"
+    },
+    {
+      "name": "Scheduled skills",
+      "status": "warn",
+      "detail": "daily-morning-briefing (8am), weekly-email-cleanup (Mon 8am), session-monitor (/10min) \u2014 all depend on the Claude daemon \u2192 currently stalled"
+    },
+    {
+      "name": "natehcmd/skills repo",
+      "status": "ok",
+      "detail": "49 skills, main clean \u00b7 44 harden/* draft PRs awaiting review (own card)"
+    },
+    {
+      "name": "~/.claude/agents",
+      "status": "ok",
+      "detail": "empty \u2014 no custom subagent definitions; all agent behavior is skills + launchd + the daemon"
+    },
+    {
+      "name": "Installed plugins",
+      "status": "ok",
+      "detail": "swift-lsp \u00b7 waitline v0.1.11 (sponsored statusline) \u2014 neither ships subagents"
+    }
   ]
 }

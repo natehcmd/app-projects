@@ -6,8 +6,9 @@
 <title>Mission Control</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="os.css">
+<link rel="stylesheet" href="stark.css">
 <script src="https://d3js.org/d3.v7.min.js"></script>
 <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
 </head>
@@ -22,7 +23,7 @@
 <main id="view"></main>
 
 <nav class="dock glass">
-  <button data-view="chat" class="active" title="Chat — Hands AI">✋<span>Chat</span></button>
+  <button data-view="chat" class="active" title="Chat — Hammond">✋<span>Chat</span></button>
   <button data-view="hub" title="Hub — project status board">🗂<span>Hub</span></button>
   <button data-view="apps" title="Apps">▦<span>Apps</span></button>
   <button data-view="projects" title="Projects">⌥<span>Projects</span></button>
@@ -31,6 +32,7 @@
   <button data-view="agentdrop" title="Agent Drop">⤵<span>Agent Drop</span></button>
   <button data-view="reels" title="Reels Vault">▶<span>Reels</span></button>
   <button data-view="life" title="Life HQ">◎<span>Life HQ</span></button>
+  <button data-view="college" title="Road to Fall 2027">🏛<span>College</span></button>
   <button data-view="briefs" title="CEO Briefs">☰<span>Briefs</span></button>
   <button data-view="term" title="Terminal">❯<span>Term</span></button>
   <button data-view="swarm" title="Swarm">⬡<span>Swarm</span></button>
@@ -56,5 +58,6 @@
 
 <script src="os.js"></script>
 <script src="hub.js"></script>
+<script src="stark.js"></script>
 </body>
 </html>

@@ -1,22 +1,23 @@
 #!/usr/bin/env python3
 """Curation pipeline for the AgentDrop Library.
 
-The curation inbox is whatever Instagram account is logged into Arc.
-Two ways a reel gets in:
-  1. Nate SAVES it on the curation account → mirrored from the saved collection.
-  2. He DMs it to the curation account from that same account (share-to-self)
-     → pulled from DMs. Reels DM'd by other accounts are skipped, with the
-     reason recorded in the ledger.
+The curation inbox is **tech.review.nate** — that's the account `ig-login.py`
+must log into (.ig-session.json). Two ways a reel gets in:
+  1. Nate SAVES it on tech.review.nate → mirrored from the saved collection.
+  2. He DMs it to tech.review.nate from natep.howard (his main account) →
+     pulled from DMs. Reels DM'd by anyone else are skipped, with the reason
+     recorded in the ledger.
 
 Both land as best-quality mp4 + caption sidecar in ~/AgentDrop-Workspace/reels/,
 which is the only folder the AgentDrop Library reads.
 
 Login: the CLI session saved by ig-login.py (.ig-session.json) — run that
-script once per account, no browser needed. If no CLI session exists, falls
-back to reading the Arc browser's Instagram login.
+script once, logged into tech.review.nate, no browser needed. If no CLI
+session exists, falls back to reading the Arc browser's Instagram login.
 Idempotent: a reel already in reels/ is skipped; each DM message is processed
 once via the .dm-seen.json watermark.
 """
+import glob
 import json
 import os
 import subprocess
@@ -29,9 +30,10 @@ SEEN_PATH = os.path.join(WORKSPACE, ".dm-seen.json")
 SKIPS_PATH = os.path.join(WORKSPACE, ".curate-skips.json")
 SESSION_PATH = os.path.join(WORKSPACE, ".ig-session.json")
 COOKIES = os.path.join(WORKSPACE, ".ig-cookies.txt")
-# DM senders whose shared reels get curated. Only the logged-in curation
-# account itself (added at runtime) — reels DM'd by anyone else are skipped
-# with a reason in the ledger.
+# DM senders whose shared reels get curated: natep.howard (Nate's main
+# account, sending to tech.review.nate) plus the logged-in curation account
+# itself (added at runtime, for self-shares within tech.review.nate) — reels
+# DM'd by anyone else are skipped with a reason in the ledger.
 ALLOWED_SENDERS = {"natep.howard"}
 
 os.makedirs(REELS_DIR, exist_ok=True)
@@ -93,10 +95,13 @@ def login():
         cl.login_by_sessionid(sid)
         return cl
     import browser_cookie3
-    cookies = list(browser_cookie3.arc(domain_name="instagram.com"))
+    try:
+        cookies = list(browser_cookie3.arc(domain_name="instagram.com"))
+    except browser_cookie3.BrowserCookieError:
+        cookies = []
     sid = next((c.value for c in cookies if c.name == "sessionid"), None)
     if not sid:
-        sys.exit("no CLI session (run ig-login.py) and no Instagram login in Arc")
+        sys.exit("no CLI session — run ig-login.py (logged into tech.review.nate) first")
     cl.login_by_sessionid(sid)
     return cl
 
@@ -116,6 +121,13 @@ def download_reel(code, caption, uploader, video_url=None):
          "-f", "bv*+ba/b", "--merge-output-format", "mp4", "-o", dest, url],
         capture_output=True, text=True, timeout=300,
     )
+    # A failed merge (Instagram's extractor breaking mid-stream is common)
+    # leaves the separately-fetched video/audio DASH fragments behind as
+    # "{code}.fdash-<id>v.mp4" / "{code}.fdash-<id>a.m4a" — real leftover
+    # junk, not alternate copies. Without this they silently doubled disk
+    # usage and inflated the "reels total" count every single run.
+    for frag in glob.glob(os.path.join(REELS_DIR, f"{code}.fdash-*")):
+        os.remove(frag)
     if r.returncode != 0 or not os.path.exists(dest):
         err = r.stderr.strip()[:160]
         if video_url:
@@ -260,9 +272,26 @@ def main():
     dm_new = sync_dms(cl)
     save_skips()
 
-    total = len([f for f in os.listdir(REELS_DIR) if f.endswith(".mp4")])
+    # ".fdash-" fragments are cleaned up in download_reel() as they're
+    # created, but excluding them here too means a stray one from an old
+    # run (or a future code path) can't quietly inflate this count.
+    total = len([f for f in os.listdir(REELS_DIR) if f.endswith(".mp4") and ".fdash-" not in f])
     print(f"✅ curated — {saved_new} new from saved, {dm_new} new from DMs · "
           f"{total} reels total in library · {len(SKIPS)} in the skip ledger")
+
+    # Push any newly-curated reels into the "agent drop and ig reels" Gemini
+    # Notebook — separate Python 3.12 venv (notebooklm-py's cookie-extraction
+    # dependency can't build under this project's main 3.14 venv). Best-effort:
+    # a failure here (e.g. expired Chrome cookie session) shouldn't fail the
+    # whole curation run — the reel is already safely in reels/ either way,
+    # nblm_sync.py will just pick it up again next run.
+    nblm_sync = os.path.join(WORKSPACE, "nblm_sync.py")
+    nblm_python = os.path.join(WORKSPACE, ".nblm-venv", "bin", "python3")
+    if os.path.exists(nblm_sync) and os.path.exists(nblm_python):
+        try:
+            subprocess.run([nblm_python, nblm_sync], timeout=300)
+        except Exception as e:
+            print(f"  (nblm_sync failed, will retry next run: {e})", file=sys.stderr)
 
 
 if __name__ == "__main__":

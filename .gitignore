@@ -22,3 +22,4 @@ command-center/mission-control/data/
 *.m4a
 *.wav
 *.mp4
+.claude/

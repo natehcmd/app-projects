@@ -27,12 +27,14 @@ const TOPIC_COLOR = {"claude-setup":"mint","skills":"mint","multi-agent":"lav","
   "agent-team":"lav","memory-graph":"sky","learning":"mint","markitdown":"mint",
   "agents-marketplace":"mint","mega-repo":"lav","free-backends":"sky","claude-md":"mint"};
 let state = {view:"chat", topic:null, verdict:null};
+const APP_STATUS_OPTIONS = ["Todo", "Project", "Review", "Testing", "Beta", "Done"];
+const APP_STATUS_DOT = {Todo:"sky", Project:"lav", Review:"peach", Testing:"peach", Beta:"rose", Done:"mint"};
 
 /* ---------- views ---------- */
 const views = {
 async chat() {
-  // Chat IS the Hands AI agent now — one engine, one conversation, shared
-  // across Command Center, the Hands AI menu bar app, and the iOS remote
+  // Chat IS the Hammond agent now — one engine, one conversation, shared
+  // across Command Center, the Hammond menu bar app, and the iOS remote
   // (all three drive/observe the same AgentStore over this WebSocket).
   // There used to be a second, separate "spawn claude/codex/ollama CLI
   // fresh per message" implementation here — removed so there's exactly
@@ -72,13 +74,13 @@ async chat() {
   const HANDS_ENGINE_COLOR = {ollama: "sky", claude: "lav", "claude-cli": "mint"};
   return `
   <div class="card glass chat-card">
-    <h2><span class="dot t-${statusColor}"></span>Chat — Hands AI
+    <h2><span class="dot t-${statusColor}"></span>Chat — Hammond
       <div class="row" style="margin-left:auto;gap:6px;align-items:center">
         <span class="sub" id="handsstatus">${esc(state.handsStatusText || "not connected")}</span>
       </div>
     </h2>
     <div class="row" style="margin-bottom:10px;gap:8px">
-      <input id="handstoken" placeholder="token from Hands AI → Settings → Remote" value="${esc(state.handsToken)}"
+      <input id="handstoken" placeholder="token from Hammond → Settings → Remote" value="${esc(state.handsToken)}"
         style="flex:1" oninput="state.handsToken=this.value">
       <button class="act ghost" onclick="connectHands()">Connect</button>
     </div>
@@ -92,11 +94,11 @@ async chat() {
     <div class="chat-log" id="handslog">${renderHandsLog()}</div>
     <div id="handstools" style="margin:8px 0"></div>
     <div class="row" style="margin-top:12px">
-      <textarea id="handsinput" rows="1" placeholder="ask Hands AI…"
+      <textarea id="handsinput" rows="1" placeholder="ask Hammond…"
         onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendHands();}"></textarea>
       <button class="act" id="handssend" onclick="sendHands()">Send</button>
     </div>
-    <div class="sub" style="margin-top:8px">talks straight to the Hands AI Mac app over a local WebSocket — same agent, same tools, same conversation as the native app and the iPhone app.</div>
+    <div class="sub" style="margin-top:8px">talks straight to the Hammond Mac app over a local WebSocket — same agent, same tools, same conversation as the native app and the iPhone app.</div>
   </div>`;
 },
 
@@ -528,19 +530,31 @@ async apps() {
   if (!state.appsQuery) state.appsQuery = "";
   window._appsCache = await api("apps");
   const cats = ["Apps", "Skills", "Websites", "Projects", "Inspo"];
+  const statusCounts = {};
+  window._appsCache.forEach(a => { if (a.status) statusCounts[a.status] = (statusCounts[a.status]||0)+1; });
+  const statuses = APP_STATUS_OPTIONS.filter(s => statusCounts[s]);
   return `
   <div class="card glass">
     <h2><span class="dot t-lav"></span>Apps (<span id="appscount">${window._appsCache.length}</span>)
       <button class="act ghost" style="margin-left:auto" onclick="rescanApps()">Rescan</button>
     </h2>
     <div class="sub" style="margin-bottom:10px">Every real app, skill, website, and project you've built —
-      scanned live from ~/Projects, ~/Applications, and ~/.claude/skills. No placeholders.</div>
-    <div class="row" style="gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      scanned live from ~/Projects, ~/Applications, and ~/.claude/skills. No placeholders.
+      Things with a real UI (Apps/Websites) default to <b>Review</b> until you move them along; bare
+      repos default to <b>Project</b>. Testing/Beta/Done are yours to set — only you know if you've
+      looked at it, other people use it, or it's actually public.</div>
+    <div class="row" style="gap:8px;margin-bottom:8px;flex-wrap:wrap">
       <input id="apps_q" placeholder="search…" value="${esc(state.appsQuery)}"
         style="flex:1;min-width:160px" oninput="state.appsQuery=this.value;renderAppsOnly()">
       <span class="pill ${!state.appsCategory ? "on t-lav" : ""}" style="cursor:pointer" onclick="filt('appsCategory',null)">All</span>
       ${cats.map(c => `<span class="pill ${state.appsCategory===c?"on t-lav":""}" style="cursor:pointer"
         onclick="filt('appsCategory','${c}')">${c}</span>`).join("")}
+    </div>
+    <div class="row" style="gap:8px;flex-wrap:wrap">
+      <span class="sub" style="margin-right:2px">Status:</span>
+      <span class="pill ${!state.appsStatus ? "on t-peach" : ""}" style="cursor:pointer" onclick="filt('appsStatus',null)">All</span>
+      ${statuses.map(s => `<span class="pill ${state.appsStatus===s?"on t-peach":""}" style="cursor:pointer"
+        onclick="filt('appsStatus','${s}')">${s} (${statusCounts[s]})</span>`).join("")}
     </div>
   </div>
   <div id="apps_grid">${appTiles(window._appsCache)}</div>`;
@@ -724,6 +738,97 @@ async filegraph() {
         <svg id="d3graph" style="width:100%;height:100%"></svg>
     </div>
   </div>`;
+},
+
+async college() {
+  // Fixed plan, not user-editable data — only the checked state is real
+  // per-item state, persisted server-side via /api/roadmap so it isn't
+  // stuck in one browser's localStorage. Mirrors the standalone
+  // ~/college-roadmap.html artifact; keep both in sync if the plan changes.
+  const ROADMAP_PHASES = [
+    { id:"now", title:"Right now", when:"Sept 2026", dot:"rose", items:[
+      {t:"Confirm all four GED subject scores meet what Franciscan actually requires", note:"Email them — see Outreach", tags:["credential"]},
+      {t:"Decide whether to retake Science (162), Social Studies (155), or Language Arts (154)", note:"Push them past the 165 College Ready line", tags:["credential"]},
+      {t:"Fill in your name, city/state, email, and phone on all 5 drafted admissions emails", tags:["outreach"]},
+      {t:"Send the email to Franciscan University of Steubenville", tags:["outreach"]},
+      {t:"Send the email to Ave Maria University", tags:["outreach"]},
+      {t:"Send the email to University of Dallas", tags:["outreach"]},
+      {t:"Send the email to Texas A&M", tags:["outreach"]},
+      {t:"Send the email to University of Arkansas", tags:["outreach"]},
+      {t:"Take one free practice SAT and one free practice ACT to decide which to prep for", tags:["testing"]},
+      {t:"Start a rough homeschool course list — subjects, years, and grades as best you remember them", tags:["docs"]}
+    ]},
+    { id:"octdec", title:"Testing, documents & the early deadlines", when:"Oct – Dec 2026", dot:"peach", items:[
+      {t:"Study for your chosen test using Khan Academy (SAT) or ACT Academy (ACT), ~1 hr/day", tags:["testing"]},
+      {t:"Register for a test date", note:"Next SATs: Oct 3, Nov 7, Dec 5, 2026", tags:["testing"]},
+      {t:"If retaking any GED subtests, schedule and complete them", tags:["credential"]},
+      {t:"Turn your course list into a proper homeschool transcript", tags:["docs"]},
+      {t:"Have your parent sign the transcript as primary educator", tags:["docs"]},
+      {t:"Get the transcript notarized (UPS Store, bank, or library — usually $5–25)", tags:["docs"]},
+      {t:"Request and fill out Ave Maria's homeschool transcript worksheet", tags:["docs"]},
+      {t:"Follow up with any school that hasn't replied within ~2 weeks", tags:["outreach"]},
+      {t:"Sit your first official SAT or ACT", tags:["testing"]},
+      {t:"Start planning campus visit logistics and budget with your dad", tags:["visit"]},
+      {t:"Submit University of Arkansas priority application", note:"Priority deadline Nov 1, 2026", tags:["apply","priority"]},
+      {t:"Submit Arkansas scholarship application", note:"Deadline Nov 15, 2026", tags:["money","priority"]},
+      {t:"Submit University of Dallas Early Action application", note:"EA deadlines Nov 1 or Dec 1, 2026", tags:["apply","priority"]},
+      {t:"Submit Texas A&M application via ApplyTexas or Common App", note:"Deadline Dec 1, 2026", tags:["apply","priority"]},
+      {t:"Submit Texas A&M supporting documents (STARS, etc.)", note:"Deadline Dec 15, 2026", tags:["apply","priority"]},
+      {t:"Apply Ave Maria Early Action if your documents and scores are ready", note:"Deadline Dec 15, 2026 — stronger shot at scholarships", tags:["apply","priority"]}
+    ]},
+    { id:"janmar", title:"Finish applications & visit campuses", when:"Jan – Mar 2027", dot:"sky", items:[
+      {t:"Retake SAT/ACT if you want a higher score (most people improve on a retake)", tags:["testing"]},
+      {t:"Submit Franciscan application", note:"Rolling — no fixed deadline, but don't leave it too late", tags:["apply"]},
+      {t:"Submit Ave Maria regular application if you didn't apply Early Action", note:"Deadline Jul 1, 2027 — but apply as early as you can", tags:["apply"]},
+      {t:"Submit University of Dallas regular application if you missed Early Action", note:"Deadline Mar 1, 2027, rolling after that until Aug 1", tags:["apply"]},
+      {t:"Visit Franciscan University of Steubenville", tags:["visit"]},
+      {t:"Visit Texas A&M — include an Engineering info session if possible", tags:["visit"]},
+      {t:"Visit University of Arkansas — include Fay Jones School / Engineering", tags:["visit"]},
+      {t:"Visit Ave Maria and/or University of Dallas if still under consideration", tags:["visit"]},
+      {t:"File the FAFSA as soon as it opens", tags:["money","priority"]},
+      {t:"Apply for additional merit scholarships at each school", note:"Ask what's separate from the main application", tags:["money"]}
+    ]},
+    { id:"aprjun", title:"Decide & commit", when:"Apr – Jun 2027", dot:"lav", items:[
+      {t:"Compare acceptance letters, merit aid, and scholarship offers side by side", tags:["money"]},
+      {t:"Revisit your top choice(s) once more if it'll help you decide", tags:["visit"]},
+      {t:"Make your final decision", tags:["apply","priority"]},
+      {t:"Pay your enrollment deposit to confirm your spot", tags:["apply"]},
+      {t:"Ave Maria regular deadline — final cutoff if still applying there", note:"Jul 1, 2027", tags:["apply"]}
+    ]},
+    { id:"summer", title:"Get ready to move", when:"Summer 2027", dot:"mint", items:[
+      {t:"Complete housing and roommate paperwork", tags:["apply"]},
+      {t:"Register for freshman orientation", tags:["apply"]},
+      {t:"Submit immunization records and any required health forms", tags:["docs"]},
+      {t:"Register for Fall 2027 classes once orientation opens registration", tags:["apply"]}
+    ]}
+  ];
+  state.roadmapChecked = (await api("roadmap")).checked || {};
+  const flatTotal = ROADMAP_PHASES.reduce((n,p) => n + p.items.length, 0);
+  const flatDone = ROADMAP_PHASES.reduce((n,p) => n + p.items.filter((it,i) => state.roadmapChecked[`${p.id}-${i}`]).length, 0);
+  const phaseCard = p => {
+    const done = p.items.filter((it,i) => state.roadmapChecked[`${p.id}-${i}`]).length;
+    const rows = p.items.map((it,i) => {
+      const id = `${p.id}-${i}`;
+      const isDone = !!state.roadmapChecked[id];
+      const priority = it.tags.includes("priority");
+      const tags = it.tags.filter(t => t !== "priority");
+      return `<div class="item ${priority && !isDone ? "urgent" : ""} ${isDone ? "done" : ""}">
+        <button title="${isDone ? "mark not done" : "mark done"}" onclick="toggleRoadmap('${id}',${!isDone})">${isDone ? "✓" : "○"}</button>
+        <div class="grow">${esc(it.t)}${it.note ? `<div class="meta">${esc(it.note)}</div>` : ""}</div>
+        ${tags.map(t => `<span class="pill" style="padding:3px 12px;font-size:0.7rem;pointer-events:none">${esc(t)}</span>`).join("")}
+      </div>`;
+    }).join("");
+    return `<div class="card glass"><h2><span class="dot t-${p.dot}"></span>${esc(p.title)}
+        <span class="sub" style="margin-left:auto">${p.when} · ${done}/${p.items.length}</span></h2>
+      <div class="list">${rows}</div></div>`;
+  };
+  return `
+  <div class="card glass"><h2><span class="dot t-mint"></span>Road to Fall 2027</h2>
+    <div class="stat">${flatDone}/${flatTotal}</div>
+    <div class="sub">Steps toward Franciscan, Ave Maria, University of Dallas, Texas A&M, and Arkansas — Fall 2027 entry. Your earliest deadline is Arkansas's priority date, Nov 1, 2026.</div>
+  </div>
+  ${ROADMAP_PHASES.map(phaseCard).join("")}
+  `;
 }
 };
 
@@ -853,6 +958,7 @@ window.addGoal = async urgent => { const t=$("#goaltext").value.trim(); if(!t) r
   await api("lifehq/goal",{text:t,urgent}); render(); };
 window.doneGoal = async id => { await api("lifehq/goal_done",{id}); render(); };
 window.delGoal = async id => { await api("lifehq/goal_delete",{id}); render(); };
+window.toggleRoadmap = async (id, checked) => { await api("roadmap/toggle",{id,checked}); render(); };
 window.addSub = async () => { const n=$("#subname").value.trim(), m=parseFloat($("#submo").value);
   if(!n||isNaN(m)) return; await api("lifehq/subscription",{name:n,monthly:m}); render(); };
 window.delSub = async id => { await api("lifehq/subscription_delete",{id}); render(); };
@@ -986,6 +1092,16 @@ window.setView = v => {
 };
 
 /* ---------- apps catalog ---------- */
+function statusSelect(a) {
+  const safeId = a.id.replace(/'/g, "\\'");
+  const opts = APP_STATUS_OPTIONS.includes(a.status) ? APP_STATUS_OPTIONS : [...APP_STATUS_OPTIONS, a.status];
+  return `<select title="maturity status" style="width:auto;display:inline-block;padding:3px 10px;font-size:0.75rem;
+      border-radius:100px;margin-left:6px;background:rgba(255,255,255,0.04)"
+      onchange="handleStatusSelect('${safeId}', this)">
+    ${opts.map(o => `<option value="${esc(o)}" ${o===a.status?"selected":""}>${esc(o)}</option>`).join("")}
+    <option value="__custom__">+ new label…</option>
+  </select>`;
+}
 function appTiles(list) {
   if (!list.length) return '<div class="empty">nothing matches</div>';
   return list.map(a => `
@@ -993,6 +1109,8 @@ function appTiles(list) {
       <div class="row" style="justify-content:space-between;align-items:flex-start">
         <div style="flex:1">
           <b>${esc(a.name)}</b> <span class="pill" style="margin-left:6px">${esc(a.kind)}</span>
+          ${a.status ? `<span class="dot t-${APP_STATUS_DOT[a.status]||"sky"}" style="margin-left:8px"></span>` : ""}
+          ${a.status ? statusSelect(a) : ""}
           <div class="sub" style="margin-top:4px">${esc(a.summary)}</div>
           <div class="sub" style="opacity:0.6">${esc(a.area)}</div>
         </div>
@@ -1006,6 +1124,7 @@ window.renderAppsOnly = () => {
   const all = window._appsCache || [];
   const q = (state.appsQuery || "").toLowerCase();
   const shown = all.filter(a => (!state.appsCategory || a.category === state.appsCategory)
+    && (!state.appsStatus || a.status === state.appsStatus)
     && (!q || a.name.toLowerCase().includes(q) || a.summary.toLowerCase().includes(q)));
   if ($("#appscount")) $("#appscount").textContent = shown.length;
   if ($("#apps_grid")) $("#apps_grid").innerHTML = appTiles(shown);
@@ -1015,6 +1134,21 @@ window.openApp = async (id, btn) => {
   try { await api("apps/open", {id}); } finally { btn.disabled = false; btn.textContent = orig; }
 };
 window.rescanApps = async () => { await api("apps?rescan=true"); render(); };
+window.handleStatusSelect = (id, selectEl) => {
+  if (selectEl.value === "__custom__") {
+    const v = (prompt("New status label:") || "").trim();
+    if (!v) { selectEl.value = (window._appsCache.find(a=>a.id===id)||{}).status || ""; return; }
+    setAppStatus(id, v);
+  } else {
+    setAppStatus(id, selectEl.value);
+  }
+};
+window.setAppStatus = async (id, status) => {
+  await api("apps/status", {id, status});
+  const item = (window._appsCache || []).find(a => a.id === id);
+  if (item) item.status = status;
+  renderAppsOnly();
+};
 
 window.openAgentDropFile = async name => { await api("agentdrop/open", {file: name}); };
 
@@ -1132,7 +1266,7 @@ function setHandsStatus(status, text) {
 
 window.connectHands = () => {
   const token = ($("#handstoken") ? $("#handstoken").value : state.handsToken).trim();
-  if (!token) { setHandsStatus("error", "enter the token from Hands AI → Settings → Remote first"); return; }
+  if (!token) { setHandsStatus("error", "enter the token from Hammond → Settings → Remote first"); return; }
   state.handsToken = token;
   localStorage.setItem("hands_token", token);
   if (handsSocket) { try { handsSocket.close(); } catch (e) {} }
@@ -1179,7 +1313,7 @@ window.connectHands = () => {
     }
   };
 
-  ws.onerror = () => setHandsStatus("error", "connection failed — is the Remote server on in Hands AI → Settings?");
+  ws.onerror = () => setHandsStatus("error", "connection failed — is the Remote server on in Hammond → Settings?");
   ws.onclose = () => { if (state.handsStatus !== "error") setHandsStatus("disconnected", "disconnected"); };
 };
 

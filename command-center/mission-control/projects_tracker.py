@@ -6,6 +6,7 @@ elapsed time (ps etime), cross-referenced against your actual open Terminal
 tabs — never invented.
 """
 import re
+import os
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
@@ -16,7 +17,11 @@ SCAN_ROOTS = [HOME / "Projects", HOME / "Projects" / "AI", HOME / "Projects" / "
 
 def _git(repo: Path, *args, timeout=5):
     try:
+        # GIT_OPTIONAL_LOCKS=0: `status` otherwise refreshes the index and
+        # takes index.lock, which collides when repos in the same monorepo
+        # are scanned in parallel.
         r = subprocess.run(["git", "-C", str(repo), *args], capture_output=True,
+                           env={**os.environ, "GIT_OPTIONAL_LOCKS": "0"},
                            text=True, timeout=timeout)
         return r.stdout.strip() if r.returncode == 0 else ""
     except Exception:
@@ -156,45 +161,51 @@ def _match_active_session(repo_name: str, branch: str, terminal_tabs: list, cli_
     return None
 
 
+def _scan_one(repo, terminal_tabs, cli_processes):
+    git_root, _ = _git_root_and_subpath(repo)
+    branch = _git(git_root, "rev-parse", "--abbrev-ref", "HEAD") or "(detached)"
+    remote = _sanitize_remote(_git(git_root, "config", "--get", "remote.origin.url"))
+    uncommitted = _status_files(repo)
+    recent = _recent_commits(repo)
+    unpushed = _unpushed_count(repo)
+    active = _match_active_session(repo.name, branch, terminal_tabs, cli_processes)
+    last_touched = _last_touched(repo)
+
+    if active:
+        status_label = "active now"
+    elif uncommitted:
+        status_label = "uncommitted work pending"
+    elif recent:
+        # last commit's relative time, e.g. "3 days ago" — flag as stale
+        # if it looks like weeks/months/years back.
+        when = recent[0]["when"]
+        status_label = "stale" if any(u in when for u in ("week", "month", "year")) else "up to date"
+    else:
+        status_label = "no commits yet"
+
+    return {
+        "name": repo.name,
+        "path": str(repo),
+        "branch": branch,
+        "remote": remote,
+        "last_commit": recent[0] if recent else None,
+        "recent_commits": recent,
+        "uncommitted": uncommitted,
+        "unpushed_count": unpushed,
+        "last_touched": last_touched,
+        "active_session": active,
+        "status_label": status_label,
+    }
+
+
 def scan(terminal_tabs=None, cli_processes=None):
     terminal_tabs = terminal_tabs or []
     cli_processes = cli_processes or []
-    projects = []
-    for repo in _find_repos():
-        git_root, _ = _git_root_and_subpath(repo)
-        branch = _git(git_root, "rev-parse", "--abbrev-ref", "HEAD") or "(detached)"
-        remote = _sanitize_remote(_git(git_root, "config", "--get", "remote.origin.url"))
-        uncommitted = _status_files(repo)
-        recent = _recent_commits(repo)
-        unpushed = _unpushed_count(repo)
-        active = _match_active_session(repo.name, branch, terminal_tabs, cli_processes)
-        last_touched = _last_touched(repo)
-
-        if active:
-            status_label = "active now"
-        elif uncommitted:
-            status_label = "uncommitted work pending"
-        elif recent:
-            # last commit's relative time, e.g. "3 days ago" — flag as stale
-            # if it looks like weeks/months/years back.
-            when = recent[0]["when"]
-            status_label = "stale" if any(u in when for u in ("week", "month", "year")) else "up to date"
-        else:
-            status_label = "no commits yet"
-
-        projects.append({
-            "name": repo.name,
-            "path": str(repo),
-            "branch": branch,
-            "remote": remote,
-            "last_commit": recent[0] if recent else None,
-            "recent_commits": recent,
-            "uncommitted": uncommitted,
-            "unpushed_count": unpushed,
-            "last_touched": last_touched,
-            "active_session": active,
-            "status_label": status_label,
-        })
+    # Repos are independent; ~5 git calls each ran serially (1.5s idle,
+    # ~6s with the machine busy). Parallel, order restored by the sort below.
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        projects = list(pool.map(lambda r: _scan_one(r, terminal_tabs, cli_processes), _find_repos()))
 
     # Active sessions first, then most recently touched.
     def sort_key(p):

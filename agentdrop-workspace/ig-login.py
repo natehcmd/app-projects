@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """One-time CLI login for the AgentDrop curation account — no browser needed.
 
-Run this interactively in Terminal:
+Run this interactively in Terminal, logging into **tech.review.nate** (the
+curation account ig-curate.py mirrors reels into — NOT natep.howard, Nate's
+main account, which is the DM sender it watches for):
 
   ~/AgentDrop-Workspace/.venv/bin/python ~/AgentDrop-Workspace/ig-login.py
 

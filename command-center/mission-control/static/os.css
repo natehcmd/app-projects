@@ -119,6 +119,9 @@ input::placeholder,textarea::placeholder{color:var(--ink-faint);}
 .item button:hover{color:var(--mint);}
 .urgent{background:linear-gradient(90deg, rgba(255,107,157,0.15), rgba(255,255,255,0.02) 60%);border-color:rgba(255,107,157,0.2);}
 .urgent .grow::before{content:"!";color:var(--rose);font-weight:800;margin-right:10px;}
+.item.done{opacity:0.55;}
+.item.done .grow{text-decoration:line-through;}
+.item.done button{color:var(--mint);}
 
 /* Chat UI */
 .chat-card{display:flex;flex-direction:column;min-height:65vh;}

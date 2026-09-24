@@ -43,6 +43,13 @@ def _is_local_request(request: Request) -> bool:
     if not _is_private_or_local_host(host):
         return False
 
+    # DNS rebinding: a public page can re-point its own hostname at 127.0.0.1,
+    # after which its requests arrive from loopback, same-origin, and (with
+    # Referrer-Policy: no-referrer) with no Origin or Referer to reject. The Host
+    # header still names the attacker's domain.
+    if not _is_private_or_local_host(request.headers.get("host", "")):
+        return False
+
     fetch_site = request.headers.get("sec-fetch-site", "")
     if fetch_site == "cross-site":
         return False
@@ -192,6 +199,8 @@ def init_db():
     CREATE TABLE IF NOT EXISTS budgets(category TEXT PRIMARY KEY, monthly REAL);
     CREATE TABLE IF NOT EXISTS txns(id INTEGER PRIMARY KEY AUTOINCREMENT,
       date TEXT, desc TEXT, amount REAL, category TEXT);
+    CREATE TABLE IF NOT EXISTS roadmap_checks(id TEXT PRIMARY KEY, checked INTEGER DEFAULT 0, updated TEXT);
+    CREATE TABLE IF NOT EXISTS app_status(id TEXT PRIMARY KEY, status TEXT, updated TEXT);
     CREATE UNIQUE INDEX IF NOT EXISTS idx_networth_date ON networth(date);
     """)
     # Encrypt existing plaintext Plaid tokens at rest
@@ -311,11 +320,11 @@ def hands_token(request: Request = None):
             is_authed = True
 
     if is_authed:
-        resp = JSONResponse({"configured": enabled and bool(token), "token": token, "port": port_num})
+        resp = JSONResponse({"configured": bool(token), "token": token, "port": port_num})
         resp.set_cookie(key="mc_session", value=SESSION_SECRET, httponly=True, samesite="strict")
         return resp
 
-    return JSONResponse({"configured": enabled and bool(token), "port": port_num}, status_code=403)
+    return JSONResponse({"configured": bool(token), "port": port_num}, status_code=403)
 
 def _verify_token(request: Request = None, payload: dict = None) -> bool:
     expected = _get_configured_token()
@@ -791,6 +800,31 @@ def lifehq_add(table: str, payload: dict = Body(...), request: Request = None):
     c.commit(); c.close()
     return {"ok": True}
 
+# ---------- college roadmap (Fall 2027 application plan) ----------
+# Fixed checklist defined client-side in os.js (views.college) — this just
+# persists which item ids are checked so it isn't tied to one browser's
+# localStorage. Same "real data, not a mock" rule as goals/checkins: nothing
+# here is seeded, it only ever reflects what's actually been checked off.
+@app.get("/api/roadmap")
+def roadmap(request: Request = None):
+    if not _verify_token(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    c = db()
+    checked = {r["id"]: bool(r["checked"]) for r in c.execute(
+        "SELECT id, checked FROM roadmap_checks WHERE checked=1")}
+    c.close()
+    return {"checked": checked}
+
+@app.post("/api/roadmap/toggle")
+def roadmap_toggle(payload: dict = Body(...), request: Request = None):
+    if not _verify_token(request, payload):
+        return JSONResponse({"error": "unauthorized: valid bearer token required"}, status_code=401)
+    c = db()
+    c.execute("INSERT OR REPLACE INTO roadmap_checks(id,checked,updated) VALUES(?,?,?)",
+              (payload["id"], int(bool(payload.get("checked"))), str(datetime.date.today())))
+    c.commit(); c.close()
+    return {"ok": True}
+
 # ---------- plaid (real bank accounts — not a demo/mock) ----------
 # Needs PLAID_CLIENT_ID / PLAID_SECRET / PLAID_ENV in .env (see .env.example).
 # Sandbox credentials are free/instant from plaid.com; Production needs a
@@ -1106,9 +1140,51 @@ def _apps_scan(force=False):
         _APPS_CACHE["ts"] = now
     return _APPS_CACHE["data"]
 
+# Maturity pipeline for things with a real UI (Nate's own taxonomy, 2026-09-16):
+#   Todo     -> just an idea
+#   Project  -> real code, no working UI yet
+#   Review   -> has an actual built UI -> queued for Nate to personally look at
+#   Testing  -> Nate has personally looked and said it looks good
+#   Beta     -> other people are actually using it
+#   Done     -> public and good
+# Only Nate can move something into Testing/Beta/Done — those are statements about
+# his own judgment or who's using it, not something derivable from the filesystem.
+# So this only ever *defaults* new/unlabeled items into Review or Project; every
+# other status is set explicitly via POST /api/apps/status and persists in
+# app_status regardless of what apps_scanner turns up on the next rescan.
+APP_STATUS_OPTIONS = ["Todo", "Project", "Review", "Testing", "Beta", "Done"]
+
+def _default_app_status(a: dict):
+    if a.get("category") in ("Apps", "Websites"):
+        return "Review"
+    if a.get("category") == "Projects":
+        return "Project"
+    return None  # Skills/Inspo aren't UI'd things this taxonomy applies to
+
 @app.get("/api/apps")
 def apps_list(rescan: bool = False):
-    return _apps_scan(force=rescan)
+    items = _apps_scan(force=rescan)
+    c = db()
+    overrides = {r["id"]: r["status"] for r in c.execute("SELECT id, status FROM app_status")}
+    c.close()
+    for a in items:
+        a["status"] = overrides.get(a["id"]) or _default_app_status(a)
+    return items
+
+@app.post("/api/apps/status")
+def apps_set_status(payload: dict = Body(...), request: Request = None):
+    if not _verify_token(request, payload):
+        return JSONResponse({"error": "unauthorized: valid bearer token required"}, status_code=401)
+    app_id = payload.get("id")
+    status = (payload.get("status") or "").strip()
+    if not app_id or not status:
+        return JSONResponse({"error": "id and status required"}, status_code=400)
+    c = db()
+    c.execute("INSERT OR REPLACE INTO app_status(id,status,updated) VALUES(?,?,?)",
+              (app_id, status, str(datetime.date.today())))
+    c.commit(); c.close()
+    log_activity("apps", f"set status of {app_id} -> {status}")
+    return {"ok": True}
 
 @app.post("/api/apps/open")
 def apps_open(payload: dict = Body(...), request: Request = None):
