@@ -18,7 +18,7 @@
  *   /help           — show commands
  */
 
-import { execSync, spawn } from 'child_process';
+import { execSync, execFileSync, spawn } from 'child_process';
 import { readFileSync, writeFileSync, existsSync, readdirSync, appendFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -70,7 +70,13 @@ function sendIMessage(number, message) {
     const chunks = chunkMessage(message, 1500);
     for (const chunk of chunks) {
       const safe = chunk.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-      execSync(`osascript -e 'tell application "Messages" to send "${safe}" to buddy "${number}" of (service 1 whose service type is iMessage)'`, { timeout: 8000 });
+      // message text is AI-generated / attacker-influenceable and commonly contains
+      // apostrophes; execFileSync passes the script straight to osascript's argv with
+      // no shell involved, so a stray `'` in the text can't break out into shell syntax
+      // the way it could when this was built into a single `osascript -e '...'` string
+      // run through execSync (which shells out via /bin/sh -c).
+      const script = `tell application "Messages" to send "${safe}" to buddy "${number}" of (service 1 whose service type is iMessage)`;
+      execFileSync('osascript', ['-e', script], { timeout: 8000 });
       if (chunks.length > 1) sleep(500);
     }
     return true;
