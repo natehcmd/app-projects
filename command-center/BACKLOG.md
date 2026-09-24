@@ -20,7 +20,7 @@ _2026-09-24: old July copy in iCloud/Applications (no remote server) trashed; en
 - [~] **Home** — Jarvis look: dials + graphs (system, agents, budget, reels, to-dos); merged **to-do list** incl. reels to review.
 - [~] **Apps / Tools** — each app card: **screenshot + logo**, says what it is (app / tool / skill); **Run opens the actual app**, not a terminal.
 - [~] **Projects** — pin-board: where each project lives, **what's missing to be perfect**, Nate's notes, status Nate controls.
-- **Pipeline** — **roots diagram**: Nate at top → Claude → branches down (subagents, agy, Gemini, local); roots **light up live** when any AI works; more agents = more roots, uncluttered. agy reviews a screenshot of it and leaves notes.
+- [~] **Pipeline** — **roots diagram**: Nate at top → Claude → branches down (subagents, agy, Gemini, local); roots **light up live** when any AI works; more agents = more roots, uncluttered. agy reviews a screenshot of it and leaves notes. _(built 2026-09-24: live from Arena calls + running processes; agy screenshot review still to do)_
 - **AgentDrop + Reels (merge)** — each reel: thumbnail from the downloaded video, playable, link to Instagram, title = reel's name, what it's about; **Build** button + **progress** view; **Auto** mode walks one by one and waits for Nate's OK; reels to review land in the Home to-do list.
 - **Life HQ** — pull from Siri/Reminders/Calendar (or ask Nate) and remember.
 - **Learn** — more scholarly; random facts, coding terms, code snippets that show how to do things.

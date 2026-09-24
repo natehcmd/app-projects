@@ -1287,6 +1287,69 @@ def review_latest(request: Request = None):
             continue
     return out
 
+ROOT_TIERS = [  # top → bottom, the order work is sent down (and results sent back up)
+    ("claude", "Claude", ["claude_adjudicator"]),
+    ("agy", "Gemini (agy)", ["agy_deep", "agy_pro", "agy_flash"]),
+    ("local", "Local models", ["local_xl", "local_big", "local_small"]),
+]
+
+@app.get("/api/roots")
+def roots_status():
+    """What is working right now, per tier — drives the Pipeline roots view.
+
+    Live = Arena calls that started and have not ended (newest run) plus
+    CLI processes (claude / agy / ollama) running on this Mac. Nothing here
+    is estimated: a node lights up only when something is actually running."""
+    now = time.time()
+    active, recent, run = {}, {}, None
+    runs = sorted(p for p in REVIEW_RUNS.glob("*/events.jsonl")) if REVIEW_RUNS.is_dir() else []
+    if runs:
+        f = runs[-1]
+        run = {"id": f.parent.name, "repo": None, "ledger": None, "ended": False}
+        try:
+            with f.open("rb") as fh:
+                start = max(0, f.stat().st_size - 400_000)
+                fh.seek(start)
+                lines = fh.read().decode(errors="replace").splitlines()[1 if start else 0:]
+        except OSError:
+            lines = []
+        open_calls = {}
+        for line in lines:
+            try:
+                e = json.loads(line)
+            except ValueError:
+                continue
+            k = e.get("kind")
+            if k == "call_start":
+                open_calls[e.get("id")] = e
+            elif k == "call_end":
+                s = open_calls.pop(e.get("id"), None)
+                mk = e.get("model_key") or (s or {}).get("model_key")
+                if mk and now - e.get("t", 0) < 600:
+                    recent[mk] = recent.get(mk, 0) + 1
+            elif k == "repo_start":
+                run["repo"] = e.get("repo")
+            elif k == "ledger":
+                run["ledger"] = e.get("by_provider")
+            elif k in ("run_end", "run_stopped"):
+                run["ended"] = True
+        if run["ended"]:
+            open_calls = {}
+        for c in open_calls.values():
+            mk = c.get("model_key") or "?"
+            active.setdefault(mk, []).append({"stage": c.get("stage"), "repo": c.get("repo"),
+                                              "model": c.get("model"), "secs": round(now - c.get("t", now))})
+    procs = {}
+    for p in _cli_processes():
+        eng = _pipeline_engine(p["args"])
+        if eng != "other" and not _PIPELINE_NOISE.search(p["args"]):
+            procs[eng] = procs.get(eng, 0) + 1
+    tiers = [{"key": key, "label": label,
+              "nodes": [{"key": mk, "active": active.get(mk, []), "recent": recent.get(mk, 0)} for mk in keys]}
+             for key, label, keys in ROOT_TIERS]
+    return {"tiers": tiers, "processes": procs, "run": run,
+            "generated": datetime.datetime.now().isoformat(timespec="seconds")}
+
 @app.get("/api/projects")
 def projects_list():
     tabs = _terminal_tabs()
