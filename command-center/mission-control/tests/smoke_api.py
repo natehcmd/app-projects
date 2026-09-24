@@ -24,7 +24,7 @@ import urllib.parse
 import urllib.request
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SENSITIVE = ["/api/reels/board", "/api/briefs/short", "/api/learn/card", "/api/activity", "/api/briefs", "/api/lifehq", "/api/plaid/accounts",
+SENSITIVE = ["/api/compare/models", "/api/reels/board", "/api/briefs/short", "/api/learn/card", "/api/activity", "/api/briefs", "/api/lifehq", "/api/plaid/accounts",
              "/api/roadmap", "/api/search", "/api/swarm/runs", "/api/term/jobs",
              "/api/artifacts", "/api/flows/runs"]
 SLOW_BUDGET_S = {"/api/projects": 4.0, "/api/term/snapshot": 4.0}
@@ -68,7 +68,8 @@ def main():
         sess.open(base + "/", timeout=10).read()
         src = open(os.path.join(tmp, "server.py")).read()
         gets = sorted(set(re.findall(r'@app\.get\("(/api/[^"{]+)"\)', src)) - {"/api/artifacts/content", "/api/apps/icon", "/api/reels/thumb", "/api/reels/video",
-                                                                                 "/api/briefs/short", "/api/learn/card"})
+                                                                                 "/api/briefs/short", "/api/learn/card",
+                                                                                 "/api/compare/duel"})
 
         print("GET endpoints with a session:")
         for path in gets:
@@ -132,6 +133,24 @@ def main():
             except urllib.error.HTTPError as e:
                 code = e.code
             check(code == want, "%s -> %s (want %s)" % (path, code, want))
+
+        print("Compare head-to-head guards:")
+        def post(path, body):
+            req = urllib.request.Request(base + path, data=json.dumps(body).encode(),
+                                         headers={"Content-Type": "application/json"})
+            try:
+                return sess.open(req, timeout=15).status
+            except urllib.error.HTTPError as e:
+                return e.code
+        check(post("/api/compare/duel", {"prompt": "hi", "models": ["claude_adjudicator", "local_small"]}) == 400,
+              "Claude refused without allow_metered")
+        check(post("/api/compare/duel", {"prompt": "hi", "models": ["local_small"]}) == 400, "one model refused")
+        check(post("/api/compare/duel", {"prompt": "hi", "models": ["rm -rf", "x"]}) == 400, "unknown models refused")
+        try:
+            code = sess.open(base + "/api/compare/duel?id=../../mission", timeout=10).status
+        except urllib.error.HTTPError as e:
+            code = e.code
+        check(code == 400, "duel id path refused (%s)" % code)
 
         print("Sensitive endpoints without a session:")
         for path in [p for p in SENSITIVE if p in gets]:   # only those this build has

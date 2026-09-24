@@ -1215,6 +1215,109 @@ def compare_add(payload: dict = Body(...), request: Request = None):
     log_activity("compare", payload["feature"])
     return rows
 
+# ---- compare: real model scoreboard + live head-to-head through the pipeline ----
+PIPELINE_SCRIPTS = Path.home() / ".local/share/review-pipeline/code-review-pipeline/scripts"
+DUELS_DIR = ROOT / "data" / "duels"
+DUEL_MODELS = {  # key -> (friendly name, metered)
+    "claude_adjudicator": ("Claude", True), "agy_pro": ("Gemini Pro", False),
+    "agy_flash": ("Gemini Flash", False), "local_xl": ("Local 30B (qwen3-coder)", False),
+    "local_small": ("Local 8B (llama3.1)", False),
+}
+
+@app.get("/api/compare/models")
+def compare_models(request: Request = None):
+    """Measured, not claimed: every model call from every Arena review run, per model."""
+    if not _verify_token(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    stats = {}
+    for f in sorted(REVIEW_RUNS.glob("*/events.jsonl")) if REVIEW_RUNS.is_dir() else []:
+        starts = {}
+        try:
+            for line in f.open(errors="replace"):
+                try:
+                    e = json.loads(line)
+                except ValueError:
+                    continue
+                if e.get("kind") == "call_start":
+                    starts[e.get("id")] = e
+                elif e.get("kind") == "call_end":
+                    mk = e.get("model_key") or (starts.get(e.get("id")) or {}).get("model_key")
+                    if not mk:
+                        continue
+                    s = stats.setdefault(mk, {"calls": 0, "ok": 0, "secs": 0.0, "out_tokens": 0, "runs": set()})
+                    s["calls"] += 1
+                    s["runs"].add(f.parent.name)
+                    if e.get("ok"):
+                        s["ok"] += 1
+                        s["secs"] += float(e.get("secs") or 0)
+                        s["out_tokens"] += int(e.get("out_tokens") or 0)
+        except OSError:
+            continue
+    out = []
+    for mk, s in stats.items():
+        out.append({"key": mk, "name": {"agy_deep": "Gemini default (agy)"}.get(mk) or DUEL_MODELS.get(mk, (mk, False))[0], "calls": s["calls"],
+                    "success_pct": round(100 * s["ok"] / s["calls"]) if s["calls"] else 0,
+                    "avg_secs": round(s["secs"] / s["ok"], 1) if s["ok"] else None,
+                    "runs": len(s["runs"])})
+    return sorted(out, key=lambda r: -r["calls"])
+
+def _run_duel(duel_id: str, prompt: str, keys: list):
+    f = DUELS_DIR / f"{duel_id}.json"
+    lock = threading.Lock()
+    state = {"id": duel_id, "prompt": prompt, "status": "running",
+             "results": {k: {"name": DUEL_MODELS[k][0], "status": "running"} for k in keys}}
+    def save():
+        with lock:
+            f.write_text(json.dumps(state))
+    save()
+    import sys as _sys
+    if str(PIPELINE_SCRIPTS) not in _sys.path:
+        _sys.path.insert(0, str(PIPELINE_SCRIPTS))
+    from claude_director import Dispatcher, TokenLedger  # the pipeline: redaction, budget, agy lockdown
+    def one(k):
+        t = time.time()
+        try:
+            d = Dispatcher(TokenLedger(), failover=False)  # no silent swap: the answer is from the model named
+            text = d.call(k, "compare", prompt, timeout=300)
+            state["results"][k].update(status="done", text=text[:6000], secs=round(time.time() - t, 1))
+        except Exception as e:
+            state["results"][k].update(status="failed", text=str(e)[:300], secs=round(time.time() - t, 1))
+        save()
+    threads = [threading.Thread(target=one, args=(k,), daemon=True) for k in keys]
+    for th in threads:
+        th.start()
+    for th in threads:
+        th.join(360)
+    state["status"] = "done"
+    save()
+
+@app.post("/api/compare/duel")
+def compare_duel(payload: dict = Body(...), request: Request = None):
+    if not _verify_token(request, payload):
+        return JSONResponse({"error": "unauthorized: valid bearer token required"}, status_code=401)
+    prompt = str(payload.get("prompt") or "").strip()[:4000]
+    keys = [k for k in dict.fromkeys(payload.get("models") or []) if k in DUEL_MODELS]
+    if not prompt or not 2 <= len(keys) <= 5:
+        return JSONResponse({"error": "need a prompt and 2-5 models"}, status_code=400)
+    if any(DUEL_MODELS[k][1] for k in keys) and payload.get("allow_metered") is not True:
+        return JSONResponse({"error": "Claude costs tokens — tick 'use Claude' to include it"}, status_code=400)
+    DUELS_DIR.mkdir(parents=True, exist_ok=True)
+    duel_id = datetime.datetime.now().strftime("%Y%m%d-%H%M%S-") + secrets.token_hex(2)
+    threading.Thread(target=_run_duel, args=(duel_id, prompt, keys), daemon=True).start()
+    log_activity("compare", f"head-to-head: {', '.join(keys)}")
+    return {"id": duel_id}
+
+@app.get("/api/compare/duel")
+def compare_duel_get(id: str = "", request: Request = None):
+    if not _verify_token(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    if not re.fullmatch(r"\d{8}-\d{6}-[0-9a-f]{4}", id or ""):
+        return JSONResponse({"error": "bad id"}, status_code=400)
+    f = DUELS_DIR / f"{id}.json"
+    if not f.exists():
+        return JSONResponse({"error": "not found"}, status_code=404)
+    return json.loads(f.read_text())
+
 @app.post("/api/tools/{tool_id}/run")
 def tools_run(tool_id: str, payload: dict = Body(...), request: Request = None):
     if not _verify_token(request, payload):

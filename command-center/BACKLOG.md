@@ -30,7 +30,7 @@ _2026-09-24: old July copy in iCloud/Applications (no remote server) trashed; en
 - [~] **Artifacts** — unclear + stale → explain or remove.
 - **Tools** — more interactive; label what each is.
 - [~] **Reel Tools** — merge with Reels/AgentDrop. _(tab removed; built tools live in Apps → Reel Apps, builds on each reel card)_
-- **Compare** — compare Claude modes, agents, local models, Gemini; also real devices (e.g. headphones) after research.
+- [~] **Compare** — compare Claude modes, agents, local models, Gemini; also real devices (e.g. headphones) after research.
 - [~] **Workflows** — duplicate of others → merge.
 - **File Graph** — show files + what's in them; pan/zoom by swiping; fill the window.
 - **Control** — more controls.
