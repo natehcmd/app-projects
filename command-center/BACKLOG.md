@@ -25,13 +25,13 @@ _2026-09-24: old July copy in iCloud/Applications (no remote server) trashed; en
 - [~] **Life HQ** — pull from Siri/Reminders/Calendar (or ask Nate) and remember. _(reminders live via Hammond; calendar needs Nate to allow Hands AI in Privacy → Calendars)_
 - **Learn** — more scholarly; random facts, coding terms, code snippets that show how to do things.
 - **Briefs** — short bullet points, simple English.
-- **Term** — unclear purpose → explain it or fold it into another tab.
-- **Swarm vs Flows vs Workflows** — explain the difference or merge; improve.
-- **Artifacts** — unclear + stale → explain or remove.
+- [~] **Term** — unclear purpose → explain it or fold it into another tab. _(now "Agents" group: Jobs / Team / Steps / Results, one-line explainer on each; Workflows moved into Tools)_
+- [~] **Swarm vs Flows vs Workflows** — explain the difference or merge; improve.
+- [~] **Artifacts** — unclear + stale → explain or remove.
 - **Tools** — more interactive; label what each is.
 - [~] **Reel Tools** — merge with Reels/AgentDrop. _(tab removed; built tools live in Apps → Reel Apps, builds on each reel card)_
 - **Compare** — compare Claude modes, agents, local models, Gemini; also real devices (e.g. headphones) after research.
-- **Workflows** — duplicate of others → merge.
+- [~] **Workflows** — duplicate of others → merge.
 - **File Graph** — show files + what's in them; pan/zoom by swiping; fill the window.
 - **Control** — more controls.
 
