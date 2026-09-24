@@ -32,3 +32,7 @@ main{min-height:calc(100vh - 110px)}
   main, .topbar{margin-left:12px!important; margin-right:12px!important}
   body{padding-bottom:110px}
 }
+
+/* #view is a grid that centered + shrink-wrapped each page — the "proportions
+   are off" / narrow-middle-column look. Every page now spans the full width. */
+#view > *{justify-self:stretch; width:100%; max-width:none}

@@ -161,6 +161,20 @@ def _match_active_session(repo_name: str, branch: str, terminal_tabs: list, cli_
     return None
 
 
+def _limited_glob(repo, patterns, limit=2000):
+    """Walk at most `limit` entries (skip deps/build dirs) yielding matches."""
+    import fnmatch
+    seen = 0
+    for dirpath, dirnames, filenames in os.walk(repo):
+        dirnames[:] = [d for d in dirnames if d not in ("node_modules", ".git", ".venv", "venv", "build", "dist", "reels-build", "DerivedData")]
+        for f in filenames:
+            seen += 1
+            if seen > limit:
+                return
+            if any(fnmatch.fnmatch(f, p) for p in patterns):
+                yield f
+
+
 def _scan_one(repo, terminal_tabs, cli_processes):
     git_root, _ = _git_root_and_subpath(repo)
     branch = _git(git_root, "rev-parse", "--abbrev-ref", "HEAD") or "(detached)"
@@ -170,6 +184,10 @@ def _scan_one(repo, terminal_tabs, cli_processes):
     unpushed = _unpushed_count(repo)
     active = _match_active_session(repo.name, branch, terminal_tabs, cli_processes)
     last_touched = _last_touched(repo)
+    # Facts for "what's missing to be perfect" — measured, not guessed.
+    has_tests = any((repo / d).is_dir() for d in ("tests", "test", "Tests", "__tests__")) or any(
+        True for _ in _limited_glob(repo, ("test_*.py", "*_test.py", "*.test.js", "*Tests.swift")))
+    has_readme = any((repo / n).exists() for n in ("README.md", "README", "readme.md"))
 
     if active:
         status_label = "active now"
@@ -195,6 +213,8 @@ def _scan_one(repo, terminal_tabs, cli_processes):
         "last_touched": last_touched,
         "active_session": active,
         "status_label": status_label,
+        "has_tests": has_tests,
+        "has_readme": has_readme,
     }
 
 

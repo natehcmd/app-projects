@@ -1266,6 +1266,27 @@ def pipeline_status():
 
 # ---------- projects (real git state, cross-referenced with live terminal
 # sessions — no fabricated hours, no fake progress numbers) ----------
+REVIEW_RUNS = Path.home() / ".local/share/review-pipeline/code-review-pipeline/scripts/arena_runs"
+
+@app.get("/api/review/latest")
+def review_latest(request: Request = None):
+    """Latest Arena verdict per repo (newest run wins): clean / findings / not checked."""
+    if not _verify_token(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    out = {}
+    runs = sorted(REVIEW_RUNS.glob("*/results.json")) if REVIEW_RUNS.is_dir() else []
+    for f in runs:
+        try:
+            for r in json.loads(f.read_text()):
+                name = (r.get("name") or "").split("/")[-1]
+                if not name or "control" in name:
+                    continue
+                out[name] = {"verdict": r.get("verdict", ""), "findings": len(r.get("findings") or []),
+                             "degraded": bool(r.get("degraded")), "run": f.parent.name}
+        except (OSError, ValueError):
+            continue
+    return out
+
 @app.get("/api/projects")
 def projects_list():
     tabs = _terminal_tabs()
