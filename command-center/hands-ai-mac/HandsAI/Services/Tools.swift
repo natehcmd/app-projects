@@ -51,7 +51,7 @@ struct Tools {
             case "remember":        return remember(args: args)
             case "recall":          return recall(args: args)
             case "forget":          return forget(args: args)
-            case "search_reels":    return quarantine(searchReels(args: args), source: "instagram")
+            case "search_reels":    return quarantine(await searchReels(args: args), source: "instagram")
             case "latest_reels":    return quarantine(latestReels(args: args), source: "instagram")
             default:
                 if let result = await runMac(name: name, args: args) { return result }
@@ -663,11 +663,41 @@ struct Tools {
         return "• \(r.code) — \(short)\n  https://www.instagram.com/reel/\(r.code)/"
     }
 
-    static func searchReels(args: Args) -> String {
+    /// Command Center's reel table carries whisper transcripts and a topic for
+    /// every reel (DM shares have no caption, so the transcript is the only
+    /// text they have). Nil when Command Center isn't running.
+    private struct CCReel: Decodable {
+        let id: String; let uploader: String?; let caption: String?
+        let transcript: String?; let topic: String?; let url: String?
+    }
+
+    private static func commandCenterReels() async -> [CCReel]? {
+        guard let url = URL(string: "http://127.0.0.1:8450/api/reels") else { return nil }
+        var req = URLRequest(url: url); req.timeoutInterval = 2
+        guard let (data, resp) = try? await URLSession.shared.data(for: req),
+              (resp as? HTTPURLResponse)?.statusCode == 200 else { return nil }
+        return try? JSONDecoder().decode([CCReel].self, from: data)
+    }
+
+    static func searchReels(args: Args) async -> String {
         let query = (args.string("query") ?? "").lowercased()
         let words = query.split(separator: " ").map(String.init)
         guard !words.isEmpty else { return "error: missing 'query'" }
         let limit = max(1, min(25, Int(args.string("limit") ?? "") ?? 8))
+        if let cc = await commandCenterReels() {
+            let hits = cc.filter { r in
+                let hay = [r.uploader, r.caption, r.transcript, r.topic].compactMap { $0 }.joined(separator: " ").lowercased()
+                return words.allSatisfy { hay.contains($0) }
+            }
+            if hits.isEmpty { return "No reels match '\(query)' (searched captions and transcripts)." }
+            return "\(hits.count) reel(s) match (captions + transcripts):\n" + hits.prefix(limit).map { r in
+                let text = (r.caption?.isEmpty == false ? r.caption! : (r.transcript ?? ""))
+                    .replacingOccurrences(of: "\n", with: " ")
+                let short = text.count > 220 ? String(text.prefix(220)) + "…" : text
+                let where_ = (r.url?.isEmpty == false) ? r.url! : "local video: " + reelsDir.appendingPathComponent(r.id + ".mp4").path
+                return "• [\(r.topic ?? "?")] @\(r.uploader ?? "?") — \(short)\n  \(where_)"
+            }.joined(separator: "\n")
+        }
         let hits = loadReels()
             .filter { r in let c = r.caption.lowercased(); return words.allSatisfy { c.contains($0) } }
             .sorted { $0.added > $1.added }
