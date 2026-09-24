@@ -1,0 +1,177 @@
+/* Theme system (backlog P1) — drafted by Gemini Flash via the pipeline, reviewed by Claude. */
+:root {
+  --r: 6px;
+  --font-ui: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-data: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+:root,
+:root[data-theme="stark"] {
+  --bg: #0b101b;
+  --bg2: #121a2d;
+  --ink: #e2e8f0;
+  --ink-dim: #94a3b8;
+  --ink-faint: #475569;
+  --mint: #34d399;
+  --lav: #a78bfa;
+  --peach: #fb923c;
+  --rose: #f43f5e;
+  --sky: #38bdf8;
+  --glass: rgba(18, 26, 45, 0.75);
+  --glass-brd: rgba(56, 189, 248, 0.15);
+  --hud: #19233c;
+  --ok: #10b981;
+  --warn: #f59e0b;
+  --bad: #ef4444;
+  --accent: #39c4ff;
+}
+
+:root[data-theme="midnight"] {
+  --bg: #09080e;
+  --bg2: #141220;
+  --ink: #ede9fe;
+  --ink-dim: #a78bfa;
+  --ink-faint: #5b4d82;
+  --mint: #2dd4bf;
+  --lav: #c084fc;
+  --peach: #f472b6;
+  --rose: #e879f9;
+  --sky: #818cf8;
+  --glass: rgba(20, 18, 32, 0.75);
+  --glass-brd: rgba(192, 132, 252, 0.18);
+  --hud: #1a162a;
+  --ok: #34d399;
+  --warn: #fbbf24;
+  --bad: #f87171;
+  --accent: #8b5cf6;
+}
+
+:root[data-theme="ember"] {
+  --bg: #120c09;
+  --bg2: #1f140f;
+  --ink: #fbeee9;
+  --ink-dim: #d19a86;
+  --ink-faint: #785346;
+  --mint: #4ade80;
+  --lav: #d8b4fe;
+  --peach: #fb923c;
+  --rose: #f87171;
+  --sky: #38bdf8;
+  --glass: rgba(31, 20, 15, 0.75);
+  --glass-brd: rgba(251, 146, 60, 0.18);
+  --hud: #2b1c15;
+  --ok: #22c55e;
+  --warn: #eab308;
+  --bad: #ef4444;
+  --accent: #f97316;
+}
+
+:root[data-theme="forest"] {
+  --bg: #08120c;
+  --bg2: #102117;
+  --ink: #e6f4ea;
+  --ink-dim: #8bb89c;
+  --ink-faint: #446853;
+  --mint: #34d399;
+  --lav: #bbf7d0;
+  --peach: #fcd34d;
+  --rose: #f87171;
+  --sky: #6ee7b7;
+  --glass: rgba(16, 33, 23, 0.75);
+  --glass-brd: rgba(52, 211, 153, 0.18);
+  --hud: #182e21;
+  --ok: #10b981;
+  --warn: #fbbf24;
+  --bad: #f87171;
+  --accent: #10b981;
+}
+
+:root[data-theme="paper"] {
+  --bg: #f6f4ef;
+  --bg2: #eae6dc;
+  --ink: #1d1f24;
+  --ink-dim: #5c626d;
+  --ink-faint: #989fab;
+  --mint: #15803d;
+  --lav: #6d28d9;
+  --peach: #c2410c;
+  --rose: #be123c;
+  --sky: #0284c7;
+  --glass: rgba(246, 244, 239, 0.85);
+  --glass-brd: rgba(29, 31, 36, 0.12);
+  --hud: #dfdbd0;
+  --ok: #15803d;
+  --warn: #b45309;
+  --bad: #b91c1c;
+  --accent: #2563eb;
+}
+
+:root[data-theme="mono"] {
+  --bg: #121212;
+  --bg2: #1e1e1e;
+  --ink: #f0f0f0;
+  --ink-dim: #a0a0a0;
+  --ink-faint: #555555;
+  --mint: #d4d4d4;
+  --lav: #cccccc;
+  --peach: #bfbfbf;
+  --rose: #e5e5e5;
+  --sky: #dddddd;
+  --glass: rgba(30, 30, 30, 0.75);
+  --glass-brd: rgba(255, 255, 255, 0.14);
+  --hud: #282828;
+  --ok: #d1d5db;
+  --warn: #9ca3af;
+  --bad: #ffffff;
+  --accent: #ffffff;
+}
+
+body[data-view="home"] { --accent: var(--sky); }
+body[data-view="chat"] { --accent: var(--mint); }
+body[data-view="hub"] { --accent: var(--lav); }
+body[data-view="projects"] { --accent: var(--peach); }
+body[data-view="apps"] { --accent: var(--sky); }
+body[data-view="pipeline"] { --accent: var(--mint); }
+body[data-view="swarm"] { --accent: var(--rose); }
+body[data-view="flows"] { --accent: var(--lav); }
+body[data-view="workflows"] { --accent: var(--peach); }
+body[data-view="compare"] { --accent: var(--sky); }
+body[data-view="term"] { --accent: var(--mint); }
+body[data-view="control"] { --accent: var(--rose); }
+body[data-view="agentdrop"] { --accent: var(--lav); }
+body[data-view="reels"] { --accent: var(--peach); }
+body[data-view="reeltools"] { --accent: var(--rose); }
+body[data-view="tools"] { --accent: var(--sky); }
+body[data-view="artifacts"] { --accent: var(--mint); }
+body[data-view="filegraph"] { --accent: var(--lav); }
+body[data-view="life"] { --accent: var(--peach); }
+body[data-view="college"] { --accent: var(--sky); }
+body[data-view="briefs"] { --accent: var(--rose); }
+body[data-view="learn"] { --accent: var(--mint); }
+
+.theme-pick {
+  appearance: none;
+  background-color: var(--bg2);
+  color: var(--ink);
+  border: 1px solid var(--glass-brd);
+  border-radius: var(--r);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  line-height: 1.2;
+  padding: 4px 24px 4px 8px;
+  cursor: pointer;
+  outline: none;
+  background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="6"><path d="M0 0l5 6 5-6z" fill="%23888888"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 8px 5px;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.theme-pick:hover,
+.theme-pick:focus-visible {
+  border-color: var(--accent);
+}
+
+/* Claude review fix: the picker stretched across the grid top bar. */
+.topbar .theme-pick{flex:none; width:auto; max-width:140px; justify-self:end; margin-left:auto}
