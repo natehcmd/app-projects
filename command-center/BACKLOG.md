@@ -17,7 +17,7 @@ _2026-09-24: old July copy in iCloud/Applications (no remote server) trashed; en
 - [ ] **Plain English everywhere** — brief bullet points, no slop; explain what each tab is for in one line.
 
 ## P2 — per tab
-- **Home** — Jarvis look: dials + graphs (system, agents, budget, reels, to-dos); merged **to-do list** incl. reels to review.
+- [~] **Home** — Jarvis look: dials + graphs (system, agents, budget, reels, to-dos); merged **to-do list** incl. reels to review.
 - **Apps / Tools** — each app card: **screenshot + logo**, says what it is (app / tool / skill); **Run opens the actual app**, not a terminal.
 - **Projects** — pin-board: where each project lives, **what's missing to be perfect**, Nate's notes, status Nate controls.
 - **Pipeline** — **roots diagram**: Nate at top → Claude → branches down (subagents, agy, Gemini, local); roots **light up live** when any AI works; more agents = more roots, uncluttered. agy reviews a screenshot of it and leaves notes.
