@@ -311,7 +311,11 @@ def scan() -> list[dict]:
                 break
         mod_time = _newest_change(tool_path) if tool_path.exists() else _mtime(REELS_MANIFEST)
         apps[f"reel:{tid}"] = {
-            "id": f"reel:{tid}", "name": name, "path": str(tool_path), "kind": "Built App",
+            # A reel build is a command-line tool unless it actually has an app
+            # bundle — calling all 99 of them "Built App" is why Run "just
+            # opened a terminal" (backlog: Apps).
+            "id": f"reel:{tid}", "name": name, "path": str(tool_path),
+            "kind": "Built App" if bundle_match else "Tool (command line)",
             "summary": desc, "modified": mod_time,
             "area": "Reel Apps", "appBundle": bundle_match, "category": "Apps",
             "terminalCommand": f'cd "{tool_path}" && {usage}',

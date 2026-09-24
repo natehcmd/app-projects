@@ -1188,6 +1188,35 @@ def apps_set_status(payload: dict = Body(...), request: Request = None):
     log_activity("apps", f"set status of {app_id} -> {status}")
     return {"ok": True}
 
+ICON_DIR = ROOT / "data" / "icons"
+
+@app.get("/api/apps/icon")
+def apps_icon(id: str = "", request: Request = None):
+    """The app's real icon as PNG (from its .app bundle), cached; 404 if none."""
+    match = next((a for a in _apps_scan() if a["id"] == id), None)
+    bundle = (match or {}).get("appBundle")
+    if not bundle or not Path(bundle).exists():
+        return JSONResponse({"error": "no bundle"}, status_code=404)
+    ICON_DIR.mkdir(parents=True, exist_ok=True)
+    out = ICON_DIR / (hashlib.sha1(bundle.encode()).hexdigest()[:16] + ".png")
+    if not out.exists():
+        try:
+            info = plistlib.loads((Path(bundle) / "Contents" / "Info.plist").read_bytes())
+            name = info.get("CFBundleIconFile") or info.get("CFBundleIconName") or "AppIcon"
+            icns = Path(bundle) / "Contents" / "Resources" / (name if name.endswith(".icns") else name + ".icns")
+            if not icns.exists():
+                cands = list((Path(bundle) / "Contents" / "Resources").glob("*.icns"))
+                icns = cands[0] if cands else None
+            if not icns:
+                return JSONResponse({"error": "no icon"}, status_code=404)
+            subprocess.run(["sips", "-s", "format", "png", "-Z", "256", str(icns), "--out", str(out)],
+                           capture_output=True, timeout=20)
+        except Exception as e:
+            return JSONResponse({"error": str(e)[:120]}, status_code=500)
+    if not out.exists():
+        return JSONResponse({"error": "conversion failed"}, status_code=500)
+    return FileResponse(out, media_type="image/png")
+
 @app.post("/api/apps/open")
 def apps_open(payload: dict = Body(...), request: Request = None):
     if not _verify_token(request, payload):

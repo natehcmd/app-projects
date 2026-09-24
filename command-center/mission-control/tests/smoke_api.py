@@ -20,6 +20,7 @@ import sys
 import tempfile
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -43,7 +44,7 @@ def check(cond, msg):
 def main():
     tmp = tempfile.mkdtemp(prefix="cc-smoke-")
     for name in os.listdir(HERE):
-        if name in (".venv", "reels-build", "__pycache__", "sandbox", "models"):
+        if name in (".venv", "__pycache__", "sandbox", "models"):
             continue
         src, dst = os.path.join(HERE, name), os.path.join(tmp, name)
         (shutil.copytree if os.path.isdir(src) else shutil.copy2)(src, dst)
@@ -66,7 +67,7 @@ def main():
         sess = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar))
         sess.open(base + "/", timeout=10).read()
         src = open(os.path.join(tmp, "server.py")).read()
-        gets = sorted(set(re.findall(r'@app\.get\("(/api/[^"{]+)"\)', src)) - {"/api/artifacts/content"})
+        gets = sorted(set(re.findall(r'@app\.get\("(/api/[^"{]+)"\)', src)) - {"/api/artifacts/content", "/api/apps/icon"})
 
         print("GET endpoints with a session:")
         for path in gets:
@@ -85,6 +86,17 @@ def main():
             check(code == 200 and is_json, "%s -> %s%s (%.2fs)" % (path, code, "" if is_json else " non-JSON", dt))
             if path in SLOW_BUDGET_S:
                 check(dt < SLOW_BUDGET_S[path], "%s under %.0fs budget (%.2fs)" % (path, SLOW_BUDGET_S[path], dt))
+
+        print("App icons:")
+        apps = json.loads(sess.open(base + "/api/apps", timeout=30).read())
+        with_bundle = [a for a in apps if a.get("appBundle")]
+        if with_bundle:
+            r = sess.open(base + "/api/apps/icon?id=" + urllib.parse.quote(with_bundle[0]["id"]), timeout=30)
+            png = r.read()
+            check(r.status == 200 and png[:8] == b"\x89PNG\r\n\x1a\n", "real icon PNG for %s (%d bytes)" % (with_bundle[0]["name"], len(png)))
+        tools = [a for a in apps if a.get("area") == "Reel Apps"]
+        check(len(tools) > 0 and all(a["kind"] == "Tool (command line)" for a in tools if not a.get("appBundle")),
+              "reel builds without an app bundle are labelled command-line tools (%d)" % len(tools))
 
         print("Sensitive endpoints without a session:")
         for path in [p for p in SENSITIVE if p in gets]:   # only those this build has
