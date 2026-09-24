@@ -7,6 +7,8 @@ import SwiftUI
 /// here shows up there too and vice versa.
 struct ChatWindowView: View {
     @EnvironmentObject var agent: AgentStore
+    @EnvironmentObject var ollama: OllamaClient
+    @EnvironmentObject var remote: RemoteServer
     @FocusState private var inputFocused: Bool
 
     var body: some View {
@@ -37,14 +39,45 @@ struct ChatWindowView: View {
             Text("Hammond")
                 .font(.system(size: 16, weight: .semibold, design: .rounded))
                 .foregroundStyle(Theme.ink)
+            connectionChip
             Spacer()
-            Text(agent.activeProvider)
-                .font(.system(size: 11, design: .monospaced))
-                .foregroundStyle(Theme.inkDim)
-                .padding(.horizontal, 8).padding(.vertical, 3)
-                .glassCard(radius: 8)
+            // The engine used to be display-only here; choosing it meant
+            // digging into Settings. Now it's the first thing in the window.
+            Picker("Engine", selection: $agent.provider) {
+                Text("Local").tag("ollama")
+                Text("Claude").tag("claude")
+                Text("Claude Code").tag("claude-cli")
+            }
+            .pickerStyle(.segmented)
+            .frame(width: 260)
+            .help("Which brain answers. Falls back to Local if the choice isn't set up.")
+            if agent.provider == "ollama" {
+                Picker("Model", selection: $ollama.selectedModel) {
+                    ForEach(ollama.availableModels) { m in Text(m.name).tag(m.name) }
+                }
+                .frame(width: 190)
+                .labelsHidden()
+                .help("Local model (Ollama)")
+            }
+            if agent.activeProvider != agent.provider {
+                Text("using \(agent.activeProvider) — \(agent.provider) not set up")
+                    .font(.system(size: 11)).foregroundStyle(Theme.peach)
+            }
         }
         .padding(16)
+        .task { await ollama.refresh() }
+    }
+
+    /// Command Center / iPhone reach this Mac through RemoteServer.
+    private var connectionChip: some View {
+        HStack(spacing: 6) {
+            Circle().fill(remote.isRunning ? Theme.mint : Theme.rose).frame(width: 7, height: 7)
+            Text(remote.isRunning ? "Command Center link on" : "link off")
+                .font(.system(size: 11)).foregroundStyle(Theme.inkDim)
+        }
+        .padding(.horizontal, 8).padding(.vertical, 4)
+        .glassCard(radius: 8)
+        .help(remote.lastError ?? "Command Center connects on port \(remote.port)")
     }
 
     private var orbColumn: some View {

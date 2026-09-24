@@ -231,6 +231,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 .environmentObject(history)
                 .environmentObject(wake)
                 .environmentObject(briefing)
+                .environmentObject(remote)
             let window = NSWindow(
                 contentRect: NSRect(x: 0, y: 0, width: 720, height: 580),
                 styleMask: [.titled, .closable, .miniaturizable, .resizable],
