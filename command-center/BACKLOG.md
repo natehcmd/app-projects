@@ -21,7 +21,7 @@ _2026-09-24: old July copy in iCloud/Applications (no remote server) trashed; en
 - [~] **Apps / Tools** — each app card: **screenshot + logo**, says what it is (app / tool / skill); **Run opens the actual app**, not a terminal.
 - [~] **Projects** — pin-board: where each project lives, **what's missing to be perfect**, Nate's notes, status Nate controls.
 - [~] **Pipeline** — **roots diagram**: Nate at top → Claude → branches down (subagents, agy, Gemini, local); roots **light up live** when any AI works; more agents = more roots, uncluttered. agy reviews a screenshot of it and leaves notes. _(built 2026-09-24: live from Arena calls + running processes; agy screenshot review still to do)_
-- **AgentDrop + Reels (merge)** — each reel: thumbnail from the downloaded video, playable, link to Instagram, title = reel's name, what it's about; **Build** button + **progress** view; **Auto** mode walks one by one and waits for Nate's OK; reels to review land in the Home to-do list.
+- [~] **AgentDrop + Reels (merge)** — each reel: thumbnail from the downloaded video, playable, link to Instagram, title = reel's name, what it's about; **Build** button + **progress** view; **Auto** mode walks one by one and waits for Nate's OK; reels to review land in the Home to-do list.
 - **Life HQ** — pull from Siri/Reminders/Calendar (or ask Nate) and remember.
 - **Learn** — more scholarly; random facts, coding terms, code snippets that show how to do things.
 - **Briefs** — short bullet points, simple English.
@@ -29,7 +29,7 @@ _2026-09-24: old July copy in iCloud/Applications (no remote server) trashed; en
 - **Swarm vs Flows vs Workflows** — explain the difference or merge; improve.
 - **Artifacts** — unclear + stale → explain or remove.
 - **Tools** — more interactive; label what each is.
-- **Reel Tools** — merge with Reels/AgentDrop.
+- [~] **Reel Tools** — merge with Reels/AgentDrop. _(tab removed; built tools live in Apps → Reel Apps, builds on each reel card)_
 - **Compare** — compare Claude modes, agents, local models, Gemini; also real devices (e.g. headphones) after research.
 - **Workflows** — duplicate of others → merge.
 - **File Graph** — show files + what's in them; pan/zoom by swiping; fill the window.

@@ -609,6 +609,88 @@ def reels_update(payload: dict = Body(...), request: Request = None):
     log_activity("reel", f"tagged reel {reel_id} → {payload.get('topic')}/{payload.get('verdict')}")
     return {"ok": True}
 
+# ---------- reels board: AgentDrop + Reels in one place ----------
+REEL_ID_RE = re.compile(r"^[A-Za-z0-9_-]{5,64}$")
+THUMBS_DIR = ROOT / "data" / "thumbs"
+BUILDS_DIR = ROOT / "data" / "builds"
+_build_lock = threading.Lock()
+
+def _reel_video(reel_id: str):
+    if not REEL_ID_RE.match(reel_id or ""):
+        return None
+    f = AGENTDROP_REELS_DIR / f"{reel_id}.mp4"
+    return f if f.is_file() else None
+
+def _reel_build_state(reel_id: str) -> dict:
+    f = BUILDS_DIR / f"{reel_id}.json"
+    if f.exists():
+        try:
+            return json.loads(f.read_text())
+        except ValueError:
+            pass
+    d = TOOLS_DIR / reel_id
+    if d.is_dir() and any(p.name not in (".git",) for p in d.iterdir()):
+        return {"state": "built_before", "step": "built in an earlier session"}
+    return {"state": "not_built"}
+
+@app.get("/api/reels/board")
+def reels_board(request: Request = None):
+    """Every reel with its video, thumbnail, link and build state — one list for the Reels tab."""
+    if not _verify_token(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    c = db(); rows = [dict(r) for r in c.execute("SELECT * FROM reels ORDER BY added DESC, id")]; c.close()
+    for r in rows:
+        r["has_video"] = _reel_video(r["id"]) is not None
+        r["build"] = _reel_build_state(r["id"])
+        r["transcript"] = (r.get("transcript") or "")[:600]
+    return rows
+
+@app.get("/api/reels/thumb")
+def reels_thumb(id: str = "", request: Request = None):
+    if not _is_local_request(request):
+        return JSONResponse({"error": "forbidden"}, status_code=403)
+    video = _reel_video(id)
+    if not video:
+        return JSONResponse({"error": "no video"}, status_code=404)
+    THUMBS_DIR.mkdir(parents=True, exist_ok=True)
+    out = THUMBS_DIR / f"{id}.jpg"
+    if not out.exists():
+        subprocess.run(["/opt/homebrew/bin/ffmpeg", "-loglevel", "error", "-y", "-ss", "1.5", "-i", str(video),
+                        "-frames:v", "1", "-vf", "scale=360:-2", str(out)], timeout=30)
+    if not out.exists():
+        return JSONResponse({"error": "no frame"}, status_code=404)
+    return FileResponse(out, media_type="image/jpeg")
+
+@app.get("/api/reels/video")
+def reels_video(id: str = "", request: Request = None):
+    if not _is_local_request(request):
+        return JSONResponse({"error": "forbidden"}, status_code=403)
+    video = _reel_video(id)
+    if not video:
+        return JSONResponse({"error": "no video"}, status_code=404)
+    return FileResponse(video, media_type="video/mp4")
+
+@app.post("/api/reels/build")
+def reels_build(payload: dict = Body(...), request: Request = None):
+    """Start building one reel into a tool. One build at a time; ends at 'ready for Nate', never done."""
+    if not _verify_token(request, payload):
+        return JSONResponse({"error": "unauthorized: valid bearer token required"}, status_code=401)
+    reel_id = payload.get("id") or ""
+    if not REEL_ID_RE.match(reel_id):
+        return JSONResponse({"error": "bad id"}, status_code=400)
+    running = [f.stem for f in (BUILDS_DIR.glob("*.json") if BUILDS_DIR.is_dir() else [])
+               if time.time() - f.stat().st_mtime < 1800   # a crashed build must not block forever
+               and _reel_build_state(f.stem).get("state") in ("queued", "running")]
+    if running:
+        return JSONResponse({"error": f"a build is already running ({running[0]})"}, status_code=409)
+    with _build_lock:
+        BUILDS_DIR.mkdir(parents=True, exist_ok=True)
+        (BUILDS_DIR / f"{reel_id}.json").write_text(json.dumps({"state": "queued", "step": "starting"}))
+        subprocess.Popen([str(ROOT / ".venv/bin/python"), str(ROOT / "scripts/build_reel.py"), reel_id],
+                         cwd=str(ROOT), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+    log_activity("reel", f"started building reel {reel_id}")
+    return {"ok": True}
+
 # ---------- life hq ----------
 @app.get("/api/lifehq")
 def lifehq(request: Request = None):

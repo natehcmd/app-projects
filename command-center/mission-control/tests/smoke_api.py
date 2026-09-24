@@ -24,7 +24,7 @@ import urllib.parse
 import urllib.request
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SENSITIVE = ["/api/activity", "/api/briefs", "/api/lifehq", "/api/plaid/accounts",
+SENSITIVE = ["/api/reels/board", "/api/activity", "/api/briefs", "/api/lifehq", "/api/plaid/accounts",
              "/api/roadmap", "/api/search", "/api/swarm/runs", "/api/term/jobs",
              "/api/artifacts", "/api/flows/runs"]
 SLOW_BUDGET_S = {"/api/projects": 4.0, "/api/term/snapshot": 4.0}
@@ -67,7 +67,7 @@ def main():
         sess = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar))
         sess.open(base + "/", timeout=10).read()
         src = open(os.path.join(tmp, "server.py")).read()
-        gets = sorted(set(re.findall(r'@app\.get\("(/api/[^"{]+)"\)', src)) - {"/api/artifacts/content", "/api/apps/icon"})
+        gets = sorted(set(re.findall(r'@app\.get\("(/api/[^"{]+)"\)', src)) - {"/api/artifacts/content", "/api/apps/icon", "/api/reels/thumb", "/api/reels/video"})
 
         print("GET endpoints with a session:")
         for path in gets:
@@ -97,6 +97,31 @@ def main():
         tools = [a for a in apps if a.get("area") == "Reel Apps"]
         check(len(tools) > 0 and all(a["kind"] == "Tool (command line)" for a in tools if not a.get("appBundle")),
               "reel builds without an app bundle are labelled command-line tools (%d)" % len(tools))
+
+        print("Reels board:")
+        board = json.loads(sess.open(base + "/api/reels/board", timeout=30).read())
+        vids = [r for r in board if r["has_video"]]
+        check(len(vids) > 0, "reels with a local video (%d of %d)" % (len(vids), len(board)))
+        check(not any(r["build"].get("state") == "done" for r in board), "no build ever reads as done")
+        if vids:
+            r = sess.open(base + "/api/reels/thumb?id=" + urllib.parse.quote(vids[0]["id"]), timeout=40)
+            check(r.status == 200 and r.read()[:2] == b"\xff\xd8", "thumbnail JPEG for %s" % vids[0]["id"])
+            req = urllib.request.Request(base + "/api/reels/video?id=" + urllib.parse.quote(vids[0]["id"]),
+                                         headers={"Range": "bytes=0-99"})
+            r = sess.open(req, timeout=30)
+            check(r.status in (200, 206) and r.headers.get("Content-Type") == "video/mp4", "video streams (%s)" % r.status)
+        for bad in ("../../etc/passwd", "a/b", "x" * 80):
+            try:
+                code = sess.open(base + "/api/reels/video?id=" + urllib.parse.quote(bad), timeout=10).status
+            except urllib.error.HTTPError as e:
+                code = e.code
+            check(code == 404, "video refuses id %r (%s)" % (bad[:20], code))
+        try:
+            code = urllib.request.urlopen(urllib.request.Request(base + "/api/reels/build", data=b'{"id":"abcdef"}',
+                headers={"Content-Type": "application/json", "Sec-Fetch-Site": "cross-site"}), timeout=10).status
+        except urllib.error.HTTPError as e:
+            code = e.code
+        check(code in (401, 403), "build refuses anonymous cross-site (%s)" % code)
 
         print("Sensitive endpoints without a session:")
         for path in [p for p in SENSITIVE if p in gets]:   # only those this build has
