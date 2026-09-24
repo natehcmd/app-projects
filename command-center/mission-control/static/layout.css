@@ -1,0 +1,34 @@
+/* Layout v2 (backlog P0): left sidebar instead of a scrolling 22-tab pill,
+   content fills the window. Buttons keep data-view, so os.js is untouched. */
+:root{--side:212px}
+body{padding:0 0 24px}
+.dock{
+  position:fixed; left:0; top:0; bottom:0; transform:none; width:var(--side);
+  display:flex; flex-direction:column; align-items:stretch; gap:2px;
+  padding:14px 10px 18px; border-radius:0; max-width:none; overflow-y:auto; overflow-x:hidden;
+  border:0; border-right:1px solid var(--glass-brd); z-index:30;
+}
+.dock .dock-h{font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-faint);
+  padding:12px 10px 4px}
+.dock .dock-h:first-child{padding-top:2px}
+.dock button{display:flex; flex-direction:row; justify-content:flex-start; align-items:center; gap:10px; width:100%; height:34px; padding:0 10px;
+  border-radius:8px; font-size:15px; transform:none!important; text-align:left}
+.dock button span{position:static; opacity:1!important; transform:none!important; font-size:13.5px;
+  font-weight:500; letter-spacing:.01em; color:inherit; white-space:nowrap}
+.dock button:hover{background:rgba(255,255,255,.05)}
+.dock button.active{box-shadow:none}
+main, .topbar{max-width:none!important; width:auto!important;
+  margin-left:calc(var(--side) + 24px)!important; margin-right:24px!important}
+main{min-height:calc(100vh - 110px)}
+/* short windows: tighter rows instead of a scrollbar */
+@media (max-height:820px){.dock button{height:28px} .dock .dock-h{padding:8px 10px 2px}}
+/* phone/narrow: sidebar becomes a two-row bottom grid, still no sideways scroll */
+@media (max-width:800px){
+  .dock{top:auto; right:0; width:auto; flex-direction:row; flex-wrap:wrap; justify-content:center;
+    border-right:0; border-top:1px solid var(--glass-brd); padding:6px; overflow:visible}
+  .dock .dock-h{display:none}
+  .dock button{width:auto; height:40px; padding:0 8px}
+  .dock button span{display:none}
+  main, .topbar{margin-left:12px!important; margin-right:12px!important}
+  body{padding-bottom:110px}
+}
