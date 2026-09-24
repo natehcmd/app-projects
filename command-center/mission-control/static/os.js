@@ -153,7 +153,7 @@ async agentdrop() {
   const fileRow = f => `<div class="item">
     <div class="grow">${esc(f.name)}</div>
     <div class="meta">${fmtSize(f.size)} · ${esc(f.modified.replace("T"," "))}</div>
-    <button onclick="openAgentDropFile('${f.name.replace(/'/g,"\\'")}')">open</button>
+    <button data-name="${esc(f.name)}" onclick="openAgentDropFile(this.dataset.name)">open</button>
   </div>`;
   return `
   <div class="card glass"><h2><span class="dot t-mint"></span>Synced Reels — live from Instagram (${window._agentdropSynced.length})
@@ -243,7 +243,7 @@ async life() {
     return `<div class="item">
       <div class="grow">${esc(cat)}
         <div class="meta">$${spent.toFixed(0)} of $${limit.toFixed(0)} — ${pct}%</div></div>
-      <button onclick="delBudget('${esc(cat)}')">✕</button>
+      <button data-cat="${esc(cat)}" onclick="delBudget(this.dataset.cat)">✕</button>
     </div>`;
   };
   const allCats = [...new Set([...Object.keys(hq.budgets), ...Object.keys(hq.spending)])].sort();
@@ -648,7 +648,7 @@ async learn() {
              style="flex:1" onkeydown="if(event.key==='Enter')startLearn()">
       <button class="act" onclick="startLearn()">Teach me</button>
     </div>
-    ${history.length ? `<div class="sub">Recent: ${history.map(h=>`<span class="pill" style="cursor:pointer" onclick="loadLearn('${esc(h.subject)}')">${esc(h.subject)}</span>`).join(" ")}</div>` : ""}
+    ${history.length ? `<div class="sub">Recent: ${history.map(h=>`<span class="pill" style="cursor:pointer" data-subject="${esc(h.subject)}" onclick="loadLearn(this.dataset.subject)">${esc(h.subject)}</span>`).join(" ")}</div>` : ""}
   </div>
   <div id="learn_body"></div>`;
 },
@@ -1093,11 +1093,10 @@ window.setView = v => {
 
 /* ---------- apps catalog ---------- */
 function statusSelect(a) {
-  const safeId = a.id.replace(/'/g, "\\'");
   const opts = APP_STATUS_OPTIONS.includes(a.status) ? APP_STATUS_OPTIONS : [...APP_STATUS_OPTIONS, a.status];
   return `<select title="maturity status" style="width:auto;display:inline-block;padding:3px 10px;font-size:0.75rem;
       border-radius:100px;margin-left:6px;background:rgba(255,255,255,0.04)"
-      onchange="handleStatusSelect('${safeId}', this)">
+      data-id="${esc(a.id)}" onchange="handleStatusSelect(this.dataset.id, this)">
     ${opts.map(o => `<option value="${esc(o)}" ${o===a.status?"selected":""}>${esc(o)}</option>`).join("")}
     <option value="__custom__">+ new label…</option>
   </select>`;
@@ -1114,7 +1113,7 @@ function appTiles(list) {
           <div class="sub" style="margin-top:4px">${esc(a.summary)}</div>
           <div class="sub" style="opacity:0.6">${esc(a.area)}</div>
         </div>
-        <button class="act ghost" onclick="openApp('${a.id.replace(/'/g, "\\'")}', this)">
+        <button class="act ghost" data-id="${esc(a.id)}" onclick="openApp(this.dataset.id, this)">
           ${a.appBundle ? "Launch" : a.terminalCommand ? "Run" : "Reveal"}
         </button>
       </div>

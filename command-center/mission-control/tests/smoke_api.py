@@ -24,7 +24,7 @@ import urllib.parse
 import urllib.request
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SENSITIVE = ["/api/reels/board", "/api/activity", "/api/briefs", "/api/lifehq", "/api/plaid/accounts",
+SENSITIVE = ["/api/reels/board", "/api/briefs/short", "/api/learn/card", "/api/activity", "/api/briefs", "/api/lifehq", "/api/plaid/accounts",
              "/api/roadmap", "/api/search", "/api/swarm/runs", "/api/term/jobs",
              "/api/artifacts", "/api/flows/runs"]
 SLOW_BUDGET_S = {"/api/projects": 4.0, "/api/term/snapshot": 4.0}
@@ -67,7 +67,8 @@ def main():
         sess = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar))
         sess.open(base + "/", timeout=10).read()
         src = open(os.path.join(tmp, "server.py")).read()
-        gets = sorted(set(re.findall(r'@app\.get\("(/api/[^"{]+)"\)', src)) - {"/api/artifacts/content", "/api/apps/icon", "/api/reels/thumb", "/api/reels/video"})
+        gets = sorted(set(re.findall(r'@app\.get\("(/api/[^"{]+)"\)', src)) - {"/api/artifacts/content", "/api/apps/icon", "/api/reels/thumb", "/api/reels/video",
+                                                                                 "/api/briefs/short", "/api/learn/card"})
 
         print("GET endpoints with a session:")
         for path in gets:
@@ -122,6 +123,15 @@ def main():
         except urllib.error.HTTPError as e:
             code = e.code
         check(code in (401, 403), "build refuses anonymous cross-site (%s)" % code)
+
+        print("Briefs / Learn inputs:")
+        for path, want in (("/api/briefs/short?name=../../server", 404), ("/api/briefs/short?name=", 404),
+                           ("/api/learn/card?kind=__proto__", 400)):
+            try:
+                code = sess.open(base + path, timeout=15).status
+            except urllib.error.HTTPError as e:
+                code = e.code
+            check(code == want, "%s -> %s (want %s)" % (path, code, want))
 
         print("Sensitive endpoints without a session:")
         for path in [p for p in SENSITIVE if p in gets]:   # only those this build has

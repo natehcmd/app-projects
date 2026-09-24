@@ -23,8 +23,8 @@ _2026-09-24: old July copy in iCloud/Applications (no remote server) trashed; en
 - [~] **Pipeline** — **roots diagram**: Nate at top → Claude → branches down (subagents, agy, Gemini, local); roots **light up live** when any AI works; more agents = more roots, uncluttered. agy reviews a screenshot of it and leaves notes. _(built 2026-09-24: live from Arena calls + running processes; agy screenshot review still to do)_
 - [~] **AgentDrop + Reels (merge)** — each reel: thumbnail from the downloaded video, playable, link to Instagram, title = reel's name, what it's about; **Build** button + **progress** view; **Auto** mode walks one by one and waits for Nate's OK; reels to review land in the Home to-do list.
 - [~] **Life HQ** — pull from Siri/Reminders/Calendar (or ask Nate) and remember. _(reminders live via Hammond; calendar needs Nate to allow Hands AI in Privacy → Calendars)_
-- **Learn** — more scholarly; random facts, coding terms, code snippets that show how to do things.
-- **Briefs** — short bullet points, simple English.
+- [~] **Learn** — more scholarly; random facts, coding terms, code snippets that show how to do things. _(Learn: term / how-to-with-code / fact cards from the local model, labelled AI-written. College: serif, small-caps "scholarly" page style)_
+- [~] **Briefs** — short bullet points, simple English. _(5 plain bullets per brief, local model, cached; morning brief prompt now bullets under 150 words)_
 - [~] **Term** — unclear purpose → explain it or fold it into another tab. _(now "Agents" group: Jobs / Team / Steps / Results, one-line explainer on each; Workflows moved into Tools)_
 - [~] **Swarm vs Flows vs Workflows** — explain the difference or merge; improve.
 - [~] **Artifacts** — unclear + stale → explain or remove.

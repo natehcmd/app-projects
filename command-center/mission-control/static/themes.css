@@ -175,3 +175,10 @@ body[data-view="learn"] { --accent: var(--mint); }
 
 /* Claude review fix: the picker stretched across the grid top bar. */
 .topbar .theme-pick{flex:none; width:auto; max-width:140px; justify-self:end; margin-left:auto}
+
+/* College — scholarly: serif type, small-caps headings, warm ink accent. Page-only. */
+body[data-view="college"] #view { font-family: "Iowan Old Style", "Palatino", "Georgia", serif; }
+body[data-view="college"] #view h2 { font-variant: small-caps; letter-spacing: .06em; font-weight: 600; }
+body[data-view="college"] #view h3 { font-style: italic; font-weight: 500; }
+body[data-view="college"] #view .card { border-top: 2px solid color-mix(in srgb, var(--accent) 55%, transparent); }
+body[data-view="college"] #view .sub, body[data-view="college"] #view .meta { font-family: inherit; }

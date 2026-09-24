@@ -27,12 +27,13 @@ def main():
     tracker = read(HOME / "job-search-2026/tracker.md", 2500)
 
     prompt = f"""You are the CEO agent of Nate's personal operating system. Date: {today} ({today.strftime('%A')}).
-Write his morning brief in markdown. Sections:
-## Yesterday  (what actually moved, from recent completions + prior brief)
-## Today's Top 3  (ranked, each with a concrete first action)
-## Watch  (deadlines/risks — check the job tracker for dates near {today}; flag anything within 14 days)
-## One Question  (a single sharp question to focus the day)
-Be specific and honest, no filler. Under 300 words.
+Write his morning brief in markdown, as short bullet points in simple, plain English
+(like texting a friend — short words, no jargon, no buzzwords, no hype). Sections:
+## Yesterday  (1-3 bullets: what actually moved, from recent completions + prior brief)
+## Today's Top 3  (3 numbered bullets, ranked, each ending with the first thing to do)
+## Watch  (0-3 bullets: deadlines/risks — check the job tracker for dates near {today}; flag anything within 14 days)
+## One Question  (one short question to focus the day)
+Every line is a bullet under 20 words. Be specific and honest; if there is nothing, say "nothing". Under 150 words.
 
 DATA
 Open goals: {json.dumps(goals)}

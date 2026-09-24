@@ -1064,6 +1064,40 @@ def briefs(request: Request = None):
     files = sorted((ROOT / "data" / "briefs").glob("*.md"), reverse=True)[:14]
     return [{"name": f.stem, "content": f.read_text()} for f in files]
 
+BRIEF_SHORT_DIR = ROOT / "data" / "briefs" / ".short"
+
+@app.get("/api/briefs/short")
+def brief_short(name: str = "", request: Request = None):
+    """Five plain-English bullets for one brief — written by the local model (free), cached."""
+    if not _verify_token(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    src = next((f for f in (ROOT / "data" / "briefs").glob("*.md") if f.stem == name), None)
+    if not src:  # only names of briefs that exist — never a path from the request
+        return JSONResponse({"error": "no such brief"}, status_code=404)
+    cache = BRIEF_SHORT_DIR / f"{src.stem}.md"
+    if cache.exists() and cache.stat().st_mtime >= src.stat().st_mtime:
+        return {"name": src.stem, "short": cache.read_text(), "cached": True}
+    prompt = ("Summarise this document as exactly 5 bullet points in very simple English "
+              "(short words, no jargon; explain any technical term in a few words). Each bullet "
+              "under 18 words. Say what it found and what to do next. Output only the 5 lines, "
+              "each starting with '- '.\n\n" + src.read_text()[:12000])
+    try:
+        req = urllib.request.Request(f"{OLLAMA}/api/generate", method="POST",
+            data=json.dumps({"model": "qwen3-coder:30b", "prompt": prompt, "stream": False,
+                             "options": {"num_predict": 400, "temperature": 0.2}}).encode(),
+            headers={"Content-Type": "application/json"})
+        with urllib.request.urlopen(req, timeout=180) as r:
+            text = json.loads(r.read()).get("response", "").strip()
+    except Exception as e:
+        return JSONResponse({"error": f"local model unavailable: {e}"}, status_code=503)
+    bullets = [l.strip() for l in text.splitlines() if l.strip().startswith(("-", "•", "*"))][:5]
+    if not bullets:  # an empty or rambling reply is a failure, not a summary
+        return JSONResponse({"error": "local model gave no bullets"}, status_code=502)
+    short = "\n".join("- " + b.lstrip("-•* ").strip() for b in bullets)
+    BRIEF_SHORT_DIR.mkdir(parents=True, exist_ok=True)
+    cache.write_text(short)
+    return {"name": src.stem, "short": short, "cached": False}
+
 @app.post("/api/briefs/generate")
 def brief_now(request: Request = None, payload: dict = Body(default={})):
     if not _verify_token(request, payload):
@@ -1499,6 +1533,39 @@ Keep everything factually accurate and concise. No preamble, no markdown, JSON o
     cache_file.write_text(json.dumps(plan, indent=2))
     log_activity("learn", f"generated study plan for '{subject}'")
     return plan
+
+LEARN_CARD_PROMPTS = {
+    "term": "Pick one useful coding or AI term a self-taught builder might not know (random; not 'API' or 'variable'). "
+            "Explain it in 2-3 simple sentences, then show a tiny example.",
+    "code": "Pick one small, practical 'how do I…' task in Python or JavaScript (random, useful for building tools). "
+            "Explain the idea in 1-2 simple sentences, then show short working code (under 15 lines).",
+    "fact": "Share one surprising, TRUE, well-documented fact about computing history, science or how the internet works. "
+            "Only well-known facts you are sure of. 2-3 simple sentences.",
+}
+
+@app.get("/api/learn/card")
+def learn_card(kind: str = "term", request: Request = None):
+    """One random learning card from the local model (free). Labelled AI-written in the UI."""
+    if not _verify_token(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    if kind not in LEARN_CARD_PROMPTS:
+        return JSONResponse({"error": "kind must be term, code or fact"}, status_code=400)
+    seed = secrets.token_hex(3)  # different card each press
+    prompt = (LEARN_CARD_PROMPTS[kind] + f" (variety seed {seed})\n"
+              'Reply with ONLY a JSON object: {"title": "...", "body": "...", "code": "... or empty", "lang": "python|javascript|bash|"}')
+    try:
+        req = urllib.request.Request(f"{OLLAMA}/api/generate", method="POST",
+            data=json.dumps({"model": "qwen3-coder:30b", "prompt": prompt, "stream": False, "format": "json",
+                             "options": {"num_predict": 500, "temperature": 0.9}}).encode(),
+            headers={"Content-Type": "application/json"})
+        with urllib.request.urlopen(req, timeout=120) as r:
+            card = json.loads(json.loads(r.read()).get("response", "") or "{}")
+    except Exception as e:
+        return JSONResponse({"error": f"local model unavailable: {e}"}, status_code=503)
+    if not isinstance(card, dict) or not card.get("title") or not card.get("body"):
+        return JSONResponse({"error": "local model gave an empty card"}, status_code=502)
+    return {"kind": kind, "title": str(card["title"])[:120], "body": str(card["body"])[:900],
+            "code": str(card.get("code") or "")[:1500], "lang": str(card.get("lang") or "")[:20]}
 
 @app.get("/api/learn/history")
 def learn_history():
