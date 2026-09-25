@@ -1530,18 +1530,6 @@ def subs_get(request: Request = None):
         return JSONResponse({"error": "unauthorized"}, status_code=401)
     return subs_watch.status(ROOT)
 
-@app.post("/api/subs/hit")
-def subs_hit(payload: dict = Body(...), request: Request = None):
-    """Nate was just stopped by Claude: what was used becomes the learned limit."""
-    if not _verify_token(request, payload):
-        return JSONResponse({"error": "unauthorized: valid bearer token required"}, status_code=401)
-    which = payload.get("which")
-    if which not in ("window", "week"):
-        return JSONResponse({"error": "which must be window or week"}, status_code=400)
-    lim = subs_watch.learn_limit(ROOT, which)
-    log_activity("subs", f"Claude {which} limit learned: {lim.get(which):,} tokens")
-    return {"ok": True, "claude": lim}
-
 _SUBS_ALERTED = set()
 
 def _subs_watch_loop():
@@ -1552,7 +1540,8 @@ def _subs_watch_loop():
             d = subs_watch.status(ROOT, max_age=0)
             hot = set()
             for sub in d["subs"]:
-                items = sub.get("models") or [dict(sub.get("window") or {}, name=sub["name"])]
+                items = sub.get("models") or [{"name": f"Claude ({l['label'].lower()})", "pct": l["pct"]}
+                                              for l in sub.get("limits") or []]
                 for it in items:
                     if it.get("out_until"):
                         hot.add(f"{it['name']} is out of quota until "

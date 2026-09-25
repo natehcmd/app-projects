@@ -158,7 +158,6 @@ def main():
             code = e.code
         check(code == 400, "team run id path refused (%s)" % code)
         check(post("/api/team/ask", {"idea": ""}) == 400, "empty idea refused")
-        check(post("/api/subs/hit", {"which": "everything"}) == 400, "subs/hit refuses an unknown limit kind")
 
         print("Arena state / reels sync:")
         arena = json.loads(sess.open(base + "/api/arena/state", timeout=10).read())

@@ -1,12 +1,8 @@
 """Subscription watcher: how much of each AI subscription is used, when it resets.
 
 Sources (nothing estimated that could be measured):
-  * Claude  — Nate's own Claude Code sessions: every assistant message's usage
-              in ~/.claude/projects/**/*.jsonl (deduped by message id). Claude
-              has no "tokens left" API, so the 5-hour session window is rebuilt
-              from message times, and limits are LEARNED: when Nate presses
-              "I just hit the limit", what was used in that window/week becomes
-              the limit (data/subs.json).
+  * Claude  — Claude Code's own `/usage` (exact session / weekly % and reset
+              times from Anthropic), run as `claude -p /usage` — local, 0 tokens.
   * Gemini  — the review pipeline's budget governor (~/.cache/code-review-
               pipeline): tokens it spent per agy model this window, capacity
               learned from real "quota reached · resets in …" errors, and the
@@ -32,105 +28,37 @@ _cache = {"t": 0.0, "data": None}
 _lock = threading.Lock()
 
 
-def _parse_iso_utc(s):
-    # "2026-09-23T15:50:48.585Z" -> epoch seconds (UTC)
-    try:
-        import calendar
-        return calendar.timegm(time.strptime(s[:19], "%Y-%m-%dT%H:%M:%S"))
-    except (TypeError, ValueError):
-        return None
-
-
-def _family(model):
-    m = (model or "").lower()
-    for f in ("opus", "sonnet", "haiku", "fable"):
-        if f in m:
-            return f
-    return "other"
-
-
-def claude_messages(now):
-    """[(epoch, family, work_tokens, cache_read_tokens)] for the last 7 days, deduped."""
-    seen, out = set(), []
-    cutoff = now - WEEK_S
-    for path in glob.glob(str(CLAUDE_DIR / "**" / "*.jsonl"), recursive=True):
-        try:
-            if os.path.getmtime(path) < cutoff:
-                continue
-            with open(path, errors="replace") as fh:
-                for line in fh:
-                    if '"usage"' not in line or '"assistant"' not in line:
-                        continue
-                    try:
-                        d = json.loads(line)
-                    except ValueError:
-                        continue
-                    msg = d.get("message") or {}
-                    u = msg.get("usage") or {}
-                    key = (msg.get("id"), d.get("requestId"))
-                    if not u or key in seen:
-                        continue
-                    seen.add(key)
-                    t = _parse_iso_utc(d.get("timestamp"))
-                    if not t or t < cutoff:
-                        continue
-                    work = (u.get("input_tokens") or 0) + (u.get("cache_creation_input_tokens") or 0) \
-                        + (u.get("output_tokens") or 0)
-                    out.append((t, _family(msg.get("model")), work, u.get("cache_read_input_tokens") or 0))
-        except OSError:
-            continue
-    out.sort()
-    return out
-
-
-def session_window(msgs, now):
-    """Claude's 5-hour window starts at the first message after the last one expired."""
-    start = None
-    for t, *_ in msgs:
-        if start is None or t >= start + SESSION_S:
-            start = t
-    if start is None or now >= start + SESSION_S:
-        return None, None
-    return start, start + SESSION_S
-
-
-def _limits_file(root):
-    return Path(root) / "data" / "subs.json"
-
-
-def load_limits(root):
-    try:
-        return json.loads(_limits_file(root).read_text())
-    except (OSError, ValueError):
-        return {}
-
-
 def _pct(used, limit):
     return round(100 * used / limit) if limit else None
 
 
+_usage_cache = {"t": 0.0, "data": None}
+
+
+def claude_usage():
+    """Exact plan usage from Claude Code's own /usage (runs locally: 0 tokens)."""
+    import re
+    import subprocess
+    if _usage_cache["data"] and time.time() - _usage_cache["t"] < 120:
+        return _usage_cache["data"]
+    try:
+        r = subprocess.run(["claude", "-p", "/usage", "--output-format", "json"],
+                           capture_output=True, text=True, timeout=60)
+        text = json.loads(r.stdout).get("result", "")
+    except (OSError, ValueError, subprocess.TimeoutExpired) as e:
+        return {"limits": [], "error": "couldn't run /usage: %s" % e}
+    limits = [{"label": m.group(1).strip(), "pct": int(m.group(2)), "resets": m.group(3).strip()}
+              for m in re.finditer(r"^(Current [^:]+):\s*(\d+)% used\s*·\s*resets ([^(\n]+)", text, re.M)]
+    data = {"limits": limits, "error": None if limits else "no usage lines in /usage output"}
+    _usage_cache.update(t=time.time(), data=data)
+    return data
+
+
 def claude_status(root, now):
-    msgs = claude_messages(now)
-    start, reset = session_window(msgs, now)
-    in_win = [m for m in msgs if start and m[0] >= start]
-    lim = load_limits(root).get("claude", {})
-    used_w = sum(m[2] for m in in_win)
-    used_wk = sum(m[2] for m in msgs)
-    by_model = {}
-    for t, fam, work, _ in in_win:
-        by_model[fam] = by_model.get(fam, 0) + work
-    return {
-        "id": "claude", "name": "Claude", "paid": True,
-        "window": {"label": "this 5-hour session", "used": used_w, "limit": lim.get("window"),
-                   "pct": _pct(used_w, lim.get("window")), "resets_at": reset,
-                   "started_at": start},
-        "week": {"label": "last 7 days", "used": used_wk, "limit": lim.get("week"),
-                 "pct": _pct(used_wk, lim.get("week"))},
-        "by_model": by_model,
-        "cache_reads_window": sum(m[3] for m in in_win),
-        "learned_at": lim.get("learned_at"),
-        "note": "Your Claude Code sessions on this Mac. Limits are learned when you press 'I just hit the limit'.",
-    }
+    u = claude_usage()
+    return {"id": "claude", "name": "Claude", "paid": True, "source": "/usage",
+            "limits": u["limits"], "error": u["error"],
+            "note": "Exact numbers from Claude Code's /usage."}
 
 
 def gemini_status(now):
@@ -200,18 +128,15 @@ def local_status(now):
 
 def advice(claude, gemini):
     tips = []
-    cw, ck = claude["window"]["pct"], claude["week"]["pct"]
-    if (cw or 0) >= 80 or (ck or 0) >= 80:
+    top = max((l["pct"] for l in claude["limits"]), default=None)
+    if top is not None and top >= 80:
         tips.append("Claude is past 80% — send work to Sonnet/Haiku subagents and Gemini; keep Opus for review only.")
-    out = [m for m in gemini["models"] if m["out_until"]]
-    for m in out:
-        tips.append("%s is out until %s — the pipeline uses the next model down." %
-                    (m["name"], time.strftime("%-I:%M %p", time.localtime(m["out_until"]))))
-    hot = [m for m in gemini["models"] if (m["pct"] or 0) >= 80 and not m["out_until"]]
-    for m in hot:
-        tips.append("%s is at %d%% — the pipeline slows it down to stay near 80%%." % (m["name"], m["pct"]))
-    if cw is None and ck is None:
-        tips.append("Claude's limits aren't learned yet — press 'I just hit the limit' next time Claude stops you.")
+    for m in gemini["models"]:
+        if m["out_until"]:
+            tips.append("%s is out until %s — the pipeline uses the next model down." %
+                        (m["name"], time.strftime("%-I:%M %p", time.localtime(m["out_until"]))))
+        elif (m["pct"] or 0) >= 80:
+            tips.append("%s is at %d%% — the pipeline slows it down to stay near 80%%." % (m["name"], m["pct"]))
     return tips
 
 
@@ -227,27 +152,6 @@ def status(root, max_age=120):
     with _lock:
         _cache.update(t=time.time(), data=data)
     return data
-
-
-def learn_limit(root, which):
-    """Nate just got stopped by Claude: what was used becomes the limit."""
-    now = time.time()
-    c = claude_status(root, now)
-    lim = load_limits(root)
-    cl = lim.setdefault("claude", {})
-    if which == "window":
-        cl["window"] = max(c["window"]["used"], 1)
-    elif which == "week":
-        cl["week"] = max(c["week"]["used"], 1)
-    else:
-        raise ValueError("which must be window or week")
-    cl["learned_at"] = now
-    f = _limits_file(root)
-    f.parent.mkdir(parents=True, exist_ok=True)
-    f.write_text(json.dumps(lim, indent=1))
-    with _lock:
-        _cache["data"] = None
-    return cl
 
 
 if __name__ == "__main__":
