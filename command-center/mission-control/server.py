@@ -1,5 +1,5 @@
 """Mission Control — local agentic OS dashboard. Runs on http://localhost:8450"""
-import json, os, re, shutil, sqlite3, subprocess, datetime, threading, urllib.request, shlex, base64, hashlib, secrets, time, plistlib, ipaddress, hmac
+import json, os, re, shutil, socket, sqlite3, subprocess, sys, datetime, threading, urllib.request, shlex, base64, hashlib, secrets, time, plistlib, ipaddress, hmac
 from pathlib import Path
 from urllib.parse import urlparse
 from dotenv import load_dotenv
@@ -13,6 +13,7 @@ ROOT = Path(__file__).parent
 load_dotenv(ROOT / ".env")  # PLAID_*/GUSTO_* — see .env.example; never commit real values
 DB = ROOT / "data" / "mission.db"
 OLLAMA = "http://localhost:11434"
+ARENA_URL = "http://127.0.0.1:8470"  # code-review-pipeline's Arena, a separate always-on service
 BRIEF_MODEL = "qwen3-coder:30b"  # actually installed on this Mac (qwen2.5-coder:32b never was)
 
 app = FastAPI(title="Mission Control")
@@ -332,6 +333,19 @@ def hands_token(request: Request = None):
         return resp
 
     return JSONResponse({"configured": bool(token), "port": port_num}, status_code=403)
+
+@app.get("/api/hands/status")
+def hands_status():
+    """Is the native Hands AI Mac app's Remote server listening. No token guard —
+    reveals nothing secret, and keeping it token-free keeps the Control tab's poll cheap."""
+    port = _get_hands_prefs()["port"]
+    running = False
+    try:
+        with socket.create_connection(("127.0.0.1", port), timeout=0.5):
+            running = True
+    except OSError:
+        running = False
+    return {"running": running, "port": port}
 
 def _verify_token(request: Request = None, payload: dict = None) -> bool:
     expected = _get_configured_token()
@@ -694,6 +708,30 @@ def reels_build(payload: dict = Body(...), request: Request = None):
         subprocess.Popen([str(ROOT / ".venv/bin/python"), str(ROOT / "scripts/build_reel.py"), reel_id],
                          cwd=str(ROOT), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
     log_activity("reel", f"started building reel {reel_id}")
+    return {"ok": True}
+
+_reel_sync_proc = None
+_reel_sync_lock = threading.Lock()
+
+@app.post("/api/reels/sync")
+def reels_sync(request: Request = None, payload: dict = Body(default={})):
+    """Start scripts/sync_library.py in the background. One at a time — a fresh
+    request while one is still running would race the same sqlite rows."""
+    if not _verify_token(request, payload):
+        return JSONResponse({"error": "unauthorized: valid bearer token required"}, status_code=401)
+    global _reel_sync_proc
+    venv_py = ROOT / ".venv" / "bin" / "python"
+    py = str(venv_py) if venv_py.exists() else sys.executable  # smoke-tested copies don't ship .venv
+    with _reel_sync_lock:
+        if _reel_sync_proc is not None and _reel_sync_proc.poll() is None:
+            return JSONResponse({"error": "a sync is already running"}, status_code=409)
+        try:
+            _reel_sync_proc = subprocess.Popen(
+                [py, str(ROOT / "scripts/sync_library.py")],
+                cwd=str(ROOT), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+        except OSError as e:
+            return JSONResponse({"error": f"couldn't start sync: {e}"}, status_code=500)
+    log_activity("reels", "library sync started")
     return {"ok": True}
 
 # ---------- life hq ----------
@@ -1112,6 +1150,35 @@ def brief_now(request: Request = None, payload: dict = Body(default={})):
     log_activity("brief", "morning brief generated" if r.returncode == 0 else "brief generation failed")
     return {"ok": r.returncode == 0, "log": (r.stdout + r.stderr)[-500:]}
 
+_brief_bg_running = False
+_brief_bg_lock = threading.Lock()
+
+def _brief_bg_worker():
+    global _brief_bg_running
+    try:
+        r = subprocess.run([str(ROOT / ".venv/bin/python"), str(ROOT / "scripts/morning_brief.py")],
+                           capture_output=True, text=True, timeout=600)
+        log_activity("brief", "morning brief generated" if r.returncode == 0 else "brief generation failed")
+    except Exception as e:
+        log_activity("brief", f"brief generation failed: {e}")
+    finally:
+        with _brief_bg_lock:
+            _brief_bg_running = False
+
+@app.post("/api/briefs/generate_bg")
+def brief_now_bg(request: Request = None, payload: dict = Body(default={})):
+    """Same as /api/briefs/generate but returns immediately — the model call can take
+    minutes and the caller shouldn't have to hold a connection open for it."""
+    if not _verify_token(request, payload):
+        return JSONResponse({"error": "unauthorized: valid bearer token required"}, status_code=401)
+    global _brief_bg_running
+    with _brief_bg_lock:
+        if _brief_bg_running:
+            return JSONResponse({"error": "a brief is already running"}, status_code=409)
+        _brief_bg_running = True
+    threading.Thread(target=_brief_bg_worker, daemon=True).start()
+    return {"ok": True, "started": True}
+
 # ---------- terminal: background agent runs (claude / codex / local) ----------
 TERM_DIR = ROOT / "data" / "term"
 TERM_DIR.mkdir(exist_ok=True)
@@ -1265,6 +1332,24 @@ def compare_models(request: Request = None):
                     "avg_secs": round(s["secs"] / s["ok"], 1) if s["ok"] else None,
                     "runs": len(s["runs"])})
     return sorted(out, key=lambda r: -r["calls"])
+
+@app.get("/api/arena/state")
+def arena_state(request: Request = None):
+    """Proxy code-review-pipeline's Arena /api/state — lets the Control tab warn
+    before a restart aborts an in-flight repo review."""
+    if not _verify_token(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    try:
+        with urllib.request.urlopen(f"{ARENA_URL}/api/state", timeout=3) as r:
+            data = json.loads(r.read())
+        state = data.get("state", {}) or {}
+        running = bool(state.get("running"))
+        return {"reachable": True, "running": running, "run_id": state.get("run_id"),
+                "done": len(state.get("done") or []), "queued": len(state.get("queue") or []),
+                "safe_to_restart": not running}
+    except Exception:
+        return {"reachable": False, "running": False, "run_id": None,
+                "done": 0, "queued": 0, "safe_to_restart": True}
 
 def _run_duel(duel_id: str, prompt: str, keys: list):
     f = DUELS_DIR / f"{duel_id}.json"

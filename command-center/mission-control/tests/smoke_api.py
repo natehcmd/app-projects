@@ -26,7 +26,7 @@ import urllib.request
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SENSITIVE = ["/api/team", "/api/team/runs", "/api/filegraph/file", "/api/compare/models", "/api/reels/board", "/api/briefs/short", "/api/learn/card", "/api/activity", "/api/briefs", "/api/lifehq", "/api/plaid/accounts",
              "/api/roadmap", "/api/search", "/api/swarm/runs", "/api/term/jobs",
-             "/api/artifacts", "/api/flows/runs"]
+             "/api/artifacts", "/api/flows/runs", "/api/arena/state"]
 SLOW_BUDGET_S = {"/api/projects": 4.0, "/api/term/snapshot": 4.0}
 fails = []
 
@@ -158,6 +158,19 @@ def main():
         check(code == 400, "team run id path refused (%s)" % code)
         check(post("/api/team/ask", {"idea": ""}) == 400, "empty idea refused")
 
+        print("Arena state / reels sync:")
+        arena = json.loads(sess.open(base + "/api/arena/state", timeout=10).read())
+        check(isinstance(arena.get("safe_to_restart"), bool),
+              "arena/state returns a boolean safe_to_restart (%r)" % (arena.get("safe_to_restart"),))
+        sync_codes = [post("/api/reels/sync", {}), post("/api/reels/sync", {})]
+        check(all(c in (200, 409) for c in sync_codes), "reels/sync twice: 200/409 only, never 500 (%r)" % sync_codes)
+        try:
+            code = urllib.request.urlopen(urllib.request.Request(base + "/api/reels/sync", data=b"{}",
+                headers={"Content-Type": "application/json", "Sec-Fetch-Site": "cross-site"}), timeout=10).status
+        except urllib.error.HTTPError as e:
+            code = e.code
+        check(code in (401, 403), "reels/sync refuses anonymous cross-site (%s)" % code)
+
         print("Sensitive endpoints without a session:")
         for path in [p for p in SENSITIVE if p in gets]:   # only those this build has
             try:
@@ -201,6 +214,9 @@ def main():
             proc.wait(10)
         except subprocess.TimeoutExpired:
             proc.kill()
+        # reels/sync starts start_new_session=True, so it survives proc.terminate() above;
+        # it only ever runs against this run's own tmp copy, so it's safe to kill by that path.
+        subprocess.run(["pkill", "-f", os.path.join(tmp, "scripts", "sync_library.py")], check=False)
         shutil.rmtree(tmp, ignore_errors=True)
     print("\n%s" % ("ALL PASSED" if not fails else "%d FAILED" % len(fails)))
 
