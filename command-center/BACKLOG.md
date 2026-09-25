@@ -14,7 +14,7 @@ _2026-09-24: old July copy in iCloud/Applications (no remote server) trashed; en
 ## P1 — app-wide
 - [~] **Theme switcher** — change the whole app theme anytime; each tab keeps its own accent within the theme.
 - [~] **Quick-note button, top-left, on every page** — voice or keyboard; notes saved where Claude/Hammond can read and act on them.
-- [ ] **Plain English everywhere** — brief bullet points, no slop; explain what each tab is for in one line.
+- [~] **Plain English everywhere** — brief bullet points, no slop; explain what each tab is for in one line.
 
 ## P2 — per tab
 - [~] **Home** — Jarvis look: dials + graphs (system, agents, budget, reels, to-dos); merged **to-do list** incl. reels to review.

@@ -98,7 +98,7 @@ async chat() {
         onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendHands();}"></textarea>
       <button class="act" id="handssend" onclick="sendHands()">Send</button>
     </div>
-    <div class="sub" style="margin-top:8px">talks straight to the Hammond Mac app over a local WebSocket — same agent, same tools, same conversation as the native app and the iPhone app.</div>
+    <div class="sub" style="margin-top:8px">This is Hammond — one conversation, shared with the Mac app and the iPhone app. Talk to it here just like you would there.</div>
   </div>`;
 },
 
@@ -159,8 +159,8 @@ async agentdrop() {
   <div class="card glass"><h2><span class="dot t-mint"></span>Synced Reels — live from Instagram (${window._agentdropSynced.length})
     <button class="act ghost" style="margin-left:auto" onclick="openAgentDropFile('reels')">Open Folder</button>
   </h2>
-  <div class="sub" style="margin-bottom:10px">Auto-synced every 10 minutes from <b>tech.review.nate</b> — anything saved there,
-    or DM'd there from natep.howard, lands here automatically (ig-curate.py via launchd).</div>
+  <div class="sub" style="margin-bottom:10px">Checks <b>tech.review.nate</b> every 10 minutes. Anything you save there, or DM there
+    from natep.howard, shows up here on its own.</div>
   <input id="synced_q" placeholder="search captions…" value="${esc(state.syncedQuery)}"
     style="width:100%;margin-bottom:10px" oninput="state.syncedQuery=this.value;renderSyncedOnly()">
   <div class="list" id="synced_reels" style="max-height:320px;overflow-y:auto">${syncedReelRows(window._agentdropSynced, state.syncedQuery)}</div>
@@ -168,11 +168,10 @@ async agentdrop() {
   <div class="card glass"><h2><span class="dot t-peach"></span>Agent Drop
     <button class="act ghost" style="margin-left:auto" onclick="openAgentDropFile(null)">Open Workspace</button>
   </h2>
-  <div class="sub">Drag anything (a link, a video, a PDF) onto the AgentDrop app and it runs Claude Code on it,
-    saving output into <code>~/AgentDrop-Workspace</code>. That's <b>one shared folder, not per-drop folders</b> —
-    a new drop's same-named files (metadata.json, summary.md, dropped_item.json) overwrite the last drop's.
-    So only the most recent structured drop shows below, plus any uniquely-named leftovers from earlier ones —
-    nothing here is invented history.</div>
+  <div class="sub">Drag anything — a link, a video, a PDF — onto the AgentDrop app and Claude Code works on it, saving the
+    result into <code>~/AgentDrop-Workspace</code>. It's <b>one shared folder, not one per drop</b> — a new drop's files
+    overwrite the last drop's files with the same name. So only the newest drop shows below, plus any older files that
+    happened not to get overwritten. Nothing here is made up.</div>
   </div>
   ${!d.exists ? '<div class="card glass empty">no ~/AgentDrop-Workspace folder yet — drop something onto AgentDrop first</div>' : `
   <div class="grid2">
@@ -185,7 +184,7 @@ async agentdrop() {
         <div class="sub" style="margin-top:6px">dropped ${esc((drop.dropped_at||"").replace("T"," "))}</div>
         ${drop.web_tools && drop.web_tools.length ? `<div class="tags" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
           ${drop.web_tools.map(t=>`<span class="pill">${esc(t)}</span>`).join("")}</div>` : ""}
-      ` : '<div class="empty">no dropped_item.json in the workspace right now</div>'}
+      ` : '<div class="empty">nothing dropped yet</div>'}
     </div>
     <div class="card glass"><h2><span class="dot t-sky"></span>Workspace Files (${d.files.length})</h2>
       <div class="list">${d.files.map(fileRow).join("") || '<div class="empty">empty</div>'}</div>
@@ -193,9 +192,8 @@ async agentdrop() {
   </div>`}
   <div class="card glass">
     <h2><span class="dot t-lav"></span>Library — every reel you've saved/DM'd to yourself on Instagram (${window._agentdropLibrary.length})</h2>
-    <div class="sub" style="margin-bottom:10px">Pulled from your real curation ledger (<code>ig-curate.py</code> mirrors your
-      Saved collection + self-DMs) — ${window._agentdropLibrary.filter(r=>r.made==="Y").length} of these were actually turned
-      into real built tools.</div>
+    <div class="sub" style="margin-bottom:10px">Every reel you've saved or DM'd to yourself on Instagram —
+      ${window._agentdropLibrary.filter(r=>r.made==="Y").length} of them have actually been turned into a real, built tool so far.</div>
     <div class="row" style="gap:8px;margin-bottom:10px;flex-wrap:wrap">
       <input id="agentdrop_q" placeholder="search captions…" value="${esc(state.agentdropQuery)}"
         style="flex:1;min-width:160px" oninput="state.agentdropQuery=this.value;renderAgentDropOnly()">
@@ -212,8 +210,8 @@ async reels() {
   return `
   <div class="card glass"><h2><span class="dot t-sky"></span>Add reels</h2>
     <div class="row"><input id="reelurls" placeholder="paste one or more Instagram reel links…">
-    <button class="act" onclick="addReels(this)">Ingest</button></div>
-    <div class="sub" style="margin-top:8px">Downloads audio, transcribes locally (whisper), auto-tags via ollama. Nothing leaves this machine.</div></div>
+    <button class="act" onclick="addReels(this)">Add</button></div>
+    <div class="sub" style="margin-top:8px">Downloads the audio, writes out the words, and tags the topic — all done on this Mac with Whisper and Ollama (the free AI here). Nothing leaves this computer.</div></div>
   <div class="card glass"><h2><span class="dot t-mint"></span>Vault <span id="reelcount"></span></h2>
     <input id="reelsearch" placeholder="search uploader / caption / transcript…" value="${esc(state.reelQuery||"")}"
       style="margin-bottom:12px" oninput="state.reelQuery=this.value;renderReelsOnly()">
@@ -331,9 +329,9 @@ async term() {
   const tabCounts = browserTabs.reduce((a,t)=>{ a[t.category]=(a[t.category]||0)+1; return a; }, {});
   const guiStamp = snap.gui_generated || snap.generated || "";
   return `
-  <div class="card glass"><h2><span class="dot t-mint"></span>Launch Agent</h2>
+  <div class="card glass"><h2><span class="dot t-mint"></span>Start a job</h2>
     <div class="sub" style="margin-bottom:12px">Type a task, pick which agent should do it, and it runs in the background —
-      you don't have to sit and watch it. "Local" runs a free Ollama model on this Mac; Claude/Codex use your CLI logins.</div>
+      you don't have to sit and watch it. "Local" runs a free model on this Mac (Ollama); Claude and Codex use your own logins.</div>
     <div class="row" style="margin-bottom:10px;flex-wrap:wrap">
       ${["claude","codex","local"].map(e=>`<span class="pill ${eng===e?"on t-"+({claude:"mint",codex:"peach",local:"sky"}[e]):""}"
         onclick="setEngine('${e}')">${{claude:"Claude Code",codex:"Codex",local:"Ollama (local)"}[e]}</span>`).join("")}
@@ -343,30 +341,30 @@ async term() {
     <textarea id="tprompt" rows="3" placeholder="what should the agent do?"></textarea>
     <div style="margin-top:12px" class="row">
       <button class="act" onclick="runJob(this)">Run in background</button>
-      <span class="sub">claude runs with acceptEdits · codex sandboxed to workspace</span></div></div>
+      <span class="sub">Claude can edit files without asking each time · Codex can only touch files in its own project folder</span></div></div>
   <div class="card glass"><h2><span class="dot t-lav"></span>Jobs</h2>
     <div class="list">${jobs.map(j=>`<div class="item ${state.job===j.id?"sel":""}" onclick="openJob('${j.id}')" style="cursor:pointer">
       <span class="status-dot ${j.status==="running"?"run":j.status==="done"?"ok":"err"}"></span>
       <div class="grow"><b>${j.engine}</b>${j.model!=="default"?" · "+j.model:""} — ${esc(j.prompt)}</div>
       <div class="meta">${j.started}${j.ended?" → "+j.ended:""} · ${j.status}</div>
       ${j.status==="running"?`<button onclick="event.stopPropagation();stopJob('${j.id}')" title="stop">■</button>`:""}
-    </div>`).join("") || '<div class="empty">no jobs yet — launch one above</div>'}</div></div>
+    </div>`).join("") || '<div class="empty">no jobs yet — start one above</div>'}</div></div>
   <div class="grid2">
-    <div class="card glass"><h2><span class="dot t-sky"></span>Open CLI Sessions
+    <div class="card glass"><h2><span class="dot t-sky"></span>Open Terminal Tabs
       <button class="mini-btn" onclick="render()" title="refresh snapshot">refresh</button></h2>
       <div class="sub" style="margin-bottom:12px">${terminalTabs.length} Terminal tabs · GUI snapshot ${esc(guiStamp.replace("T"," "))}</div>
       <div class="list snaplist">${terminalTabs.map(sessionRow).join("") || '<div class="empty">no Terminal tabs detected</div>'}</div></div>
     <div class="card glass"><h2><span class="dot t-peach"></span>Local Services</h2>
       <div class="list">${(snap.tracked_apps||[]).map(trackedAppRow).join("")}</div>
-      <div class="sub" style="margin-top:12px">${(snap.services||[]).length} listening TCP services found</div></div>
+      <div class="sub" style="margin-top:12px">${(snap.services||[]).length} services listening on this Mac</div></div>
   </div>
   <div class="card glass"><h2><span class="dot t-mint"></span>Browser Tabs — ${browserTabs.length}</h2>
     <div class="tags" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
       ${Object.entries(tabCounts).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span class="pill">${esc(k)} · ${v}</span>`).join("")}
     </div>
     <div class="list tablist">${browserTabs.map(browserTabRow).join("") || '<div class="empty">no browser tabs detected</div>'}</div></div>
-  <div class="card glass"><h2><span class="dot t-lav"></span>CLI Process Detail</h2>
-    <div class="list proclist">${(snap.cli_processes||[]).map(processRow).join("") || '<div class="empty">no tracked CLI processes detected</div>'}</div></div>
+  <div class="card glass"><h2><span class="dot t-lav"></span>Running Processes</h2>
+    <div class="list proclist">${(snap.cli_processes||[]).map(processRow).join("") || '<div class="empty">nothing running right now</div>'}</div></div>
   ${state.job?`<div class="card glass"><h2><span class="dot t-sky"></span>Output — ${state.job}
       <span class="sub" id="tstatus"></span></h2><pre class="termout" id="termout"></pre></div>`:""}`;
 },
@@ -391,14 +389,14 @@ async swarm() {
   }
   return `
   <div class="card glass"><h2><span class="dot t-mint"></span>Swarm</h2>
-    <div class="sub" style="margin-bottom:12px">Give it one big goal and it splits the work into 2-4 smaller sub-tasks,
-      runs them all <i>at the same time</i> on separate agents, then writes a combined summary. Good for anything that
-      breaks into independent pieces — Flows (next tab) is better when steps need to happen in order, one feeding the next.</div>
+    <div class="sub" style="margin-bottom:12px">Give it one big goal and it breaks the work into 2-4 pieces,
+      runs them all <i>at the same time</i> on separate agents, then writes one combined summary. Good for anything that
+      breaks into independent pieces — Steps (next tab) is better when each step needs the one before it done first.</div>
     <textarea id="sgoal" rows="2" placeholder="give the swarm a goal…"></textarea>
     <div class="row" style="margin-top:10px">
       <input id="scwd" placeholder="~/Projects/mission-control/sandbox" value="${state.scwd||"~/Projects/mission-control/sandbox"}" style="width:280px;flex:none">
       <button class="act" onclick="runSwarm(this)">Launch swarm</button>
-      <span class="sub">simple→local qwen · medium→haiku · complex→your default Claude</span></div></div>
+      <span class="sub">simple → free local model · medium → Haiku · complex → your default Claude</span></div></div>
   <div class="card glass"><h2><span class="dot t-peach"></span>Runs</h2>
     <div class="list">${runs.map(r=>`<div class="item ${state.srun===r.id?"sel":""}" style="cursor:pointer" onclick="openSwarm('${r.id}')">
       <span class="status-dot ${r.status==="running"?"run":"ok"}"></span>
@@ -484,7 +482,7 @@ async control() {
 async tools() {
   const st = await api("status");
   return `
-  <div class="card glass"><div class="sub">A read-only reference: what's installed and running — not something you configure here.</div></div>
+  <div class="card glass"><div class="sub">Just a look at what's installed and running — you don't change anything here.</div></div>
   <div class="grid2">
     <div class="card glass"><h2><span class="dot t-mint"></span>Installed Skills (${st.skills.length})</h2>
       <div class="tags" style="display:flex;gap:6px;flex-wrap:wrap">${st.skills.map(s=>`<span class="pill">${s}</span>`).join("")}</div></div>
@@ -492,10 +490,10 @@ async tools() {
       <div class="tags" style="display:flex;gap:6px;flex-wrap:wrap">${st.ollama_models.map(m=>`<span class="pill">${m}</span>`).join("")}</div></div>
   </div>
   <div class="card glass"><h2><span class="dot t-lav"></span>Scheduled Jobs</h2>
-    ${st.cron.length ? st.cron.map(c=>`<div class="sub"><code>${esc(c)}</code></div>`).join("") : '<div class="empty">no cron jobs</div>'}</div>
+    ${st.cron.length ? st.cron.map(c=>`<div class="sub"><code>${esc(c)}</code></div>`).join("") : '<div class="empty">no scheduled jobs</div>'}</div>
   <div class="card glass"><h2><span class="dot t-peach"></span>Quick Reference</h2>
-    <div class="sub"><code>claude-local</code> — Claude Code on local qwen · <code>markitdown f.pdf</code> — PDF→markdown ·
-    <code>skills find "query"</code> — discover skills (installed globally 2026-07-20) · <code>/plugin</code> — agent marketplace (claude-code-workflows)</div></div>`;
+    <div class="sub"><code>claude-local</code> — Claude Code using the free local model · <code>markitdown f.pdf</code> — turn a PDF into markdown ·
+    <code>skills find "query"</code> — search for a skill · <code>/plugin</code> — browse and install skills</div></div>`;
 },
 
 async reeltools() {
@@ -639,12 +637,12 @@ async pipeline() {
 async learn() {
   const history = await api("learn/history");
   return `
-  <div class="card glass"><h2><span class="dot t-lav"></span>Learn</h2>
-    <div class="sub" style="margin-bottom:12px">Pick a subject. A local model builds a short curriculum, pulls in
-      real curated resources where they exist, and gives you a quiz to test yourself — all offline except the
-      search links, which just open your browser.</div>
+  <div class="card glass"><h2><span class="dot t-lav"></span>Study a subject</h2>
+    <div class="sub" style="margin-bottom:12px">Type any subject and a free local AI builds you a short course —
+      real resources where it can find them, plus a quiz to test yourself. Only the search links leave this Mac,
+      to open in your browser.</div>
     <div class="row" style="gap:8px;margin-bottom:8px">
-      <input id="learn_subject" placeholder="e.g. \"Python generators\", \"the French Revolution\", \"SQL joins\""
+      <input id="learn_subject" placeholder="e.g. Python generators, the French Revolution, SQL joins"
              style="flex:1" onkeydown="if(event.key==='Enter')startLearn()">
       <button class="act" onclick="startLearn()">Teach me</button>
     </div>
@@ -682,15 +680,15 @@ async compare() {
 
 async workflows() {
   return `
-  <div class="card glass"><h2><span class="dot t-mint"></span>Safe Workflows (Reel Archive)</h2>
-    <div class="sub" style="margin-bottom:12px">Test the local workflows generated by the ReelAnalyzer subagents. These run completely offline and locally using shell scripts.</div>
+  <div class="card glass"><h2><span class="dot t-mint"></span>Old Workflow Tests</h2>
+    <div class="sub" style="margin-bottom:12px">A few early scripts built from saved reels. Click a button to run one and see what it does — all on this Mac, nothing sent anywhere.</div>
     <div class="row" style="margin-bottom:12px; gap:8px">
       <button class="act" onclick="testWorkflow('python3 ~/Projects/app-projects/mac-dotfiles-backup/scripts/repomap.py ~/Projects/app-projects/command-center/mission-control')">Test Graphify (Map)</button>
       <button class="act" onclick="testWorkflow('python3 ~/Projects/app-projects/mac-dotfiles-backup/scripts/web-search.py &quot;Agentic AI&quot;')">Test Web Search</button>
       <button class="act" onclick="testWorkflow('python3 ~/Projects/app-projects/mac-dotfiles-backup/scripts/web-scrape.py https://example.com')">Test Web Scraper</button>
       <button class="act" onclick="testWorkflow('tail -n 20 ~/Projects/app-projects/mac-dotfiles-backup/scripts/clap_detector.out')">Check Audio Trigger Logs</button>
     </div>
-    <pre class="termout" id="wf_out" style="min-height:200px">Select a workflow to test...</pre>
+    <pre class="termout" id="wf_out" style="min-height:200px">Click a button above to see the output here...</pre>
   </div>`;
 },
 
@@ -842,7 +840,7 @@ const chatBubble = m => `<div class="msg ${m.role}"><div class="bubble">${esc(m.
 const compareForm = () => `
   <div class="card glass" style="margin-top:14px">
     <h2><span class="dot t-peach"></span>Record a comparison</h2>
-    <div class="sub" style="margin-bottom:10px">For a feature you actually built (or evaluated) both ways — not a generated guess, since there's no honest way to synthesize what the other side actually did.</div>
+    <div class="sub" style="margin-bottom:10px">For a feature you actually built (or judged) both ways — not a guess, since there's no honest way to make up what the other side actually did.</div>
     <input id="cmp_feature" placeholder="Feature name">
     <div class="grid2" style="margin-top:8px">
       <div>

@@ -4,7 +4,7 @@
     "name": "CS Resources CLI",
     "script": "resources_cli.py",
     "desc": "Curated offline list of real CS learning resources.",
-    "usage": "python3 resources_cli.py --list"
+    "usage": "python3 resources_cli.py --random 5"
   },
   {
     "id": "DaagbUMP8Tg",
