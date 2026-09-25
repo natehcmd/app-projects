@@ -4,6 +4,7 @@ import time
 import errno
 import subprocess
 import json
+import tempfile
 import urllib.request
 
 LOCK_PATH = "/tmp/jarvis.lock"
@@ -44,18 +45,37 @@ def main():
     print("Jarvis activated.")
     speak("Yes sir. Listening.")
 
-    # Record 4 seconds using ffmpeg on macOS (avfoundation)
-    os.system("/usr/local/Cellar/ffmpeg/8.0.1_4/bin/ffmpeg -y -f avfoundation -i ':0' -t 4 /tmp/jarvis_cmd.wav -loglevel quiet")
-    speak("Processing.")
+    # Use a private per-run temp dir so the wav/txt can't be pre-created,
+    # symlinked, or left stale by another process/run sharing fixed /tmp paths.
+    with tempfile.TemporaryDirectory(prefix="jarvis_cmd_") as tmpdir:
+        wav_path = os.path.join(tmpdir, "jarvis_cmd.wav")
+        txt_path = os.path.join(tmpdir, "jarvis_cmd.txt")
 
-    # Transcribe locally with Whisper (running inside the safe venv)
-    os.system("/Users/natehoward/AgentDrop-Workspace/venv/bin/whisper /tmp/jarvis_cmd.wav --model tiny --output_dir /tmp --output_format txt > /dev/null 2>&1")
+        # Record 4 seconds using ffmpeg on macOS (avfoundation)
+        subprocess.run(
+            [
+                "/usr/local/Cellar/ffmpeg/8.0.1_4/bin/ffmpeg",
+                "-y", "-f", "avfoundation", "-i", ":0", "-t", "4",
+                wav_path, "-loglevel", "quiet",
+            ]
+        )
+        speak("Processing.")
 
-    try:
-        with open("/tmp/jarvis_cmd.txt", "r") as f:
-            cmd = f.read().strip()
-    except Exception:
-        cmd = ""
+        # Transcribe locally with Whisper (running inside the safe venv)
+        subprocess.run(
+            [
+                "/Users/natehoward/AgentDrop-Workspace/venv/bin/whisper",
+                wav_path, "--model", "tiny", "--output_dir", tmpdir, "--output_format", "txt",
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+
+        try:
+            with open(txt_path, "r") as f:
+                cmd = f.read().strip()
+        except Exception:
+            cmd = ""
 
     print(f"Heard: {cmd}")
 
