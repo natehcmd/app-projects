@@ -40,4 +40,4 @@ Each item: build on `cc-v2` → smoke test (`tests/smoke_api.py`) → screenshot
 
 ## Found while working
 - [~] Hammond: auth-only socket frame should reply with a state snapshot — works in the current build (verified 2026-09-25: `state:idle` arrives on connect); the old build lacked it.
-- [ ] Hammond was found not running at 09:45 on 2026-09-25 with no crash report (quit or closed?). Consider "Open at Login" + a CC banner when it is down.
+- [~] Hammond was found not running at 09:45 on 2026-09-25 with no crash report (quit or closed?). Consider "Open at Login" + a CC banner when it is down. _(banner added: top bar shows "Hammond is off — open it" and opens Hands AI; "Open at Login" is Nate's call)_
