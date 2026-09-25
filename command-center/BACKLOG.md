@@ -39,4 +39,5 @@ _2026-09-24: old July copy in iCloud/Applications (no remote server) trashed; en
 Each item: build on `cc-v2` → smoke test (`tests/smoke_api.py`) → screenshot → Nate checks → only then `[x]`.
 
 ## Found while working
-- [ ] Hammond: auth-only socket frame should reply with a state snapshot (code is there, nothing arrives) — CC now treats open+no-error as connected.
+- [~] Hammond: auth-only socket frame should reply with a state snapshot — works in the current build (verified 2026-09-25: `state:idle` arrives on connect); the old build lacked it.
+- [ ] Hammond was found not running at 09:45 on 2026-09-25 with no crash report (quit or closed?). Consider "Open at Login" + a CC banner when it is down.
