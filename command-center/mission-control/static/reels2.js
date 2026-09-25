@@ -315,7 +315,7 @@ const oldReels = views.reels, oldDrop = views.agentdrop;
       if (isPolling) return;
       isPolling = true;
       try {
-        const fresh = await api("reels/board");
+        const fresh = await apiOk("reels/board");
         if (Array.isArray(fresh)) {
           reelsData = fresh;
           document.querySelectorAll('.rv2-build-area').forEach(area => {
@@ -346,7 +346,7 @@ const oldReels = views.reels, oldDrop = views.agentdrop;
         if (r.build) r.build.state = 'queued';
         else r.build = { state: 'queued' };
         updateBuildAreas(id);
-        await api("reels/build", { id });
+        await apiOk("reels/build", { id });
         checkPolling();
       } catch (err) {
         cardErrors.set(id, err.message || 'Build failed to start');
@@ -356,7 +356,7 @@ const oldReels = views.reels, oldDrop = views.agentdrop;
     } else if (action === 'looks-good') {
       try {
         cardErrors.delete(id);
-        await api("reels/update", { id, topic: r.topic, verdict: 'built', notes: r.notes });
+        await apiOk("reels/update", { id, topic: r.topic, verdict: 'built', notes: r.notes });
         r.verdict = 'built';
         refreshAll();
       } catch (err) {
@@ -367,7 +367,7 @@ const oldReels = views.reels, oldDrop = views.agentdrop;
       try {
         cardErrors.delete(id);
         const newNotes = r.notes ? `${r.notes} · needs work` : 'needs work';
-        await api("reels/update", { id, topic: r.topic, verdict: 'review', notes: newNotes });
+        await apiOk("reels/update", { id, topic: r.topic, verdict: 'review', notes: newNotes });
         r.verdict = 'review';
         r.notes = newNotes;
         refreshAll();
@@ -378,7 +378,7 @@ const oldReels = views.reels, oldDrop = views.agentdrop;
     } else if (action === 'skip') {
       try {
         cardErrors.delete(id);
-        await api("reels/update", { id, topic: r.topic, verdict: 'skipped', notes: r.notes });
+        await apiOk("reels/update", { id, topic: r.topic, verdict: 'skipped', notes: r.notes });
         r.verdict = 'skipped';
         refreshAll();
       } catch (err) {
@@ -464,7 +464,7 @@ const oldReels = views.reels, oldDrop = views.agentdrop;
     stopPolling();
 
     try {
-      reelsData = await api("reels/board");
+      reelsData = await apiOk("reels/board");
     } catch (err) {
       setTimeout(() => {
         const root = document.getElementById('rv2-root');

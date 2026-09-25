@@ -10,7 +10,7 @@
     return new Promise(async (resolve) => {
       const out = {};
       let token;
-      try { token = (await api("hands/token")).token; } catch (e) { return resolve({ _error: "no Hammond token" }); }
+      try { token = (await apiOk("hands/token")).token; } catch (e) { return resolve({ _error: "no Hammond token" }); }
       let ws;
       try { ws = new WebSocket("ws://127.0.0.1:8787/agent"); } catch (e) { return resolve({ _error: "Hammond not reachable" }); }
       const done = () => { try { ws.close(); } catch (e) {} resolve(out); };
@@ -54,7 +54,7 @@
       : "Updated " + new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
     if (!r._error && r.reminders_list !== undefined) {
       const detail = "reminders: " + lines(r.reminders_list).join(" | ").slice(0, 900);
-      try { await api("activity/log", { kind: "lifehq_sync", detail }); } catch (e) {}
+      try { await apiOk("activity/log", { kind: "lifehq_sync", detail }); } catch (e) {}
     }
   }
 

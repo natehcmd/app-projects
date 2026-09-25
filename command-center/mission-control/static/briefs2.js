@@ -11,7 +11,7 @@
 
   async function loadShort(el) {
     try {
-      const r = await api("briefs/short?name=" + encodeURIComponent(el.dataset.name));
+      const r = await apiOk("briefs/short?name=" + encodeURIComponent(el.dataset.name));
       el.innerHTML = r && r.short ? bullets(r.short) : '<div class="empty">No summary</div>';
     } catch (e) {
       el.innerHTML = '<div class="empty">Short version not ready (local model busy) — open the full brief below.</div>';
@@ -19,7 +19,7 @@
   }
 
   views.briefs = async () => {
-    const bs = await api("briefs");
+    const bs = await apiOk("briefs");
     setTimeout(async () => {
       for (const el of document.querySelectorAll(".br2-short[data-name]")) await loadShort(el); // one at a time: one local model
     }, 0);

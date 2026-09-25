@@ -26,7 +26,7 @@
     const tick = async () => {
       if (!document.getElementById("tm2-out")) return clearInterval(timer);
       try {
-        const d = await api("team/run?id=" + encodeURIComponent(id));
+        const d = await apiOk("team/run?id=" + encodeURIComponent(id));
         renderRun(d);
         if (d.status === "done") { clearInterval(timer); const b = document.getElementById("tm2-go"); if (b) b.disabled = false; }
       } catch (e) { clearInterval(timer); }
@@ -40,7 +40,7 @@
     const idea = document.getElementById("tm2-idea").value.trim();
     if (!idea) return;
     btn.disabled = true;
-    try { follow((await api("team/ask", { idea })).id); }
+    try { follow((await apiOk("team/ask", { idea })).id); }
     catch (e) { btn.disabled = false; document.getElementById("tm2-out").innerHTML = `<div class="empty">${esc(e.message || String(e))}</div>`; }
   };
 
@@ -49,7 +49,7 @@
     if (!idea) return;
     btn.disabled = true;
     try {
-      await api("term/run", { engine: "claude", model: "default", cwd: "~/Projects", prompt:
+      await apiOk("term/run", { engine: "claude", model: "default", cwd: "~/Projects", prompt:
         "You are Scroll, a chronically online researcher. Search the web for real, current evidence about this idea: " + idea +
         ". Find what already exists (with links), what people actually say (quote with source links), prices, and the real gap. " +
         "Then a short 'Doubting Thomas' section: which of your findings are weak or could be wrong. Plain English bullets." });
@@ -63,7 +63,7 @@
     if (!task) return;
     btn.disabled = true;
     try {
-      await api("term/run", { engine: "claude", model: "default", cwd: "~/Projects", prompt:
+      await apiOk("term/run", { engine: "claude", model: "default", cwd: "~/Projects", prompt:
         "You are Diane, Nate's assistant who gets things done. Do this task fully and carefully, then report back in 3-5 " +
         "plain bullets: what you did, where it is, anything Nate must check. Never mark anything as done for Nate. Task: " + task });
       out.innerHTML = 'Diane is on it — follow along in <a href="#" onclick="event.preventDefault();document.querySelector(\'.dock button[data-view=&quot;term&quot;]\').click()">Jobs</a>.';
@@ -74,7 +74,7 @@
 
   views.swarm = async () => {
     let team = { members: [], diane: null }, runs = [];
-    try { [team, runs] = await Promise.all([api("team"), api("team/runs")]); } catch (e) {}
+    try { [team, runs] = await Promise.all([apiOk("team"), apiOk("team/runs")]); } catch (e) {}
     const rest = oldSwarm ? await oldSwarm() : "";
     return `
     <div class="card glass"><h2><span class="dot t-peach"></span>Your team</h2>

@@ -27,13 +27,13 @@ _2026-09-24: old July copy in iCloud/Applications (no remote server) trashed; en
 - [~] **Briefs** — short bullet points, simple English. _(5 plain bullets per brief, local model, cached; morning brief prompt now bullets under 150 words)_
 - [~] **Term** — unclear purpose → explain it or fold it into another tab. _(now "Agents" group: Jobs / Team / Steps / Results, one-line explainer on each; Workflows moved into Tools)_
 - [~] **Swarm vs Flows vs Workflows** — explain the difference or merge; improve.
-- [~] **Artifacts** — unclear + stale → explain or remove.
-- **Tools** — more interactive; label what each is.
+- [~] **Artifacts** — _(Results: readable cards grouped Flows / Team / Reports, previews, expand inline, search)_ unclear + stale → explain or remove.
+- [~] **Tools** — more interactive; label what each is. _(37 tool cards: plain one-liner, type badge, Try it / Show help run inline. Found: Clap Trigger needs `sounddevice`; CS Resources manifest usage `--list` is wrong)_
 - [~] **Reel Tools** — merge with Reels/AgentDrop. _(tab removed; built tools live in Apps → Reel Apps, builds on each reel card)_
 - [~] **Compare** — compare Claude modes, agents, local models, Gemini; also real devices (e.g. headphones) after research.
 - [~] **Workflows** — duplicate of others → merge.
 - [~] **File Graph** — show files + what's in them; pan/zoom by swiping; fill the window.
-- **Control** — more controls.
+- [~] **Control** — more controls. _(Right now stats; stop jobs/sleep with inline confirm; open apps; brief; FileGraph; reels count. Wanted server endpoints: reels sync, Arena state proxy, stop flow/swarm runs, Hammond status, background brief)_
 
 ## Method
 Each item: build on `cc-v2` → smoke test (`tests/smoke_api.py`) → screenshot → Nate checks → only then `[x]`.

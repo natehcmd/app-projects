@@ -31,7 +31,7 @@
     side.style.display = "block";
     side.innerHTML = '<div class="empty">Loading…</div>';
     try {
-      const f = await api("filegraph/file?id=" + encodeURIComponent(id));
+      const f = await apiOk("filegraph/file?id=" + encodeURIComponent(id));
       side.innerHTML = `
         <div style="display:flex;justify-content:space-between;gap:8px"><h3 style="margin:0;word-break:break-all">${esc(f.name)}</h3>
           <button onclick="document.getElementById('fg2-side').style.display='none'">✕</button></div>
@@ -54,7 +54,7 @@
     if (sim) sim.stop();
     const { width, height } = svg.node().getBoundingClientRect();
     let data;
-    try { data = await api("filegraph/relations"); } catch (e) { data = { nodes: [], links: [] }; }
+    try { data = await apiOk("filegraph/relations"); } catch (e) { data = { nodes: [], links: [] }; }
     if (!data.nodes.length) {
       d3.select("#graph-container").html("<div class='empty' style='padding:30px'>No graph yet — press Rebuild.</div>");
       return;

@@ -10,7 +10,7 @@
     document.querySelectorAll(".ln2-k").forEach((b) => (b.disabled = true));
     box.innerHTML = '<div class="empty">Thinking… (local model, free)</div>';
     try {
-      const c = await api("learn/card?kind=" + encodeURIComponent(kind));
+      const c = await apiOk("learn/card?kind=" + encodeURIComponent(kind));
       box.innerHTML = `
         <h3 style="margin:0 0 6px">${esc(c.title)}</h3>
         <div style="line-height:1.55">${esc(c.body)}</div>

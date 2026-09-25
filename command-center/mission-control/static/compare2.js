@@ -28,12 +28,12 @@
     if (!prompt || models.length < 2) { out.innerHTML = '<div class="empty">Type a question and tick at least 2 models.</div>'; return; }
     btn.disabled = true;
     try {
-      const { id } = await api("compare/duel", { prompt, models, allow_metered: models.includes("claude_adjudicator") });
+      const { id } = await apiOk("compare/duel", { prompt, models, allow_metered: models.includes("claude_adjudicator") });
       clearInterval(duelTimer);
       duelTimer = setInterval(async () => {
         if (!document.getElementById("cp2-duel-out")) return clearInterval(duelTimer);
         try {
-          const d = await api("compare/duel?id=" + encodeURIComponent(id));
+          const d = await apiOk("compare/duel?id=" + encodeURIComponent(id));
           renderDuel(d);
           if (d.status === "done") { clearInterval(duelTimer); btn.disabled = false; }
         } catch (e) { clearInterval(duelTimer); btn.disabled = false; }
@@ -53,7 +53,7 @@
       "battery, pros, cons) then 3 plain-English bullets on which to pick and why. Cite sources as links.";
     btn.disabled = true;
     try {
-      await api("term/run", { engine: "claude", model: "default", prompt, cwd: "~/Projects" });
+      await apiOk("term/run", { engine: "claude", model: "default", prompt, cwd: "~/Projects" });
       out.innerHTML = 'Started — follow it in <a href="#" onclick="event.preventDefault();document.querySelector(\'.dock button[data-view=&quot;term&quot;]\').click()">Jobs</a>. The result also lands in Results.';
     } catch (e) {
       out.textContent = "Couldn't start: " + (e.message || e);
@@ -62,7 +62,7 @@
 
   views.compare = async () => {
     let board = [];
-    try { board = await api("compare/models"); } catch (e) {}
+    try { board = await apiOk("compare/models"); } catch (e) {}
     const rest = oldCompare ? await oldCompare() : "";
     return `
     <div class="card glass"><h2><span class="dot t-peach"></span>AI scoreboard</h2>

@@ -302,6 +302,11 @@ def sh(cmd):
 @app.middleware("http")
 async def session_cookie_middleware(request: Request, call_next):
     response = await call_next(request)
+    # The page shell must never be cached: a stale index.html kept loading old
+    # script versions, so fixes looked like they "didn't work". Scripts carry
+    # ?v=<hash> (bust_cache.py), so they can still cache.
+    if request.url.path in ("/", "/index.html"):
+        response.headers["Cache-Control"] = "no-cache, must-revalidate"
     if _is_local_request(request):
         if request.cookies.get("mc_session") != SESSION_SECRET:
             response.set_cookie(key="mc_session", value=SESSION_SECRET, httponly=True, samesite="strict")

@@ -401,7 +401,7 @@
     fetching = true;
 
     try {
-      const data = await api("roots");
+      const data = await apiOk("roots");
       const box = document.getElementById("rt-box");
       const footer = document.getElementById("rt-footer");
       if (box) box.innerHTML = renderSvg(data);
