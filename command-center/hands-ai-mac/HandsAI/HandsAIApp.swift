@@ -13,6 +13,10 @@ struct HandsAIApp: App {
                 .environmentObject(appDelegate.profiles)
                 .environmentObject(appDelegate.skills)
                 .environmentObject(appDelegate.remote)
+                .environmentObject(appDelegate.voice)
+                .environmentObject(appDelegate.memory)
+                .environmentObject(appDelegate.wake)
+                .environmentObject(appDelegate.briefing)
         }
     }
 }

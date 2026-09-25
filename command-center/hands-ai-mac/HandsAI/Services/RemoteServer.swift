@@ -7,15 +7,17 @@ import FlyingFox
 /// over a WebSocket. Doesn't duplicate any agent logic — it just calls
 /// `agent.send(text)` (the same call `ChatInput`/`InputField` already make)
 /// and forwards the store's existing `@Published` properties to the socket
-/// as they change. Off by default; only starts when explicitly enabled in
-/// Settings → Remote.
+/// as they change. Always runs on localhost so Command Center connects with
+/// no setup; `enabled` (Settings → Remote) only widens it to other devices
+/// (the iPhone over Tailscale). Token-authenticated either way.
 @MainActor
 final class RemoteServer: ObservableObject {
     @Published private(set) var isRunning = false
     @Published private(set) var lastError: String?
 
+    /// Allow other devices (iPhone). Off = loopback only.
     @AppStorage("remote.serverEnabled") var enabled: Bool = false {
-        didSet { syncRunState() }
+        didSet { if oldValue != enabled { restart() } }
     }
     @AppStorage("remote.port") var port: Int = 8787
     @AppStorage("remote.token") var token: String = "" {
@@ -39,10 +41,17 @@ final class RemoteServer: ObservableObject {
     }
 
     private func syncRunState() {
-        if enabled {
-            start()
-        } else {
-            stop()
+        start()
+    }
+
+    /// Rebind after the device-access toggle changes: stop, wait for the old
+    /// listener to release the port, start on the new address.
+    private func restart() {
+        let old = serverTask
+        stop()
+        Task {
+            _ = await old?.value
+            self.start()
         }
     }
 
@@ -55,7 +64,11 @@ final class RemoteServer: ObservableObject {
         // running requires toggling it off/on to pick up the new value
         // (documented in Settings → Remote).
         let handler = AgentWSHandler(agent: agent, expectedToken: token)
-        let server = HTTPServer(port: UInt16(clamping: port))
+        let p = UInt16(clamping: port)
+        // Loopback unless the user opted in to other devices: this agent can
+        // run shell commands, so the LAN is never exposed by default.
+        let server = enabled ? HTTPServer(port: p)
+                             : HTTPServer(address: sockaddr_in6.loopback(port: p))
         self.server = server
         lastError = nil
         serverTask = Task {
@@ -64,11 +77,9 @@ final class RemoteServer: ObservableObject {
                 self.isRunning = true
                 try await server.run()
             } catch {
-                // `enabled` is already false when this is a deliberate stop
-                // (cancelling the task can surface as a thrown error
-                // depending on where in `run()` cancellation lands) — only
-                // treat it as a real failure if the user didn't ask to stop.
-                if self.enabled {
+                // Cancellation (a deliberate restart) can surface as a thrown
+                // error depending on where in `run()` it lands — not a failure.
+                if !Task.isCancelled {
                     self.lastError = error.localizedDescription
                 }
             }

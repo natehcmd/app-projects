@@ -56,7 +56,7 @@ struct RootShell: View {
                 MCWebView(url: URL(string: "http://localhost:8450")!)
             }
         case .hands:
-            ContentView()
+            ChatWindowView()
         }
     }
 }

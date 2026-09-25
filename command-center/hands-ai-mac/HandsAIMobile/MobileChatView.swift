@@ -50,7 +50,7 @@ struct MobileChatView: View {
                 inputBar
             }
             .background(Theme.bg.ignoresSafeArea())
-            .navigationTitle("Hands AI")
+            .navigationTitle("Hammond")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     OrbView(state: remote.state)
@@ -151,7 +151,7 @@ private struct InputBar: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            TextField("Ask Hands AI…", text: $text, axis: .vertical)
+            TextField("Ask Hammond…", text: $text, axis: .vertical)
                 .font(.system(size: 15, design: .rounded))
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)

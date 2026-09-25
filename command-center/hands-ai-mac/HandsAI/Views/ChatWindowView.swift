@@ -34,7 +34,7 @@ struct ChatWindowView: View {
 
     private var header: some View {
         HStack {
-            Text("Hands AI")
+            Text("Hammond")
                 .font(.system(size: 16, weight: .semibold, design: .rounded))
                 .foregroundStyle(Theme.ink)
             Spacer()
@@ -88,7 +88,7 @@ struct ChatWindowView: View {
 
     private var inputBar: some View {
         HStack(spacing: 10) {
-            TextField("Message Hands AI…", text: $agent.input, axis: .vertical)
+            TextField("Message Hammond…", text: $agent.input, axis: .vertical)
                 .textFieldStyle(.plain)
                 .font(.system(size: 13, design: .rounded))
                 .padding(10)

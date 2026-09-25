@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Hands AI brand mark.
+/// Hammond brand mark.
 /// Renders the pixel-art PNG from Assets.xcassets/BrandLogo if present,
 /// falls back to a vector approximation otherwise.
 struct LogoView: View {

@@ -7,7 +7,19 @@ struct SettingsView: View {
     @EnvironmentObject var profiles: ProfileStore
     @EnvironmentObject var skills: SkillsStore
     @EnvironmentObject var remote: RemoteServer
+    @EnvironmentObject var voice: VoiceService
+    @EnvironmentObject var memory: MemoryStore
+    @EnvironmentObject var wake: WakeService
+    @EnvironmentObject var briefing: BriefingService
     @AppStorage("chat.provider") private var provider: String = "ollama"
+    @AppStorage("voice.handsFree") private var handsFree: Bool = true
+    @State private var ollamaURLField: String = ""
+    @State private var ollamaURLInvalid = false
+
+    private func applyOllamaURL() {
+        ollamaURLInvalid = !ollama.setBaseURL(ollamaURLField)
+        if !ollamaURLInvalid { ollamaURLField = ollama.baseURL.absoluteString }
+    }
 
     var body: some View {
         TabView {
@@ -19,6 +31,12 @@ struct SettingsView: View {
                 .tabItem { Label("Skills", systemImage: "book.closed") }
             remoteTab
                 .tabItem { Label("Remote", systemImage: "iphone") }
+            voiceTab
+                .tabItem { Label("Voice", systemImage: "waveform") }
+            wakeTab
+                .tabItem { Label("Wake", systemImage: "ear") }
+            MemoryTab()
+                .tabItem { Label("Memory", systemImage: "brain.head.profile") }
             aboutTab
                 .tabItem { Label("About", systemImage: "info.circle") }
         }
@@ -28,7 +46,7 @@ struct SettingsView: View {
     private var remoteTab: some View {
         Form {
             Section("iPhone remote control") {
-                Toggle("Let the Hands AI Remote app connect", isOn: $remote.enabled)
+                Toggle("Let the Hammond Remote app connect", isOn: $remote.enabled)
                 HStack {
                     Circle()
                         .fill(remote.isRunning ? .green : .secondary.opacity(0.4))
@@ -77,6 +95,117 @@ struct SettingsView: View {
         .formStyle(.grouped)
     }
 
+    /// Wake word, double clap, hands-free conversation, and the daily briefing.
+    private var wakeTab: some View {
+        Form {
+            Section("Wake word") {
+                Toggle("Listen for a wake phrase", isOn: $wake.wakeEnabled)
+                TextField("Phrase", text: $wake.wakePhrase)
+                    .disabled(!wake.wakeEnabled)
+                Text("Say it any time to bring Hammond up and start talking. "
+                     + "Recognition runs on-device — nothing leaves the Mac while idle.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section("Double clap") {
+                Toggle("Trigger on a double clap", isOn: $wake.clapEnabled)
+                Picker("A double clap", selection: $wake.clapAction) {
+                    Text("Starts listening").tag("listen")
+                    Text("Speaks the briefing").tag("briefing")
+                }
+                .disabled(!wake.clapEnabled)
+                Text("Two sharp claps within about a second. Handy from across the room.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section("Conversation") {
+                Toggle("Hands-free follow-ups", isOn: $handsFree)
+                Text("After Hammond finishes speaking, the microphone re-arms so "
+                     + "you can simply reply — no tapping, no wake phrase.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section("Daily briefing") {
+                Toggle("Speak a briefing on the first wake of the day", isOn: $briefing.enabled)
+                HStack {
+                    Button("Preview now") {
+                        Task { await briefing.speakBriefing() }
+                    }
+                    Button("Rebuild") { briefing.invalidate() }
+                        .help("Discard the cached briefing and gather fresh data")
+                }
+                Text("Your calendar, reminders, weather, and machine health — "
+                     + "prepared in the background so it answers instantly.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section("Microphone") {
+                Toggle("Mute microphone", isOn: $wake.micMuted)
+                Text("While muted, Hammond never listens on its own — no wake word, "
+                     + "no claps, no hands-free re-arm. Also in the menu-bar right-click menu.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section {
+                Label(wake.micMuted ? "Microphone muted"
+                      : wake.isAmbient ? "Listening for triggers" : "Ambient detection off",
+                      systemImage: wake.isAmbient ? "waveform.badge.mic" : "mic.slash")
+                    .foregroundStyle(wake.micMuted ? .orange : wake.isAmbient ? .green : .secondary)
+                    .font(.callout)
+            }
+        }
+        .formStyle(.grouped)
+        .padding()
+    }
+
+    private var voiceTab: some View {
+        Form {
+            Section("Voice output") {
+                Toggle("Speak replies", isOn: $voice.voiceEnabled)
+                Picker("Voice", selection: $voice.selectedVoiceID) {
+                    ForEach(voice.availableVoices, id: \.identifier) { v in
+                        Text("\(v.name) — \(v.language) · \(v.quality.label)").tag(v.identifier)
+                    }
+                }
+                HStack {
+                    Spacer()
+                    Button("Test voice") {
+                        voice.speak("Good evening, sir. All systems nominal.")
+                    }
+                }
+            }
+            if voice.hasOnlyDefaultVoices {
+                Section {
+                    Label {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("For a proper Jarvis voice, install a premium British voice.")
+                                .font(.system(size: 12))
+                            Text("System Settings → Accessibility → Spoken Content → System Voice → Manage Voices → English (UK) → tick \"Daniel (Premium)\".")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.secondary)
+                            Button("Open System Settings") {
+                                if let url = URL(string: "x-apple.systempreferences:com.apple.preference.universalaccess?Spoken_Content") {
+                                    NSWorkspace.shared.open(url)
+                                }
+                            }
+                            .controlSize(.small)
+                            .padding(.top, 4)
+                        }
+                    } icon: {
+                        Image(systemName: "info.circle.fill")
+                            .foregroundStyle(.yellow)
+                    }
+                }
+            }
+        }
+        .formStyle(.grouped)
+    }
+
     private var backendTab: some View {
         Form {
             Section("Provider") {
@@ -87,13 +216,13 @@ struct SettingsView: View {
                 }
                 .pickerStyle(.menu)
                 if provider == "claude" && !claude.isConfigured {
-                    Label("Add an API key below — until then, Hands AI stays on Ollama.",
+                    Label("Add an API key below — until then, Hammond stays on Ollama.",
                           systemImage: "exclamationmark.triangle.fill")
                         .font(.system(size: 11))
                         .foregroundStyle(.yellow)
                 }
                 if provider == "claude-cli" && !claudeCLI.isConfigured {
-                    Label(claudeCLI.resolveError ?? "claude CLI not found — until then, Hands AI stays on Ollama.",
+                    Label(claudeCLI.resolveError ?? "claude CLI not found — until then, Hammond stays on Ollama.",
                           systemImage: "exclamationmark.triangle.fill")
                         .font(.system(size: 11))
                         .foregroundStyle(.yellow)
@@ -152,7 +281,24 @@ struct SettingsView: View {
                     Spacer()
                     Button("Refresh") { Task { await ollama.refresh() } }
                 }
-                LabeledContent("URL", value: ollama.baseURL.absoluteString)
+                HStack {
+                    TextField("Server URL", text: $ollamaURLField)
+                        .textFieldStyle(.roundedBorder)
+                        .font(.system(size: 11, design: .monospaced))
+                        .onSubmit(applyOllamaURL)
+                    Button("Apply", action: applyOllamaURL)
+                        .disabled(ollamaURLField.trimmingCharacters(in: .whitespaces)
+                                  == ollama.baseURL.absoluteString)
+                }
+                if ollamaURLInvalid {
+                    Text("That doesn't look like a valid http(s) URL — leave it empty to restore \(OllamaClient.defaultBaseURL.absoluteString).")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.red)
+                } else {
+                    Text("Point this at another machine to use a remote Ollama, e.g. http://192.168.1.50:11434. Empty restores the default.")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.tertiary)
+                }
             }
             Section("Ollama model") {
                 Picker("Active model", selection: $ollama.selectedModel) {
@@ -172,6 +318,7 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
+        .onAppear { ollamaURLField = ollama.baseURL.absoluteString }
     }
 
     // MARK: - Profiles
@@ -292,6 +439,86 @@ struct SettingsView: View {
 
     // MARK: - Skills
 
+    /// What Hammond has remembered, grouped by tier, with delete.
+    private struct MemoryTab: View {
+        @EnvironmentObject var memory: MemoryStore
+        @State private var newText = ""
+        @State private var newTier = "user"
+
+        private let tiers: [(id: String, label: String, symbol: String)] = [
+            ("user", "About you", "person"),
+            ("work", "Your work", "hammer"),
+            ("policy", "Standing rules", "checklist"),
+        ]
+
+        var body: some View {
+            VStack(alignment: .leading, spacing: 10) {
+                if memory.entries.isEmpty {
+                    Spacer()
+                    VStack(spacing: 6) {
+                        Image(systemName: "brain.head.profile")
+                            .font(.system(size: 34))
+                            .foregroundStyle(.secondary)
+                        Text("Nothing remembered yet.")
+                            .foregroundStyle(.secondary)
+                        Text("Tell Hammond something about yourself — it saves it on its own.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    Spacer()
+                } else {
+                    List {
+                        ForEach(tiers, id: \.id) { tier in
+                            let items = memory.entries.filter { $0.tier == tier.id }
+                            if !items.isEmpty {
+                                Section {
+                                    ForEach(items) { entry in
+                                        HStack {
+                                            Text(entry.text)
+                                                .font(.callout)
+                                            Spacer()
+                                            Button {
+                                                _ = memory.forget(query: entry.text)
+                                            } label: {
+                                                Image(systemName: "xmark.circle.fill")
+                                                    .foregroundStyle(.secondary)
+                                            }
+                                            .buttonStyle(.plain)
+                                            .help("Forget this")
+                                        }
+                                    }
+                                } header: {
+                                    Label(tier.label, systemImage: tier.symbol)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                HStack(spacing: 8) {
+                    Picker("", selection: $newTier) {
+                        ForEach(tiers, id: \.id) { Text($0.label).tag($0.id) }
+                    }
+                    .frame(width: 140)
+                    TextField("Teach it something…", text: $newText)
+                        .textFieldStyle(.roundedBorder)
+                        .onSubmit(add)
+                    Button("Add", action: add)
+                        .disabled(newText.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+            }
+            .padding()
+        }
+
+        private func add() {
+            let text = newText.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !text.isEmpty else { return }
+            _ = memory.remember(tier: newTier, text: text)
+            newText = ""
+        }
+    }
+
     private struct SkillsTab: View {
         @EnvironmentObject var skills: SkillsStore
 
@@ -331,7 +558,7 @@ struct SettingsView: View {
                     }
                 }
                 Section {
-                    Text("Ask Hands AI to \"use the daily briefing skill\" — or just ask for a briefing; it loads matching skills on its own via the use_skill tool.")
+                    Text("Ask Hammond to \"use the daily briefing skill\" — or just ask for a briefing; it loads matching skills on its own via the use_skill tool.")
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                 }
@@ -343,12 +570,12 @@ struct SettingsView: View {
     private var aboutTab: some View {
         VStack(spacing: 14) {
             LogoView().frame(width: 110, height: 110)
-            Text("Hands AI")
+            Text("Hammond")
                 .font(.system(size: 18, weight: .semibold, design: .rounded))
             Text("Local-first agent engine for macOS")
                 .font(.system(size: 12, design: .rounded))
                 .foregroundStyle(.secondary)
-            Text("v0.6.0 — headless · 38 tools · profiles · skills · Command Center + iOS remote")
+            Text("v0.7.0 — headless · 41 tools · Command Center + iOS remote · Jarvis voice, wake word, memory, briefing")
                 .font(.system(size: 11, design: .monospaced))
                 .foregroundStyle(.tertiary)
             Spacer()

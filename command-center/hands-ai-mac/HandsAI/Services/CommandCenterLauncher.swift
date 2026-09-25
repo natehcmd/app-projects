@@ -56,7 +56,7 @@ enum CommandCenterLauncher {
         process.currentDirectoryURL = missionControlDir
 
         // Detached — outlives this app; mission-control is meant to keep
-        // running as its own background service, not tied to Hands AI's
+        // running as its own background service, not tied to Hammond's
         // lifecycle. Log to the same place its own launchd setup would.
         let logURL = missionControlDir.appendingPathComponent("data/server.log")
         try? FileManager.default.createDirectory(at: logURL.deletingLastPathComponent(),

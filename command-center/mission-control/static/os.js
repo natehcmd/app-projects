@@ -31,8 +31,8 @@ let state = {view:"chat", topic:null, verdict:null};
 /* ---------- views ---------- */
 const views = {
 async chat() {
-  // Chat IS the Hands AI agent now — one engine, one conversation, shared
-  // across Command Center, the Hands AI menu bar app, and the iOS remote
+  // Chat IS the Hammond agent now — one engine, one conversation, shared
+  // across Command Center, the Hammond menu bar app, and the iOS remote
   // (all three drive/observe the same AgentStore over this WebSocket).
   // There used to be a second, separate "spawn claude/codex/ollama CLI
   // fresh per message" implementation here — removed so there's exactly
@@ -72,13 +72,13 @@ async chat() {
   const HANDS_ENGINE_COLOR = {ollama: "sky", claude: "lav", "claude-cli": "mint"};
   return `
   <div class="card glass chat-card">
-    <h2><span class="dot t-${statusColor}"></span>Chat — Hands AI
+    <h2><span class="dot t-${statusColor}"></span>Chat — Hammond
       <div class="row" style="margin-left:auto;gap:6px;align-items:center">
         <span class="sub" id="handsstatus">${esc(state.handsStatusText || "not connected")}</span>
       </div>
     </h2>
     <div class="row" style="margin-bottom:10px;gap:8px">
-      <input id="handstoken" placeholder="token from Hands AI → Settings → Remote" value="${esc(state.handsToken)}"
+      <input id="handstoken" placeholder="token from Hammond → Settings → Remote" value="${esc(state.handsToken)}"
         style="flex:1" oninput="state.handsToken=this.value">
       <button class="act ghost" onclick="connectHands()">Connect</button>
     </div>
@@ -92,11 +92,11 @@ async chat() {
     <div class="chat-log" id="handslog">${renderHandsLog()}</div>
     <div id="handstools" style="margin:8px 0"></div>
     <div class="row" style="margin-top:12px">
-      <textarea id="handsinput" rows="1" placeholder="ask Hands AI…"
+      <textarea id="handsinput" rows="1" placeholder="ask Hammond…"
         onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendHands();}"></textarea>
       <button class="act" id="handssend" onclick="sendHands()">Send</button>
     </div>
-    <div class="sub" style="margin-top:8px">talks straight to the Hands AI Mac app over a local WebSocket — same agent, same tools, same conversation as the native app and the iPhone app.</div>
+    <div class="sub" style="margin-top:8px">talks straight to the Hammond Mac app over a local WebSocket — same agent, same tools, same conversation as the native app and the iPhone app.</div>
   </div>`;
 },
 
@@ -1132,7 +1132,7 @@ function setHandsStatus(status, text) {
 
 window.connectHands = () => {
   const token = ($("#handstoken") ? $("#handstoken").value : state.handsToken).trim();
-  if (!token) { setHandsStatus("error", "enter the token from Hands AI → Settings → Remote first"); return; }
+  if (!token) { setHandsStatus("error", "enter the token from Hammond → Settings → Remote first"); return; }
   state.handsToken = token;
   localStorage.setItem("hands_token", token);
   if (handsSocket) { try { handsSocket.close(); } catch (e) {} }
@@ -1179,7 +1179,7 @@ window.connectHands = () => {
     }
   };
 
-  ws.onerror = () => setHandsStatus("error", "connection failed — is the Remote server on in Hands AI → Settings?");
+  ws.onerror = () => setHandsStatus("error", "connection failed — is the Remote server on in Hammond → Settings?");
   ws.onclose = () => { if (state.handsStatus !== "error") setHandsStatus("disconnected", "disconnected"); };
 };
 
