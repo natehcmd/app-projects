@@ -14,6 +14,7 @@ import datetime
 import os
 import re
 import sqlite3
+import subprocess
 import sys
 from pathlib import Path
 
@@ -67,6 +68,19 @@ def main(limit: int) -> None:
     print(f"sync: {done} processed, {max(0, len(todo) - done)} remaining")
 
 
+def make_thumbs() -> None:
+    """Thumbnails ahead of time: generating them on request made the Reels tab
+    hold every browser connection while ffmpeg ran, so nothing else would load."""
+    thumbs = Path(__file__).resolve().parent.parent / "data" / "thumbs"
+    thumbs.mkdir(parents=True, exist_ok=True)
+    for mp4 in LIB.glob("*.mp4"):
+        out = thumbs / f"{mp4.stem}.jpg"
+        if not out.exists():
+            subprocess.run(["/opt/homebrew/bin/ffmpeg", "-loglevel", "error", "-y", "-ss", "1.5", "-i", str(mp4),
+                            "-frames:v", "1", "-vf", "scale=360:-2", str(out)], timeout=60)
+
+
 if __name__ == "__main__":
     lim = int(sys.argv[sys.argv.index("--limit") + 1]) if "--limit" in sys.argv else 10**9
     main(lim)
+    make_thumbs()

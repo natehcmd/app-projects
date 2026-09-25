@@ -1278,7 +1278,7 @@ def _run_duel(duel_id: str, prompt: str, keys: list):
         t = time.time()
         try:
             d = Dispatcher(TokenLedger(), failover=False)  # no silent swap: the answer is from the model named
-            text = d.call(k, "compare", prompt, timeout=300)
+            text = _tracked_call(d, k, "head-to-head", prompt, "Compare")
             state["results"][k].update(status="done", text=text[:6000], secs=round(time.time() - t, 1))
         except Exception as e:
             state["results"][k].update(status="failed", text=str(e)[:300], secs=round(time.time() - t, 1))
@@ -1384,7 +1384,7 @@ def _run_team(run_id: str, idea: str):
         t = time.time()
         try:
             d = Dispatcher(TokenLedger())  # failover on: a busy model hands down, and we record who answered
-            text = d.call(m.get("model", "local_xl"), "team", prompt, timeout=300)
+            text = _tracked_call(d, m.get("model", "local_xl"), "team", prompt, m["name"])
             state["replies"][i].update(status="done", text=text.strip()[:4000], secs=round(time.time() - t, 1),
                                        served_by=d.last_served.get("team", m.get("model")))
             said.append(f"{m['name']}: {text.strip()[:1500]}")
@@ -1619,6 +1619,19 @@ def review_latest(request: Request = None):
             continue
     return out
 
+LIVE_CALLS = {}  # in-flight model calls made by this server (Team, Compare) -> shown on the roots
+_live_lock = threading.Lock()
+
+def _tracked_call(d, key, stage, prompt, label, timeout=300):
+    cid = secrets.token_hex(4)
+    with _live_lock:
+        LIVE_CALLS[cid] = {"model_key": key, "stage": stage, "repo": label, "t": time.time()}
+    try:
+        return d.call(key, stage, prompt, timeout=timeout)
+    finally:
+        with _live_lock:
+            LIVE_CALLS.pop(cid, None)
+
 ROOT_TIERS = [  # top → bottom, the order work is sent down (and results sent back up)
     ("claude", "Claude", ["claude_adjudicator"]),
     ("agy", "Gemini (agy)", ["agy_deep", "agy_pro", "agy_flash"]),
@@ -1671,8 +1684,24 @@ def roots_status():
             mk = c.get("model_key") or "?"
             active.setdefault(mk, []).append({"stage": c.get("stage"), "repo": c.get("repo"),
                                               "model": c.get("model"), "secs": round(now - c.get("t", now))})
+    with _live_lock:
+        live = list(LIVE_CALLS.values())
+    for c in live:
+        active.setdefault(c["model_key"], []).append({"stage": c["stage"], "repo": c["repo"],
+                                                     "model": "", "secs": round(now - c["t"])})
+    engine_node = {"claude": "claude_adjudicator", "local": "local_xl", "codex": "claude_adjudicator"}
+    for jid, j in list(JOBS.items()):
+        proc, meta = j.get("proc"), j.get("meta") or {}
+        if proc is not None and proc.poll() is None and meta.get("engine") in engine_node:
+            active.setdefault(engine_node[meta["engine"]], []).append(
+                {"stage": "job", "repo": (meta.get("prompt") or "")[:40], "model": meta.get("model", ""),
+                 "secs": round(now - (meta.get("started_ts") or now))})
+    cli = _cli_processes()
+    for p in cli:
+        if "agent_loop.py" in p["args"] and "reels-build" in p["args"]:
+            active.setdefault("agy_deep", []).append({"stage": "reel build", "repo": "Reels", "model": "", "secs": 0})
     procs = {}
-    for p in _cli_processes():
+    for p in cli:
         eng = _pipeline_engine(p["args"])
         if eng != "other" and not _PIPELINE_NOISE.search(p["args"]):
             procs[eng] = procs.get(eng, 0) + 1

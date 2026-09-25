@@ -24,7 +24,7 @@ import urllib.parse
 import urllib.request
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SENSITIVE = ["/api/filegraph/file", "/api/compare/models", "/api/reels/board", "/api/briefs/short", "/api/learn/card", "/api/activity", "/api/briefs", "/api/lifehq", "/api/plaid/accounts",
+SENSITIVE = ["/api/team", "/api/team/runs", "/api/filegraph/file", "/api/compare/models", "/api/reels/board", "/api/briefs/short", "/api/learn/card", "/api/activity", "/api/briefs", "/api/lifehq", "/api/plaid/accounts",
              "/api/roadmap", "/api/search", "/api/swarm/runs", "/api/term/jobs",
              "/api/artifacts", "/api/flows/runs"]
 SLOW_BUDGET_S = {"/api/projects": 4.0, "/api/term/snapshot": 4.0}
@@ -69,7 +69,7 @@ def main():
         src = open(os.path.join(tmp, "server.py")).read()
         gets = sorted(set(re.findall(r'@app\.get\("(/api/[^"{]+)"\)', src)) - {"/api/artifacts/content", "/api/apps/icon", "/api/reels/thumb", "/api/reels/video",
                                                                                  "/api/briefs/short", "/api/learn/card",
-                                                                                 "/api/compare/duel", "/api/filegraph/file"})
+                                                                                 "/api/compare/duel", "/api/filegraph/file", "/api/team/run"})
 
         print("GET endpoints with a session:")
         for path in gets:
@@ -151,6 +151,12 @@ def main():
         except urllib.error.HTTPError as e:
             code = e.code
         check(code == 400, "duel id path refused (%s)" % code)
+        try:
+            code = sess.open(base + "/api/team/run?id=../../team", timeout=10).status
+        except urllib.error.HTTPError as e:
+            code = e.code
+        check(code == 400, "team run id path refused (%s)" % code)
+        check(post("/api/team/ask", {"idea": ""}) == 400, "empty idea refused")
 
         print("Sensitive endpoints without a session:")
         for path in [p for p in SENSITIVE if p in gets]:   # only those this build has

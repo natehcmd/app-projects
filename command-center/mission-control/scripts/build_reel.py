@@ -14,6 +14,7 @@ import datetime
 import json
 import os
 import re
+import shutil
 import sqlite3
 import subprocess
 import sys
@@ -83,6 +84,9 @@ def main(reel_id):
     if not row:
         raise SystemExit("unknown reel")
     out = ROOT / "reels-build" / reel_id
+    if out.exists() and (out / ".git").is_dir() and subprocess.run(
+            ["git", "-C", str(out), "rev-list", "--count", "HEAD"], capture_output=True, text=True).stdout.strip() == "1":
+        shutil.rmtree(out)  # only our own seed commit is there (an earlier build that stopped) — safe to retry
     if out.exists() and any(p.name not in {".git"} for p in out.iterdir()):
         status(reel_id, state="failed", step="already has a build — not overwriting", ended=now())
         raise SystemExit("already built")
@@ -123,9 +127,10 @@ def main(reel_id):
     if rc == 0:
         status(reel_id, state="ready_for_nate", step="built and tests pass — waiting for Nate to check", ended=now())
     else:
-        why = next((l for l in reversed(log) if any(k in l for k in
-                    ("iteration_cap", "no_improvement", "budget_exhausted", "error", "Error"))), "see log")
-        status(reel_id, state="failed", step=f"stopped: {why[:140]}", ended=now())
+        why = next((l for l in reversed(log) if l.startswith(("STOPPED", "last:"))), None) or \
+            next((l for l in reversed(log) if "rror" in l), "see the log")
+        degraded = next((l for l in log if l.startswith("DEGRADED")), "")
+        status(reel_id, state="failed", step=why[:220], degraded=degraded[:300], ended=now())
     return rc
 
 
