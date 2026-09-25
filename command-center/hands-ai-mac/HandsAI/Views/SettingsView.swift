@@ -216,8 +216,10 @@ struct SettingsView: View {
                 }
                 .pickerStyle(.menu)
                 if provider == "claude" && !claude.isConfigured {
-                    Label("Add an API key below — until then, Hammond stays on Ollama.",
-                          systemImage: "exclamationmark.triangle.fill")
+                    Label(claudeCLI.isConfigured
+                          ? "No API key set — using Claude Code (CLI) below instead."
+                          : "No API key set and Claude Code (CLI) isn't available either — Hammond stays on Ollama.",
+                          systemImage: "info.circle.fill")
                         .font(.system(size: 11))
                         .foregroundStyle(.yellow)
                 }
@@ -237,7 +239,7 @@ struct SettingsView: View {
                         Text(m.label).tag(m.id)
                     }
                 }
-                Text("Key is stored locally in app preferences and sent only to api.anthropic.com. Also used by Claude Code (CLI) below.")
+                Text("Key is stored locally in app preferences and sent only to api.anthropic.com. Optional — without one, \"Claude\" answers through Claude Code (CLI) below instead.")
                     .font(.system(size: 10))
                     .foregroundStyle(.tertiary)
             }
@@ -252,7 +254,7 @@ struct SettingsView: View {
                         .lineLimit(1)
                 }
                 Picker("Model", selection: $claudeCLI.selectedModel) {
-                    ForEach(ClaudeClient.models, id: \.id) { m in
+                    ForEach(ClaudeCLIClient.models, id: \.id) { m in
                         Text(m.label).tag(m.id)
                     }
                 }

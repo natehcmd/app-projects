@@ -29,13 +29,20 @@ final class AgentStore: ObservableObject {
     private weak var history: HistoryStore?
 
     /// "ollama" (local), "claude" (Anthropic API), or "claude-cli" (real
-    /// Claude Code, shelled out to). Falls back to Ollama automatically if
-    /// the selected Claude backend isn't actually configured.
+    /// Claude Code, shelled out to). "claude" with no API key set falls back
+    /// to "claude-cli" — Claude still means Claude, just answered through
+    /// the CLI (a subscription login) instead of a metered API key. Only
+    /// falls back to Ollama when nothing usable was actually requested;
+    /// see `resolveProvider` for the on-demand, non-silent version used to
+    /// actually route a message.
     @AppStorage("chat.provider") var provider: String = "ollama"
 
     var activeProvider: String {
         if provider == "claude-cli", claudeCLI?.isConfigured == true { return "claude-cli" }
-        if provider == "claude", claude?.isConfigured == true { return "claude" }
+        if provider == "claude" {
+            if claude?.isConfigured == true { return "claude" }
+            if claudeCLI?.isConfigured == true { return "claude-cli" }
+        }
         return "ollama"
     }
 
@@ -168,15 +175,28 @@ final class AgentStore: ObservableObject {
         }
     }
 
-    /// Falls back to `activeProvider` if the override is missing or names a
-    /// backend that isn't actually configured (no API key, etc.) — same
-    /// safety net `activeProvider` already gives the no-override path.
-    private func effectiveProvider(_ override: String?) -> String {
-        switch override {
-        case "claude-cli" where claudeCLI?.isConfigured == true: return "claude-cli"
-        case "claude" where claude?.isConfigured == true: return "claude"
-        case "ollama": return "ollama"
-        default: return activeProvider
+    /// `override`, when present, takes priority over the persisted
+    /// `provider` setting — same contract the old sync `effectiveProvider`
+    /// had. Two differences: it resolves the Claude Code CLI's path on
+    /// demand (rather than trusting whatever `init()`'s background Task got
+    /// to by the time this runs), and it returns `nil` — never a silent
+    /// switch to a different engine — when what was actually requested
+    /// truly isn't available, so the caller can surface the real error
+    /// instead of quietly answering with Ollama.
+    private func resolveProvider(_ override: String?) async -> String? {
+        let requested = override ?? provider
+        switch requested {
+        case "claude-cli":
+            await claudeCLI?.ensureResolved()
+            return claudeCLI?.isConfigured == true ? "claude-cli" : nil
+        case "claude":
+            if claude?.isConfigured == true { return "claude" }
+            // No API key — "Claude" still means Claude, just via the
+            // Claude Code CLI (subscription) instead of the metered API.
+            await claudeCLI?.ensureResolved()
+            return claudeCLI?.isConfigured == true ? "claude-cli" : nil
+        default:
+            return "ollama"
         }
     }
 
@@ -197,7 +217,12 @@ final class AgentStore: ObservableObject {
         }
 
         let profile = profiles?.selected
-        let provider = effectiveProvider(engineOverride)
+        guard let provider = await resolveProvider(engineOverride) else {
+            let requested = engineOverride ?? self.provider
+            let label = requested == "claude" ? "Claude" : "Claude Code"
+            state = .error(message: claudeCLI?.resolveError ?? "\(label) isn't set up.")
+            return
+        }
         let maxTurns = 12
         for _ in 0..<maxTurns {
             do {
@@ -208,9 +233,9 @@ final class AgentStore: ObservableObject {
                 // actually requested for — e.g. an Ollama tag name passed
                 // while falling back to Claude (unconfigured override)
                 // would be meaningless as a Claude model id.
-                if provider == "claude-cli", let claudeCLI, let claude {
+                if provider == "claude-cli", let claudeCLI {
                     reply = try await claudeCLI.chatStreaming(
-                        messages: messages, apiKey: claude.apiKey,
+                        messages: messages,
                         model: engineOverride == "claude-cli" ? modelOverride : nil
                     ) { [weak self] accumulated in
                         self?.liveReply = accumulated

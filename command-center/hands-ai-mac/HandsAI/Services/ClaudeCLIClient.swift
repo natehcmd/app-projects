@@ -6,14 +6,21 @@ import SwiftUI
 /// agent gets actual Claude Code tool use (Bash, Read, Edit, WebFetch,
 /// WebSearch) instead of just chat-with-custom-tools.
 ///
-/// Runs in `--bare` mode (skips hooks, auto-memory, CLAUDE.md discovery, and
-/// the user's personal skills/MCP servers — confirmed live: without --bare a
-/// spawned `claude` inherits the user's ENTIRE interactive Claude Code
-/// environment, which is wrong for an embedded assistant feature) using its
-/// own Anthropic API key rather than the signed-in OAuth session, so this is
-/// a clean, fast, isolated agent call — not a shared session with whatever
-/// else the user runs claude for. Requires the same key already entered for
-/// the direct-API backend (Settings → Backend → Claude).
+/// Runs in `--safe-mode` (skips CLAUDE.md, installed plugins, hooks, MCP
+/// servers, custom slash commands/agents and the like — confirmed live:
+/// without it a spawned `claude` inherits the user's ENTIRE interactive
+/// Claude Code environment, which is wrong for an embedded assistant
+/// feature). NOT `--bare`: `--bare` disables the exact same customizations
+/// but ALSO forces `ANTHROPIC_API_KEY`-or-`apiKeyHelper`-only auth and never
+/// reads the keychain (confirmed live via `claude --help`: "OAuth and
+/// keychain are never read" under --bare, and reproduced the resulting
+/// "Not logged in" failure directly in Terminal) — which breaks this
+/// entirely for Nate, who has no API key and authenticates the CLI itself
+/// via his Claude subscription (`claude login`, stored in the macOS
+/// Keychain). `--safe-mode` gives the same isolation while leaving that
+/// auth alone. If the user's shell environment happens to export
+/// ANTHROPIC_API_KEY, Process inherits it automatically since we don't
+/// touch `environment` here; we don't force it either way.
 ///
 /// The CLI runs its own multi-turn tool-calling loop internally and streams
 /// JSON events as it goes — it does NOT hand tool calls back to us to
@@ -22,7 +29,19 @@ import SwiftUI
 /// `onToolEvent` so the UI can still show it happening.
 @MainActor
 final class ClaudeCLIClient: ObservableObject {
-    @AppStorage("claudeCLI.model") var selectedModel: String = "claude-opus-4-8"
+    /// "" means "let the CLI pick its own default model" (no --model flag
+    /// passed) — the safe choice, since hardcoding an id here risks going
+    /// stale as Anthropic ships new models. `models` below is the picker
+    /// list; a value that isn't one of these (e.g. a stale id from before a
+    /// migration) is reset to "" in `init()`.
+    @AppStorage("claudeCLI.model") var selectedModel: String = ""
+
+    static let models: [(id: String, label: String)] = [
+        ("", "Default (recommended)"),
+        ("claude-opus-5-5", "Opus 5.5 — most capable"),
+        ("claude-sonnet-5", "Sonnet 5 — fast + smart"),
+        ("claude-haiku-4-5-20251001", "Haiku 4.5 — fastest"),
+    ]
     /// Comma-separated tool names/patterns (e.g. "Bash(git *)") allowed to run
     /// without a permission prompt. Non-interactive mode can't show prompts,
     /// so anything not on this list (and not covered by `skipPermissions`)
@@ -40,7 +59,22 @@ final class ClaudeCLIClient: ObservableObject {
     var isConfigured: Bool { resolvedPath != nil }
 
     init() {
+        // Migrate away from a stale/unknown model id (e.g. the old
+        // hardcoded "claude-opus-4-8" default) rather than ever passing it
+        // to the CLI as --model.
+        if !Self.models.contains(where: { $0.id == selectedModel }) {
+            selectedModel = ""
+        }
         Task { await resolvePath() }
+    }
+
+    /// Resolves the CLI path on demand if the background resolution from
+    /// `init()` hasn't finished yet (or hasn't run at all) — covers the race
+    /// where a message arrives right after launch. Safe to call repeatedly;
+    /// a no-op once `resolvedPath` is set.
+    func ensureResolved() async {
+        guard resolvedPath == nil else { return }
+        await resolvePath()
     }
 
     /// GUI apps don't inherit the login shell's PATH, so a bare Process
@@ -87,18 +121,16 @@ final class ClaudeCLIClient: ObservableObject {
     func resetSession() { sessionID = "" }
 
     func chatStreaming(messages: [OllamaClient.ChatMessage],
-                       apiKey: String,
                        model: String? = nil,
                        onDelta: @escaping (String) -> Void,
                        onToolEvent: @escaping (ToolCall) -> Void) async throws -> OllamaClient.ChatMessage {
+        // On-demand resolution rather than trusting whatever `init()`'s
+        // background Task got to by now — only a genuinely-not-found CLI
+        // should surface `resolveError`, never a race with app launch.
+        await ensureResolved()
         guard let claudePath = resolvedPath else {
             throw NSError(domain: "ClaudeCLI", code: -1,
                           userInfo: [NSLocalizedDescriptionKey: resolveError ?? "claude CLI not found."])
-        }
-        let key = apiKey.trimmingCharacters(in: .whitespaces)
-        guard !key.isEmpty else {
-            throw NSError(domain: "ClaudeCLI", code: 401,
-                          userInfo: [NSLocalizedDescriptionKey: "No Claude API key set (Settings → Backend → Claude)."])
         }
         guard let userMessage = messages.last(where: { $0.role == "user" })?.content,
               !userMessage.isEmpty else {
@@ -106,15 +138,19 @@ final class ClaudeCLIClient: ObservableObject {
                           userInfo: [NSLocalizedDescriptionKey: "No user message to send."])
         }
         let systemPrompt = messages.first(where: { $0.role == "system" })?.content ?? ""
+        // Empty means "no --model flag" — let the CLI use its own default
+        // rather than us hardcoding (and risking staling out) a model id.
         let useModel = (model?.isEmpty == false ? model! : selectedModel)
 
         var args = [
             "-p", userMessage,
             "--output-format", "stream-json",
             "--verbose",
-            "--bare",
-            "--model", useModel,
+            "--safe-mode",
         ]
+        if !useModel.isEmpty {
+            args += ["--model", useModel]
+        }
         if !systemPrompt.isEmpty {
             args += ["--append-system-prompt", systemPrompt]
         }
@@ -131,20 +167,22 @@ final class ClaudeCLIClient: ObservableObject {
             args += ["--resume", resumeID]
         }
 
-        return try await runProcess(path: claudePath, args: args, apiKey: key,
+        return try await runProcess(path: claudePath, args: args,
                                     onDelta: onDelta, onToolEvent: onToolEvent)
     }
 
-    private func runProcess(path: String, args: [String], apiKey: String,
+    private func runProcess(path: String, args: [String],
                             onDelta: @escaping (String) -> Void,
                             onToolEvent: @escaping (ToolCall) -> Void) async throws -> OllamaClient.ChatMessage {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<OllamaClient.ChatMessage, Error>) in
             let process = Process()
             process.executableURL = URL(fileURLWithPath: path)
             process.arguments = args
-            var env = ProcessInfo.processInfo.environment
-            env["ANTHROPIC_API_KEY"] = apiKey
-            process.environment = env
+            // Leave `environment` unset — Process then inherits this app's
+            // own environment, which is however the `claude` CLI is already
+            // authenticated (subscription login via `claude login`, or an
+            // ANTHROPIC_API_KEY the user's shell happens to export). We
+            // never force an API key here.
 
             let stdout = Pipe()
             let stderr = Pipe()

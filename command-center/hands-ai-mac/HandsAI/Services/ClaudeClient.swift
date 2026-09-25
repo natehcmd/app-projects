@@ -8,15 +8,23 @@ import SwiftUI
 @MainActor
 final class ClaudeClient: ObservableObject {
     @AppStorage("claude.apiKey") var apiKey: String = ""
-    @AppStorage("claude.model") var selectedModel: String = "claude-opus-4-8"
+    @AppStorage("claude.model") var selectedModel: String = "claude-sonnet-5"
 
     static let models: [(id: String, label: String)] = [
-        ("claude-opus-4-8", "Opus 4.8 — most capable"),
+        ("claude-opus-5-5", "Opus 5.5 — most capable"),
         ("claude-sonnet-5", "Sonnet 5 — fast + smart"),
-        ("claude-haiku-4-5", "Haiku 4.5 — fastest"),
+        ("claude-haiku-4-5-20251001", "Haiku 4.5 — fastest"),
     ]
 
     var isConfigured: Bool { !apiKey.trimmingCharacters(in: .whitespaces).isEmpty }
+
+    init() {
+        // Migrate a stale id (e.g. the old hardcoded "claude-opus-4-8"
+        // default) rather than ever sending it to the API.
+        if !Self.models.contains(where: { $0.id == selectedModel }) {
+            selectedModel = "claude-sonnet-5"
+        }
+    }
 
     private let session: URLSession = {
         let cfg = URLSessionConfiguration.ephemeral
