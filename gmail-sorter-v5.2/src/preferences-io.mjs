@@ -45,9 +45,17 @@ export function isTrustedSender(email, prefs) {
 export function isSpamPattern(from, subject, body, prefs) {
   const sp = prefs.spamPatterns;
   const fromLower = from.toLowerCase();
-  const domain = (fromLower.match(/@([^>]+)/)?.[1] || '').replace('>', '');
+  // The sender's address is the one in <...> when present (a display name can
+  // contain its own "@", e.g. Google Groups' "'a@x.com' via Group <g@groups.com>"),
+  // otherwise the bare address.
+  const addr = (fromLower.match(/<([^<>]+)>/)?.[1] || fromLower).trim();
+  const domain = addr.includes('@') ? addr.slice(addr.lastIndexOf('@') + 1) : '';
 
-  if (sp.domains.some(d => domain.includes(d.toLowerCase()))) return true;
+  // Exact domain or a subdomain of it — a substring match let "mail.com" flag gmail.com.
+  if (domain && sp.domains.some(d => {
+    const dl = d.toLowerCase();
+    return domain === dl || domain.endsWith('.' + dl);
+  })) return true;
   if (sp.emails.some(e => fromLower.includes(e.toLowerCase()))) return true;
   if (sp.subjectPatterns.some(p => new RegExp(p, 'i').test(subject))) return true;
   if (sp.bodyPatterns.some(p => new RegExp(p, 'i').test(body || ''))) return true;
