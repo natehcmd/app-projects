@@ -24,7 +24,7 @@ import urllib.parse
 import urllib.request
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SENSITIVE = ["/api/team", "/api/team/runs", "/api/filegraph/file", "/api/compare/models", "/api/reels/board", "/api/briefs/short", "/api/learn/card", "/api/activity", "/api/briefs", "/api/lifehq", "/api/plaid/accounts",
+SENSITIVE = ["/api/subs", "/api/team", "/api/team/runs", "/api/filegraph/file", "/api/compare/models", "/api/reels/board", "/api/briefs/short", "/api/learn/card", "/api/activity", "/api/briefs", "/api/lifehq", "/api/plaid/accounts",
              "/api/roadmap", "/api/search", "/api/swarm/runs", "/api/term/jobs",
              "/api/artifacts", "/api/flows/runs", "/api/arena/state"]
 SLOW_BUDGET_S = {"/api/projects": 4.0, "/api/term/snapshot": 4.0}
@@ -51,7 +51,8 @@ def main():
     port = free_port()
     uvicorn = os.path.join(HERE, ".venv", "bin", "uvicorn")
     proc = subprocess.Popen([uvicorn, "server:app", "--host", "127.0.0.1", "--port", str(port)],
-                            cwd=tmp, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+                            cwd=tmp, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
+                            env=dict(os.environ, CC_NO_WATCHERS="1"))
     base = "http://127.0.0.1:%d" % port
     try:
         for _ in range(60):
@@ -157,6 +158,7 @@ def main():
             code = e.code
         check(code == 400, "team run id path refused (%s)" % code)
         check(post("/api/team/ask", {"idea": ""}) == 400, "empty idea refused")
+        check(post("/api/subs/hit", {"which": "everything"}) == 400, "subs/hit refuses an unknown limit kind")
 
         print("Arena state / reels sync:")
         arena = json.loads(sess.open(base + "/api/arena/state", timeout=10).read())
