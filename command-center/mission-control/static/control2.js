@@ -44,24 +44,32 @@
       <button class="c2-btn" data-c2="stop-one" data-id="${E(j.id)}" data-danger="1">Stop</button></div>`).join("");
   }
 
-  function statsHtml(v, roots) {
+  function statsHtml(v, roots, hands) {
     if (!ok(v)) return `<div class="c2-out bad">Couldn't read this Mac's vitals.</div>`;
     const loaded = v.ollama_loaded === null ? "Ollama isn't running"
       : v.ollama_loaded.length ? v.ollama_loaded.map(E).join(", ") : "none loaded";
     const p = (ok(roots) && roots.processes) || {};
+    const hammond = ok(hands) ? (hands.running ? "running" : "not running") : "unknown";
     return `<div class="c2-stats">
       <div class="c2-stat"><b>${E(v.cpu.pct)}%</b>CPU busy</div>
       <div class="c2-stat"><b>${E(v.mem.pct)}%</b>Memory used (${E(gb(v.mem.used))} of ${E(gb(v.mem.total))})</div>
       <div class="c2-stat"><b>${E(v.disk.pct)}%</b>Disk full (${E(gb(v.disk.total - v.disk.used))} free)</div>
       <div class="c2-stat"><b>${E(p.claude || 0)} / ${E(p.agy || 0)} / ${E(p.ollama || 0)}</b>Claude / Gemini / Ollama processes</div>
     </div>
-    <div class="sub" style="margin-top:8px">Local models in memory: ${loaded} · Mac up ${E(v.uptime)}</div>`;
+    <div class="sub" style="margin-top:8px">Local models in memory: ${loaded} · Mac up ${E(v.uptime)}</div>
+    <div class="sub" style="margin-top:4px">Hammond: ${E(hammond)}</div>`;
+  }
+
+  function arenaHtml(a) {
+    if (!ok(a) || !a.reachable || !a.running) return `<div class="sub">Arena idle — safe to restart.</div>`;
+    return `<div class="sub">Arena: reviewing ${E(a.done)} of ${E(a.done + a.queued)} — don't restart.</div>`;
   }
 
   const oldControl = views.control;
   views.control = async () => {
-    const [v, jobs, roots, apps, synced] = await Promise.all(
-      ["vitals", "term/jobs", "roots", "apps", "agentdrop/synced"].map(p => api(p).catch(e => ({error: String(e)}))));
+    const [v, jobs, roots, apps, synced, arena, hands2] = await Promise.all(
+      ["vitals", "term/jobs", "roots", "apps", "agentdrop/synced", "arena/state", "hands/status"]
+        .map(p => api(p).catch(e => ({error: String(e)}))));
     const appList = Array.isArray(apps) ? apps.filter(a => a.category === "Apps") : [];
     const hands = appList.find(a => /hands ai|hammond/i.test(a.name));
     const reelCount = ok(synced) && synced.exists ? synced.reels.length : null;
@@ -69,14 +77,15 @@
     const NEW_HTML = `${CSS}
     <div class="card glass"><h2><span class="dot t-sky"></span>Right now
       <button class="act ghost" style="margin-left:auto" data-c2="refresh">Refresh</button></h2>
-      <div id="c2_stats">${statsHtml(v, roots)}</div></div>
+      <div id="c2_stats">${statsHtml(v, roots, hands2)}</div></div>
     <div class="c2-grid">
       <div class="card glass"><h2><span class="dot t-lav"></span>AI</h2>
         <div class="c2-btns">
           ${btn("stop-all", `Stop all running agent jobs (${nRun})`, "Stops every Claude / Codex / local job started from Term or Swarm", 'data-danger="1"')}
           ${btn("chat", "Talk to Hammond here", "Opens the Chat tab")}
           <a class="c2-btn" href="http://127.0.0.1:8470" target="_blank" rel="noopener">Open Arena (code review)<small>Opens in a new tab</small></a>
-        </div></div>
+        </div>
+        <div id="c2_arena" style="margin-top:8px">${arenaHtml(arena)}</div></div>
       <div class="card glass"><h2><span class="dot t-mint"></span>Apps</h2>
         <div class="c2-btns">
           ${hands ? btn("open-app", `Open ${E(hands.name)} (Hammond)`, "The menu bar app", `data-id="${E(hands.id)}"`)
@@ -87,9 +96,10 @@
         <div class="c2-out" data-out="open-picked"></div></div>
       <div class="card glass"><h2><span class="dot t-peach"></span>Content</h2>
         <div class="c2-btns">
-          ${btn("brief", "Write today's brief", "Takes a minute or two — result shows here")}
+          ${btn("brief", "Write today's brief", "Runs in the background — check the Briefs tab in a few minutes")}
           ${btn("filegraph", "Rebuild FileGraph", "Re-scans ~/Projects/app-projects (first 1,000 files)")}
           ${btn("reels", "How many reels are synced?", reelCount === null ? "AgentDrop reels folder not found" : `${reelCount} reel videos on disk`)}
+          ${btn("sync-reels", "Sync reels now", "Adds new library reels + backfills transcripts, in the background")}
         </div></div>
       <div class="card glass"><h2><span class="dot t-sky"></span>This Mac</h2>
         <div class="c2-btns">
@@ -117,8 +127,11 @@
 
   const ACTIONS = {
     async refresh() {
-      const [v, roots] = await Promise.all([api("vitals"), api("roots")]);
-      document.getElementById("c2_stats").innerHTML = statsHtml(v, roots);
+      const [v, roots, hands2, arena] = await Promise.all(
+        ["vitals", "roots", "hands/status", "arena/state"].map(p => api(p).catch(e => ({error: String(e)}))));
+      document.getElementById("c2_stats").innerHTML = statsHtml(v, roots, hands2);
+      const arenaBox = document.getElementById("c2_arena");
+      if (arenaBox) arenaBox.innerHTML = arenaHtml(arena);
       await reloadJobs();
     },
     async "stop-all"() {
@@ -138,9 +151,14 @@
     async "open-app"(b) { await openApp(b.dataset.id, "open-app"); },
     async "open-picked"() { await openApp(document.getElementById("c2_app").value, "open-picked"); },
     async brief() {
-      const r = await api("briefs/generate", {});
-      say("brief", ok(r) && r.ok ? "Done — today's brief is written. See the Briefs tab."
-        : `The brief didn't finish: ${(r && (r.error || r.log)) || "unknown error"}`, !(ok(r) && r.ok));
+      const r = await api("briefs/generate_bg", {});
+      say("brief", ok(r) && r.started ? "Writing — it'll appear in Briefs in a few minutes."
+        : `The brief didn't start: ${(r && r.error) || "unknown error"}`, !(ok(r) && r.started));
+    },
+    async "sync-reels"() {
+      const r = await api("reels/sync", {});
+      say("sync-reels", ok(r) && r.ok ? "Started — new reels will appear in the Reels tab shortly."
+        : `Couldn't start it: ${(r && r.error) || "unknown error"}`, !(ok(r) && r.ok));
     },
     async filegraph() {
       const r = await api("filegraph/rebuild", {});

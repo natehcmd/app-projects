@@ -268,13 +268,13 @@
     // Agy -> Local roots
     localPositions.forEach((lp, i) => {
       const lit = localLitState[i];
-      const startX = lp.parentPos.x, startY = lp.parentPos.y + lp.parentPos.r;
+      const startX = lp.parentPos.x, startY = lp.parentPos.y + lp.parentPos.r + 34;  // below the label + badge, not through them
       const endX = lp.x, endY = lp.y - lp.r;
       let d = "";
       if (Math.abs(endX - startX) < 5) {
-        d = `M ${startX} ${startY} C ${startX - 10} 365, ${startX + 10} 405, ${endX} ${endY}`;
+        d = `M ${startX} ${startY} C ${startX - 8} 390, ${startX + 8} 415, ${endX} ${endY}`;
       } else {
-        d = `M ${startX} ${startY} C ${startX} 380, ${endX} 390, ${endX} ${endY}`;
+        d = `M ${startX} ${startY} C ${startX} 395, ${endX} 405, ${endX} ${endY}`;
       }
       pathsSvg += `<path d="${d}" class="rt-path rt-path-tier3 ${lit ? 'rt-path-lit rt-path-animated' : ''}" />`;
     });
