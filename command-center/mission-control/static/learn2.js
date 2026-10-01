@@ -8,14 +8,14 @@
     const box = document.getElementById("ln2-card");
     if (!box) return;
     document.querySelectorAll(".ln2-k").forEach((b) => (b.disabled = true));
-    box.innerHTML = '<div class="empty">Thinking… (local model, free)</div>';
+    box.innerHTML = '<div class="empty">Writing and checking… (local AI writes, Gemini checks)</div>';
     try {
       const c = await apiOk("learn/card?kind=" + encodeURIComponent(kind));
       box.innerHTML = `
         <h3 style="margin:0 0 6px">${esc(c.title)}</h3>
         <div style="line-height:1.55">${esc(c.body)}</div>
         ${c.code ? `<pre class="termout" style="margin-top:10px;white-space:pre-wrap">${esc(c.code)}</pre>` : ""}
-        <div class="meta" style="margin-top:8px;opacity:.55">Written by a local AI — usually right, not always. Double-check anything important.</div>`;
+        <div class="meta" style="margin-top:8px;opacity:.65">${checkLine(c.check)}</div>`;
     } catch (e) {
       box.innerHTML = '<div class="empty">The local model is busy — try again in a minute.</div>';
     } finally {
@@ -23,6 +23,13 @@
     }
   }
   window.ln2Deal = deal;
+  function checkLine(ck) {
+    if (!ck) return "Written by a local AI — not checked.";
+    if (ck.corrected_by) return "Written by a local AI, corrected by Gemini after a check flagged: " + esc(ck.issue || "");
+    if (ck.ok === true) return "Written by a local AI · checked by Gemini ✓";
+    if (ck.ok === false) return "⚠️ Gemini flagged this card: " + esc(ck.issue || "") + " — treat it with care.";
+    return "Written by a local AI — not checked (" + esc(ck.issue || "checker unavailable") + ").";
+  }
 
   views.learn = async () => {
     const rest = oldLearn ? await oldLearn() : "";

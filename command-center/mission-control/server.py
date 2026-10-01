@@ -1114,6 +1114,58 @@ def briefs(request: Request = None):
     files = sorted((ROOT / "data" / "briefs").glob("*.md"), reverse=True)[:14]
     return [{"name": f.stem, "content": f.read_text()} for f in files]
 
+# ---- the pipeline for Command Center's own model calls (Nate: every call goes
+# through the pipeline unless he says otherwise): local 8B drafts, Gemini
+# Flash checks, Gemini Pro rewrites with the reason if the check fails. ----
+VERIFY_PROMPT = """You are checking AI-written text before a user sees it.
+TASK IT WAS GIVEN: {task}
+{source}
+TEXT TO CHECK:
+{text}
+
+Reject it if it states anything false or unsupported{src_rule}, has broken code,
+or doesn't do the task. Don't reject for style.
+Reply with ONLY: {{"ok": true|false, "issue": "<what is wrong, empty if ok>"}}"""
+
+
+def _pipeline_import():
+    import sys as _sys
+    if str(PIPELINE_SCRIPTS) not in _sys.path:
+        _sys.path.insert(0, str(PIPELINE_SCRIPTS))
+    from claude_director import Dispatcher, TokenLedger
+    return Dispatcher, TokenLedger
+
+
+def pipeline_verify(task: str, text: str, source: str = "", label: str = "check") -> dict:
+    """Gemini Flash judges `text`. {"ok": True|False|None, "issue", "checker"};
+    None = the check couldn't run (never reported as passed)."""
+    Dispatcher, TokenLedger = _pipeline_import()
+    d = Dispatcher(TokenLedger(), failover=False)
+    prompt = VERIFY_PROMPT.format(task=task[:1500], text=text[:6000],
+                                  source=("SOURCE IT MUST BE FAITHFUL TO:\n" + source[:8000]) if source else "",
+                                  src_rule=" by the source" if source else "")
+    try:
+        raw = _tracked_call(d, "agy_flash", "verify", prompt, label, timeout=45)
+    except Exception as e:
+        return {"ok": None, "issue": f"checker unavailable: {str(e)[:120]}", "checker": None}
+    m = re.search(r"\{[^{}]*\"ok\"[^{}]*\}", raw or "", re.S)
+    try:
+        v = json.loads(m.group(0)) if m else {}
+    except ValueError:
+        v = {}
+    if "ok" not in v:
+        return {"ok": None, "issue": "checker gave no verdict", "checker": "agy_flash"}
+    return {"ok": bool(v["ok"]), "issue": str(v.get("issue", ""))[:300], "checker": "agy_flash"}
+
+
+def pipeline_rewrite(prompt: str, issue: str, label: str = "rewrite") -> str:
+    """Escalation: Gemini Pro redoes the task knowing why the draft was rejected."""
+    Dispatcher, TokenLedger = _pipeline_import()
+    d = Dispatcher(TokenLedger(), failover=False)
+    return _tracked_call(d, "agy_pro", "rewrite",
+                         prompt + "\n\nA reviewer rejected an earlier draft because: " + issue +
+                         "\nFix that. Follow the original output format exactly.", label, timeout=90)
+
 BRIEF_SHORT_DIR = ROOT / "data" / "briefs" / ".short"
 
 @app.get("/api/briefs/short")
@@ -1125,8 +1177,10 @@ def brief_short(name: str = "", request: Request = None):
     if not src:  # only names of briefs that exist — never a path from the request
         return JSONResponse({"error": "no such brief"}, status_code=404)
     cache = BRIEF_SHORT_DIR / f"{src.stem}.md"
+    status_f = BRIEF_SHORT_DIR / f"{src.stem}.check.json"
     if cache.exists() and cache.stat().st_mtime >= src.stat().st_mtime:
-        return {"name": src.stem, "short": cache.read_text(), "cached": True}
+        st = json.loads(status_f.read_text()) if status_f.exists() else {"ok": None, "issue": "summarised before checks existed"}
+        return {"name": src.stem, "short": cache.read_text(), "cached": True, "check": st}
     prompt = ("Summarise this document as exactly 5 bullet points in very simple English "
               "(short words, no jargon; explain any technical term in a few words). Each bullet "
               "under 18 words. Say what it found and what to do next. Output only the 5 lines, "
@@ -1144,9 +1198,21 @@ def brief_short(name: str = "", request: Request = None):
     if not bullets:  # an empty or rambling reply is a failure, not a summary
         return JSONResponse({"error": "local model gave no bullets"}, status_code=502)
     short = "\n".join("- " + b.lstrip("-•* ").strip() for b in bullets)
+    check = pipeline_verify("5 plain-English bullets summarising a document", short,
+                            source=src.read_text(), label="Brief summary")
+    if check["ok"] is False:
+        try:
+            redo = pipeline_rewrite(prompt, check["issue"], label="Brief summary")
+            redo_b = [l.strip() for l in redo.splitlines() if l.strip().startswith(("-", "•", "*"))][:5]
+            if redo_b:
+                short = "\n".join("- " + b.lstrip("-•* ").strip() for b in redo_b)
+                check = {"ok": True, "issue": check["issue"], "checker": "agy_flash", "corrected_by": "agy_pro"}
+        except Exception as e:
+            check["issue"] += f" (rewrite failed: {str(e)[:80]})"
     BRIEF_SHORT_DIR.mkdir(parents=True, exist_ok=True)
     cache.write_text(short)
-    return {"name": src.stem, "short": short, "cached": False}
+    status_f.write_text(json.dumps(check))
+    return {"name": src.stem, "short": short, "cached": False, "check": check}
 
 @app.post("/api/briefs/generate")
 def brief_now(request: Request = None, payload: dict = Body(default={})):
@@ -2009,8 +2075,21 @@ def learn_card(kind: str = "term", request: Request = None):
         return JSONResponse({"error": f"local model unavailable: {e}"}, status_code=503)
     if not isinstance(card, dict) or not card.get("title") or not card.get("body"):
         return JSONResponse({"error": "local model gave an empty card"}, status_code=502)
+    text = f"{card.get('title')}\n{card.get('body')}\n{card.get('code') or ''}"
+    check = pipeline_verify("a short, TRUE learning card: " + LEARN_CARD_PROMPTS[kind], text, label="Learn card")
+    if check["ok"] is False:
+        try:
+            redo = pipeline_rewrite(prompt, check["issue"], label="Learn card")
+            m = re.search(r"\{.*\}", redo, re.S)
+            new = json.loads(m.group(0)) if m else {}
+            if new.get("title") and new.get("body"):
+                card = new
+                check = {"ok": True, "issue": check["issue"], "checker": "agy_flash", "corrected_by": "agy_pro"}
+        except Exception as e:
+            check["issue"] += f" (rewrite failed: {str(e)[:80]})"
     return {"kind": kind, "title": str(card["title"])[:120], "body": str(card["body"])[:900],
-            "code": str(card.get("code") or "")[:1500], "lang": str(card.get("lang") or "")[:20]}
+            "code": str(card.get("code") or "")[:1500], "lang": str(card.get("lang") or "")[:20],
+            "check": check}
 
 @app.get("/api/learn/history")
 def learn_history():

@@ -12,7 +12,10 @@
   async function loadShort(el) {
     try {
       const r = await apiOk("briefs/short?name=" + encodeURIComponent(el.dataset.name));
-      el.innerHTML = r && r.short ? bullets(r.short) : '<div class="empty">No summary</div>';
+      const ck = r && r.check;
+      const note = !ck || ck.ok === null || ck.ok === undefined ? "not checked"
+        : ck.corrected_by ? "corrected by Gemini" : ck.ok ? "checked by Gemini ✓" : "⚠️ Gemini flagged: " + esc(ck.issue || "");
+      el.innerHTML = r && r.short ? bullets(r.short) + `<div class="meta" style="opacity:.6">${note}</div>` : '<div class="empty">No summary</div>';
     } catch (e) {
       el.innerHTML = '<div class="empty">Short version not ready (local model busy) — open the full brief below.</div>';
     }
