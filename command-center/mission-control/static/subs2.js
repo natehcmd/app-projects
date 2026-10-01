@@ -202,36 +202,57 @@
     if (pct >= 60) return "var(--peach,#ffb570)";
     return "var(--mint,#3bffd2)";
   }
+  function ensurePillStyle() {
+    // Own <style>, not the Control card's: the pill shows on every tab.
+    if (document.getElementById("s2-pill-style")) return;
+    const st = document.createElement("style");
+    st.id = "s2-pill-style";
+    st.textContent = `
+      .s2-bar{display:flex;align-items:center;gap:8px;margin-left:10px;padding:4px 10px;border-radius:999px;
+        border:1px solid var(--glass-brd,rgba(255,255,255,.15));background:transparent;color:var(--ink,#e8eef5);
+        font-size:12px;cursor:pointer;flex:none}
+      .s2-bar .s2-name{opacity:.8}
+      .s2-bar .s2-track{position:relative;width:130px;height:10px;border-radius:999px;background:rgba(255,255,255,.18);overflow:hidden}
+      .s2-bar .s2-fill{position:absolute;left:0;top:0;bottom:0;border-radius:999px;transition:width .4s}
+      .s2-bar .s2-mark{position:absolute;top:-2px;bottom:-2px;width:2px;background:rgba(255,255,255,.55)}
+      .s2-bar .s2-pct{font-weight:700;font-size:13px;min-width:36px;text-align:right}
+      .s2-bar .s2-wk{opacity:.6;font-size:11px}
+      @media (prefers-reduced-motion: reduce){.s2-bar .s2-fill{transition:none}}`;
+    document.head.appendChild(st);
+  }
   async function checkPill() {
     const bar = document.querySelector(".topbar");
     if (!bar) return;
     let data;
     try { data = await apiOk("subs"); } catch (e) { if (pill) pill.hidden = true; return; }
+    ensurePillStyle();
     const subs = Array.isArray(data.subs) ? data.subs : [];
     const claude = subs.find(s => s.id === "claude") || {};
     const gemini = subs.find(s => s.id === "gemini") || {};
     const outModel = (gemini.models || []).find(m => m.out_until);
-    let label, color;
-    if (outModel) {
-      label = `${outModel.name} out`;
-      color = "var(--rose,#ff6b9d)";
-    } else {
-      const pcts = (Array.isArray(claude.limits) ? claude.limits : [])
-        .map(l => l.pct).filter(p => p !== null && p !== undefined);
-      const pct = pcts.length ? Math.max(...pcts) : null;
-      label = pct === null ? "Claude" : `Claude ${pct}%`;
-      color = pillColor(pct);
-    }
+    const limits = Array.isArray(claude.limits) ? claude.limits : [];
+    const session = limits.find(l => /session/i.test(l.label)) || limits[0] || null;
+    const week = limits.find(l => /week/i.test(l.label)) || null;
+    const pct = session && typeof session.pct === "number" ? session.pct : null;
     if (!pill) {
       pill = document.createElement("button");
       pill.type = "button";
-      pill.className = "s2-pill";
+      pill.className = "s2-bar";
       pill.onclick = () => document.querySelector('.dock button[data-view="control"]')?.click();
       bar.appendChild(pill);
     }
-    pill.style.borderColor = color;
-    pill.style.color = color;
-    pill.textContent = label;
+    const color = outModel ? "var(--rose,#ff6b9d)" : pillColor(pct);
+    const width = pct === null ? 0 : Math.max(2, Math.min(100, pct));
+    pill.innerHTML = `
+      <span class="s2-name">${outModel ? esc(String(outModel.name)) + " out" : "Claude"}</span>
+      <span class="s2-track" aria-hidden="true">
+        <span class="s2-fill" style="width:${width}%;background:${color}"></span>
+        <span class="s2-mark" style="left:80%"></span>
+      </span>
+      <span class="s2-pct" style="color:${color}">${pct === null ? "—" : pct + "%"}</span>
+      ${week && typeof week.pct === "number" ? `<span class="s2-wk">wk ${esc(String(week.pct))}%</span>` : ""}`;
+    pill.title = limits.map(l => `${l.label}: ${l.pct}% · resets ${l.resets}`).join("\n") || "Claude usage";
+    pill.setAttribute("aria-label", pct === null ? "Claude usage" : `Claude session ${pct} percent used`);
     pill.hidden = false;
   }
   const startPill = () => { checkPill(); setInterval(checkPill, 60000); };
