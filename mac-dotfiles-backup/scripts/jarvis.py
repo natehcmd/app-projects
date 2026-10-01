@@ -2,38 +2,52 @@ import os
 import sys
 import time
 import errno
+import fcntl
 import subprocess
 import json
 import urllib.request
 
 LOCK_PATH = "/tmp/jarvis.lock"
-STALE_LOCK_SECONDS = 120  # a run should never take this long; treat older locks as dead
+
+# Module-level fd for the held lock, so release_lock() can unlock/close the
+# exact descriptor that holds it.
+_lock_fd = None
 
 
 def acquire_lock():
-    # Atomic create-or-fail so overlapping launches can't both proceed,
-    # even if something ever calls jarvis.py back-to-back without a cooldown.
+    # fcntl.flock is kernel-enforced and tied to this process: if the holder
+    # dies for any reason (crash, kill -9, power loss), the kernel releases
+    # the lock automatically when the fd's last reference closes — no mtime
+    # "staleness" heuristic needed. The old remove-if-stale-then-recreate
+    # approach let a second process decide a still-running-but-slow jarvis
+    # was dead (if a run legitimately took longer than the stale threshold)
+    # and rip its lock out from under it, so both ran at once.
+    global _lock_fd
+    fd = os.open(LOCK_PATH, os.O_CREAT | os.O_RDWR, 0o644)
     try:
-        fd = os.open(LOCK_PATH, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-        os.write(fd, str(os.getpid()).encode())
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
         os.close(fd)
-        return True
-    except FileExistsError:
-        try:
-            age = time.time() - os.path.getmtime(LOCK_PATH)
-            if age > STALE_LOCK_SECONDS:
-                os.remove(LOCK_PATH)
-                return acquire_lock()
-        except FileNotFoundError:
-            return acquire_lock()
         return False
+    os.ftruncate(fd, 0)
+    os.write(fd, str(os.getpid()).encode())
+    _lock_fd = fd
+    return True
 
 
 def release_lock():
+    global _lock_fd
+    if _lock_fd is None:
+        return
     try:
-        os.remove(LOCK_PATH)
-    except FileNotFoundError:
+        fcntl.flock(_lock_fd, fcntl.LOCK_UN)
+    except OSError:
         pass
+    try:
+        os.close(_lock_fd)
+    except OSError:
+        pass
+    _lock_fd = None
 
 
 def speak(text):

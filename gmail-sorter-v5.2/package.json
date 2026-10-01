@@ -23,7 +23,8 @@
   "scripts": {
     "setup": "node src/setup.js",
     "sort": "node src/sort-now.mjs",
-    "test-batch": "node src/sort-now.mjs --test-batch"
+    "test-batch": "node src/sort-now.mjs --test-batch",
+    "test": "node --test src/*.test.mjs"
   },
   "dependencies": {
     "@google-cloud/local-auth": "^3.0.1",

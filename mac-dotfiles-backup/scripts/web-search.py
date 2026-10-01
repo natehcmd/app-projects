@@ -18,7 +18,7 @@ def search(query):
     })
     
     try:
-        with urllib.request.urlopen(req) as response:
+        with urllib.request.urlopen(req, timeout=15) as response:
             print(response.read().decode('utf-8'))
     except Exception as e:
         print(json.dumps({"error": str(e)}))

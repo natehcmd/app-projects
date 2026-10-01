@@ -1,4 +1,6 @@
+import os
 import time
+import fcntl
 import subprocess
 import numpy as np
 import sounddevice as sd
@@ -9,14 +11,34 @@ DOUBLE_CLAP_WINDOW = 1.0
 RETRIGGER_LOCKOUT = 30  # seconds to ignore claps after a trigger, so jarvis's own
                         # speaker output isn't picked up by the mic as a new clap
 
+# Same lock file jarvis.py itself takes with fcntl.flock (see jarvis.py).
+JARVIS_LOCK_PATH = "/tmp/jarvis.lock"
+
 last_spike = 0
 last_trigger = 0
 clap_count = 0
 
 
 def jarvis_already_running() -> bool:
-    result = subprocess.run(["pgrep", "-f", "scripts/jarvis.py"], capture_output=True)
-    return result.returncode == 0
+    # `pgrep -f scripts/jarvis.py` matches ANY process whose command line
+    # contains that substring — including e.g. `vim scripts/jarvis.py` or a
+    # grep of this very file — which would wrongly report jarvis as "running"
+    # and silently swallow a real double-clap trigger. Checking jarvis's own
+    # flock is exact: it can only be held by a real, currently-running
+    # jarvis.py process, and the kernel guarantees it's released the instant
+    # that process exits or dies.
+    try:
+        fd = os.open(JARVIS_LOCK_PATH, os.O_CREAT | os.O_RDWR, 0o644)
+    except OSError:
+        return False
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        fcntl.flock(fd, fcntl.LOCK_UN)
+        return False  # we got the lock uncontended => jarvis is not running
+    except OSError:
+        return True  # lock is held by another process => jarvis is running
+    finally:
+        os.close(fd)
 
 
 def audio_callback(indata, frames, time_info, status):
@@ -49,7 +71,15 @@ def audio_callback(indata, frames, time_info, status):
                 subprocess.Popen(["/opt/homebrew/bin/python3", "/Users/natehoward/scripts/jarvis.py"])
 
 
-# Run in background
-with sd.InputStream(callback=audio_callback):
-    while True:
-        time.sleep(1)
+def main():
+    # Run in background
+    with sd.InputStream(callback=audio_callback):
+        while True:
+            time.sleep(1)
+
+
+if __name__ == "__main__":
+    # Guard the mic-listening loop so the module can be imported (e.g. to
+    # unit-test jarvis_already_running()) without opening the microphone or
+    # blocking forever.
+    main()

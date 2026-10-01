@@ -18,7 +18,7 @@
  *   /help           — show commands
  */
 
-import { execSync, execFileSync, spawn } from 'child_process';
+import { execSync, execFileSync, execFile, spawn } from 'child_process';
 import { readFileSync, writeFileSync, existsSync, readdirSync, appendFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -148,19 +148,21 @@ function requiresConfirmation(message) {
 
 // ── AI Models ────────────────────────────────────────────────────
 async function askClaude(messages, systemPrompt) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: config.models.claude.model,
-      max_tokens: 1500,
-      system: systemPrompt,
-      messages
-    })
+  // Unlike gpt/gemini below, config.json carries no apiKey for Claude, so this
+  // used to call the raw Anthropic API with no auth header at all — every
+  // request failed (and since "claude" is the configured defaultModel, that
+  // broke every default-routed message, not just explicit @claude ones).
+  // Route through the already-authenticated local `claude` CLI instead, the
+  // same pattern agent-tracker's /api/agent-turn uses.
+  const convo = messages.map(m => `${m.role === 'assistant' ? 'Assistant' : 'User'}: ${m.content}`).join('\n\n');
+  const prompt = `${systemPrompt}\n\n${convo}`;
+  return new Promise((resolve, reject) => {
+    execFile('claude', ['-p', prompt], { timeout: 60000, maxBuffer: 10 * 1024 * 1024 }, (err, stdout, stderr) => {
+      const out = (stdout || '').trim();
+      if (out) return resolve(out);
+      reject(new Error((stderr || '').trim() || err?.message || 'no response'));
+    });
   });
-  const data = await res.json();
-  if (data.error) throw new Error(data.error.message);
-  return data.content?.[0]?.text || '(no response)';
 }
 
 async function askGPT(messages, systemPrompt) {

@@ -71,7 +71,7 @@ export function scoreEmail(subject, snippet, from, body, preferences) {
 
   // Bonus scoring only for confirmed important known people
   if (isKnownPerson && !isMarketingFromKnown) {
-    if (/\bfwd:|re:|forward/i.test(subject)) importantScore += 40;
+    if (/\b(?:fwd:|re:|forward)/i.test(subject)) importantScore += 40;
     if (/question|help|review|feedback|thoughts|input|opinion|advice/.test(text)) importantScore += 70;
     if (/meeting|call|timezone|schedule|available|lunch|coffee|catch.up/.test(text)) importantScore += 80;
     if (/project|contract|proposal|opportunity|partnership|collaboration|investment|fund/.test(text)) importantScore += 85;
