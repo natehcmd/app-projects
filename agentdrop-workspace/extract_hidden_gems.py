@@ -2,8 +2,9 @@ import os
 import sqlite3
 import glob
 from pathlib import Path
+import re
 
-DB_PATH = os.path.expanduser("~/Projects/mission-control/data/mission.db")
+DB_PATH = os.path.expanduser('~/Projects/app-projects/command-center/mission-control/data/mission.db')
 GEMS_FILE = Path(os.path.expanduser("~/Learning/hidden_gems_report.md"))
 
 def extract_gems(transcript):
@@ -17,7 +18,7 @@ def extract_gems(transcript):
     sentences = transcript.split('.')
     for s in sentences:
         s_lower = s.lower()
-        if any(k in s_lower for k in tech_keywords):
+        if any(re.search(r'\b' + re.escape(k) + r'\b', s_lower) for k in tech_keywords):
             if len(s.strip()) > 10:
                 gems.append(s.strip())
                 
@@ -50,19 +51,20 @@ def main():
             
     print(f"Found {len(skipped_reels)} skipped reels. Extracting gems...")
     
-    report = "# Hidden Gems Extracted from Engagement-Bait Reels\\n\\n"
-    report += "Even though these videos were 'comment-for-link' bait, here are the actual technical resources they mentioned:\\n\\n"
+    report = "# Hidden Gems Extracted from Engagement-Bait Reels\n\n"
+    report += "Even though these videos were 'comment-for-link' bait, here are the actual technical resources they mentioned:\n\n"
     
     extracted_count = 0
     for rid, transcript in skipped_reels:
         gems = extract_gems(transcript)
         if gems:
-            report += f"### Reel {rid}\\n"
+            report += f"### Reel {rid}\n"
             for gem in set(gems): # Deduplicate sentences
-                report += f"- {gem}\\n"
-            report += "\\n"
+                report += f"- {gem}\n"
+            report += "\n"
             extracted_count += 1
             
+    GEMS_FILE.parent.mkdir(parents=True, exist_ok=True)  # ~/Learning may not exist yet
     GEMS_FILE.write_text(report)
     print(f"Extraction complete! Found useful resources in {extracted_count} of the skipped reels.")
     print(f"Saved to {GEMS_FILE}")
