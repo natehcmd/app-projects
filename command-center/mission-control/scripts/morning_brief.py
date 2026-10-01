@@ -1,6 +1,6 @@
 """CEO morning brief — reads Life HQ, job tracker, memory index, and yesterday's brief;
 generates today's priorities via local ollama. Runs from cron at 8am or on demand."""
-import json, sqlite3, datetime, urllib.request
+import json, sys, sqlite3, datetime, urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
@@ -48,10 +48,42 @@ Job tracker: {tracker}"""
         headers={"Content-Type": "application/json"})
     with urllib.request.urlopen(req, timeout=600) as r:
         brief = json.loads(r.read())["response"].strip()
+    brief, note = pipeline_check(brief, prompt)
     out = ROOT / "data" / "briefs" / f"{today}.md"
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(f"# CEO Brief — {today}\n\n{brief}\n")
+    out.write_text(f"# CEO Brief — {today}\n\n{brief}\n\n_{note}_\n")
     print(f"wrote {out}")
+
+def pipeline_check(brief, prompt):
+    """Nate: every model call goes through the pipeline. Gemini Flash checks the
+    8B's brief against the data it was given (a made-up deadline is worse than
+    no brief); Gemini Pro rewrites it with the reason if rejected."""
+    try:
+        sys.path.insert(0, str(Path.home() / ".local/share/review-pipeline/code-review-pipeline/scripts"))
+        from claude_director import Dispatcher, TokenLedger
+        check = ("You are checking a morning brief before the user reads it. Reject it if it states "
+                 "any date, deadline, task or fact that is NOT in the DATA, or misreads it. Don't reject "
+                 "for style. Do NOT use tools. Reply with ONLY: {\"ok\": true|false, \"issue\": \"...\"}"
+                 "\n\nDATA AND INSTRUCTIONS:\n" + prompt[:9000] + "\n\nBRIEF:\n" + brief[:4000])
+        raw = Dispatcher(TokenLedger(), failover=False).call("agy_flash", "verify", check, timeout=90)
+        import re as _re
+        m = _re.search(r"\{[^{}]*\"ok\"[^{}]*\}", raw or "", _re.S)
+        v = json.loads(m.group(0)) if m else {}
+    except Exception as e:
+        return brief, f"not checked ({str(e)[:80]})"
+    if v.get("ok") is True:
+        return brief, "checked by Gemini ✓"
+    if v.get("ok") is False:
+        try:
+            redo = Dispatcher(TokenLedger(), failover=False).call(
+                "agy_pro", "rewrite", prompt + "\n\nA reviewer rejected an earlier draft because: "
+                + str(v.get("issue", "")) + "\nFix that. Same format.", timeout=120).strip()
+            if redo:
+                return redo, "corrected by Gemini — the first draft had: " + str(v.get("issue", ""))[:120]
+        except Exception as e:
+            return brief, "⚠️ Gemini flagged: " + str(v.get("issue", ""))[:120] + f" (rewrite failed: {str(e)[:60]})"
+    return brief, "not checked (no verdict)"
+
 
 if __name__ == "__main__":
     main()
