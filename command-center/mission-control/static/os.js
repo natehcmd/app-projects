@@ -45,7 +45,7 @@ async chat() {
   if (!state.handsConfirmAlways) state.handsConfirmAlways = {};
   if (state.handsStatus === undefined) state.handsStatus = "disconnected";
   if (state.handsToken === undefined) state.handsToken = localStorage.getItem("hands_token") || "";
-  if (!state.handsEngine) state.handsEngine = "ollama";
+  if (!state.handsEngine) state.handsEngine = "pipeline";  // Nate: everything goes through the pipeline unless he picks one engine
   // Auto-connect once per page load — both apps run on the same Mac, so
   // there's no real reason to make the user copy/paste a token manually.
   if (!state.handsAutoTried && state.handsStatus === "disconnected") {
@@ -66,14 +66,15 @@ async chat() {
   // itself via /api/term/options); claude/claude-cli mirror the exact ids
   // ClaudeClient.swift / the CLI's --model flag actually accept.
   const HANDS_MODELS = {
+    pipeline: ["local → Gemini check → Claude Code"],
     ollama: (opts.local && opts.local.length) ? opts.local : ["(profile default)"],
-    claude: ["claude-opus-4-8", "claude-sonnet-5", "claude-haiku-4-5"],
+    claude: ["claude-opus-5-5", "claude-sonnet-5", "claude-haiku-4-5"],
     "claude-cli": ["default", "opus", "sonnet", "haiku"],
   };
   const models = HANDS_MODELS[state.handsEngine];
   if (!state.handsModel || !models.includes(state.handsModel)) state.handsModel = models[0];
-  const HANDS_ENGINE_LABEL = {ollama: "Local", claude: "Claude API", "claude-cli": "Claude Code"};
-  const HANDS_ENGINE_COLOR = {ollama: "sky", claude: "lav", "claude-cli": "mint"};
+  const HANDS_ENGINE_LABEL = {pipeline: "Pipeline", ollama: "Local", claude: "Claude API", "claude-cli": "Claude Code"};
+  const HANDS_ENGINE_COLOR = {pipeline: "peach", ollama: "sky", claude: "lav", "claude-cli": "mint"};
   return `
   <div class="card glass chat-card">
     <h2><span class="dot t-${statusColor}"></span>Chat — Hammond

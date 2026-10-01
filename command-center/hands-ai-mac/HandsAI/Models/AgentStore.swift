@@ -42,9 +42,13 @@ final class AgentStore: ObservableObject {
     /// falls back to Ollama when nothing usable was actually requested;
     /// see `resolveProvider` for the on-demand, non-silent version used to
     /// actually route a message.
-    @AppStorage("chat.provider") var provider: String = "ollama"
+    @AppStorage("chat.provider") var provider: String = "pipeline"
 
     var activeProvider: String {
+        // "pipeline" (the default): local worker with tools, a Gemini checker,
+        // escalation to Claude Code when the checker rejects. Nate's rule:
+        // every call goes through the pipeline unless he picks one engine.
+        if provider == "pipeline" { return "pipeline" }
         if provider == "claude-cli", claudeCLI?.isConfigured == true { return "claude-cli" }
         if provider == "claude" {
             if claude?.isConfigured == true { return "claude" }
@@ -246,6 +250,8 @@ final class AgentStore: ObservableObject {
             // Claude Code CLI (subscription) instead of the metered API.
             await claudeCLI?.ensureResolved()
             return claudeCLI?.isConfigured == true ? "claude-cli" : nil
+        case "pipeline":
+            return "pipeline"
         default:
             return "ollama"
         }
@@ -254,7 +260,7 @@ final class AgentStore: ObservableObject {
     /// Multi-turn loop: call Ollama → if response has tool_calls, execute them,
     /// append results, call again. Stop when no tool_calls or hit turn cap.
     private func runAgentLoop(engineOverride: String? = nil, modelOverride: String? = nil,
-                              speakReply: Bool = false) async {
+                              speakReply: Bool = false, reviewerNote: String? = nil) async {
         guard let ollama else {
             state = .error(message: "Ollama not connected")
             return
@@ -266,6 +272,10 @@ final class AgentStore: ObservableObject {
         for m in transcript {
             messages.append(.init(role: m.role == .user ? "user" : "assistant", content: m.text))
         }
+        if let note = reviewerNote, let i = messages.lastIndex(where: { $0.role == "user" }) {
+            messages[i] = .init(role: "user", content: messages[i].content + "\n\n(" + note + ")")
+        }
+        var evidence: [[String: String]] = []   // tool name/input/result, for the pipeline checker
 
         let profile = profiles?.selected
         guard let provider = await resolveProvider(engineOverride) else {
@@ -321,6 +331,8 @@ final class AgentStore: ObservableObject {
 
                         let result = await Tools.run(toolCall: call)
                         markLastToolCompleted(success: !result.hasPrefix("error:"))
+                        evidence.append(["name": toolName, "input": String(detail.prefix(300)),
+                                         "result": String(result.prefix(800))])
 
                         messages.append(.init(role: "tool", content: result, tool_calls: nil,
                                               tool_call_id: call.id))
@@ -330,18 +342,28 @@ final class AgentStore: ObservableObject {
 
                 // No more tool calls — final answer.
                 liveReply = ""
-                if !reply.content.isEmpty {
-                    transcript.append(Message(role: .assistant, text: reply.content))
+                let finalText = reply.content
+                if provider == "pipeline" && !finalText.isEmpty {
+                    // Answer now; check afterwards so the checker never slows the reply.
+                    let question = transcript.last(where: { $0.role == .user })?.text ?? ""
+                    let evidenceCopy = evidence
+                    Task { [weak self] in
+                        await self?.checkAfterReply(question: question, answer: finalText,
+                                                    evidence: evidenceCopy, speakReply: speakReply)
+                    }
+                }
+                if !finalText.isEmpty {
+                    transcript.append(Message(role: .assistant, text: finalText))
                     history?.record(
                         user: transcript.last(where: { $0.role == .user })?.text ?? "",
-                        assistant: reply.content,
+                        assistant: finalText,
                         provider: provider
                     )
                     // .speaking drives the orb in Command Center/iOS either way;
                     // audio only when the user actually spoke this turn.
                     state = .speaking
                     if speakReply {
-                        voice?.speak(reply.content)
+                        voice?.speak(finalText)
                     }
                     try? await Task.sleep(nanoseconds: 800_000_000)
                 }
@@ -355,6 +377,53 @@ final class AgentStore: ObservableObject {
         }
         liveReply = ""
         state = .idle
+    }
+
+    /// Runs after the worker's reply was shown. If the checker rejects it, the
+    /// question goes to Claude Code with the reviewer's reason and its answer is
+    /// added as a correction. A check that can't run is shown as "not checked".
+    private func checkAfterReply(question: String, answer: String,
+                                 evidence: [[String: String]], speakReply: Bool) async {
+        let verdict = await pipelineCheck(question: question, answer: answer, evidence: evidence)
+        guard verdict.ok == false else { return }
+        if claudeCLI?.isConfigured == true {
+            transcript.append(Message(role: .assistant,
+                text: "Correction coming — a reviewer flagged that answer: \(verdict.issue)"))
+            appendToolCall(ToolCall(tool: "pipeline", detail: "Escalated to Claude Code", status: .completed))
+            await runAgentLoop(engineOverride: "claude-cli", speakReply: speakReply,
+                               reviewerNote: "A reviewer rejected an earlier answer: \(verdict.issue). Answer correctly, use tools to check, and say plainly if something couldn't be checked.")
+        } else {
+            transcript.append(Message(role: .assistant,
+                text: "⚠️ A reviewer flagged that answer: \(verdict.issue)"))
+        }
+    }
+
+    /// The pipeline's checking step: Command Center asks a different, cheap model
+    /// (Gemini Flash) whether the worker's reply is correct given the tool
+    /// evidence. ok == nil means the check couldn't run — never treated as a pass.
+    private func pipelineCheck(question: String, answer: String,
+                               evidence: [[String: String]]) async -> (ok: Bool?, issue: String) {
+        appendToolCall(ToolCall(tool: "pipeline", detail: "Gemini is checking the answer…", status: .running))
+        let token = UserDefaults.standard.string(forKey: "remote.token") ?? ""
+        var req = URLRequest(url: URL(string: "http://127.0.0.1:8450/api/pipeline/check")!)
+        req.httpMethod = "POST"
+        req.timeoutInterval = 60
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.httpBody = try? JSONSerialization.data(withJSONObject:
+            ["question": question, "answer": answer, "tools": evidence])
+        var ok: Bool? = nil
+        var issue = "checker didn't answer"
+        if let (data, _) = try? await URLSession.shared.data(for: req),
+           let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            ok = obj["ok"] as? Bool
+            issue = (obj["issue"] as? String) ?? (obj["error"] as? String) ?? issue
+        }
+        let detail = ok == true ? "Checked by Gemini ✓"
+            : ok == false ? "Gemini rejected: \(issue)" : "Not checked: \(issue)"
+        markLastToolCompleted(success: ok == true)
+        if let i = toolCalls.lastIndex(where: { $0.tool == "pipeline" }) { toolCalls[i].detail = detail }
+        return (ok, issue)
     }
 
     private func describeArgs(_ args: OllamaClient.ArgsJSON) -> String {

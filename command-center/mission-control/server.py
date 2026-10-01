@@ -1769,6 +1769,69 @@ def _tracked_call(d, key, stage, prompt, label, timeout=300):
         with _live_lock:
             LIVE_CALLS.pop(cid, None)
 
+PIPELINE_CHECK_PROMPT = """You are checking an AI assistant's reply before the user sees it.
+Judge ONLY whether the reply is correct and honest given the evidence below.
+Reject it if it claims something the tool results don't show (e.g. "I checked your
+email" when no email tool ran or it failed), misreports a tool result, ignores an
+error, or doesn't answer what was asked. Don't reject for style.
+Reply with ONLY a JSON object: {{"ok": true|false, "issue": "<what is wrong, empty if ok>"}}
+
+USER ASKED:
+{q}
+
+TOOLS THAT RAN (name, input, result):
+{tools}
+
+ASSISTANT'S REPLY:
+{a}"""
+
+@app.post("/api/pipeline/check")
+def pipeline_check(payload: dict = Body(...), request: Request = None):
+    """The checking step of Hammond's pipeline: a different, cheap model (Gemini
+    Flash, falling down the chain if it's out) judges a worker's reply against the
+    tool evidence. Hammond escalates to a stronger engine when this rejects."""
+    if not _verify_token(request, payload):
+        return JSONResponse({"error": "unauthorized: valid bearer token required"}, status_code=401)
+    q = str(payload.get("question") or "")[:3000]
+    a = str(payload.get("answer") or "")[:6000]
+    tools = payload.get("tools") or []
+    if not q or not a:
+        return JSONResponse({"error": "need question and answer"}, status_code=400)
+    tool_text = "\n".join(
+        f"- {str(t.get('name',''))[:60]}({str(t.get('input',''))[:300]}) -> {str(t.get('result',''))[:800]}"
+        for t in tools[:20] if isinstance(t, dict)) or "(none)"
+    import sys as _sys
+    if str(PIPELINE_SCRIPTS) not in _sys.path:
+        _sys.path.insert(0, str(PIPELINE_SCRIPTS))
+    from claude_director import Dispatcher, TokenLedger
+    # Fast and bounded: Gemini Flash gets 45 s with no cascade through the slower
+    # tiers; if it can't answer, the local 8B checks instead (a different model
+    # from the worker's prompt, still free). Each Dispatcher call is time-boxed.
+    prompt = PIPELINE_CHECK_PROMPT.format(q=q, tools=tool_text, a=a)
+    t0 = time.time()
+    raw, d, last_err = None, None, ""
+    for key, limit in (("agy_flash", 45), ("local_small", 40)):
+        d = Dispatcher(TokenLedger(), failover=False)
+        try:
+            raw = _tracked_call(d, key, "check", prompt, "Hammond answer", timeout=limit)
+            break
+        except Exception as e:
+            last_err = f"{key}: {str(e)[:150]}"
+    if raw is None:
+        # A checker that can't run is not a pass: say so, let Hammond decide.
+        return {"ok": None, "issue": f"checker unavailable ({last_err})", "checker": None,
+                "secs": round(time.time() - t0, 1)}
+    m = re.search(r"\{[^{}]*\"ok\"[^{}]*\}", raw or "", re.S)
+    try:
+        v = json.loads(m.group(0)) if m else {}
+    except ValueError:
+        v = {}
+    if "ok" not in v:
+        return {"ok": None, "issue": "checker gave no verdict", "checker": d.last_served.get("check"),
+                "secs": round(time.time() - t0, 1)}
+    return {"ok": bool(v["ok"]), "issue": str(v.get("issue", ""))[:400],
+            "checker": d.last_served.get("check"), "secs": round(time.time() - t0, 1)}
+
 ROOT_TIERS = [  # top → bottom, the order work is sent down (and results sent back up)
     ("claude", "Claude", ["claude_adjudicator"]),
     ("agy", "Gemini (agy)", ["agy_deep", "agy_pro", "agy_flash"]),

@@ -46,12 +46,13 @@ struct ChatWindowView: View {
             // The engine used to be display-only here; choosing it meant
             // digging into Settings. Now it's the first thing in the window.
             Picker("Engine", selection: $agent.provider) {
+                Text("Pipeline").tag("pipeline")
                 Text("Local").tag("ollama")
                 Text("Claude").tag("claude")
                 Text("Claude Code").tag("claude-cli")
             }
             .pickerStyle(.segmented)
-            .frame(width: 260)
+            .frame(width: 340)
             .help("Which brain answers. Falls back to Local if the choice isn't set up.")
             if agent.provider == "ollama" {
                 Picker("Model", selection: $ollama.selectedModel) {
