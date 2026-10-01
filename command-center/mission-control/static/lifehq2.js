@@ -9,6 +9,27 @@
   function askHammond(tools) {
     return new Promise(async (resolve) => {
       const out = {};
+      // Hammond's Remote server accepts one connection per token and drops the
+      // older one when a second connects — opening our own socket here used to
+      // silently disconnect an active Chat tab session. Reuse that live socket
+      // instead of competing with it; only open a private one as a fallback
+      // when Chat isn't connected (found 2026-09-30: visiting Life HQ dropped
+      // Chat's connection every time).
+      const shared = (typeof handsSocket !== "undefined") ? handsSocket : null;
+      if (shared && shared.readyState === WebSocket.OPEN) {
+        const token = state.handsToken;
+        const finish = () => { clearTimeout(timer); shared.removeEventListener("message", onMsg); resolve(out); };
+        const timer = setTimeout(() => { out._error = out._error || "Hammond didn't answer in time"; finish(); }, 20000);
+        const onMsg = (ev) => {
+          let m; try { m = JSON.parse(ev.data); } catch (e) { return; }
+          if (m.type === "toolResult" && m.tool) out[m.tool] = m.text || "";
+          if (m.type === "error") out._error = m.text || "error";
+          if (tools.every((t) => t in out) || out._error) finish();
+        };
+        shared.addEventListener("message", onMsg);
+        tools.forEach((tool) => shared.send(JSON.stringify({ type: "message", text: "", token, tool })));
+        return;
+      }
       let token;
       try { token = (await apiOk("hands/token")).token; } catch (e) { return resolve({ _error: "no Hammond token" }); }
       let ws;
@@ -28,8 +49,8 @@
 
   const lines = (txt) => (txt || "").split("\n").map((l) => l.replace(/^- /, "").trim()).filter(Boolean);
 
-  function listHtml(txt, emptyMsg) {
-    if (txt === undefined) return '<div class="empty">…</div>';
+  function listHtml(txt, emptyMsg, errMsg) {
+    if (txt === undefined) return `<div class="empty">${esc(errMsg || "…")}</div>`;
     if (/^error:/i.test(txt)) {
       const perm = /-600|not allowed|access/i.test(txt);
       return `<div class="empty">${perm
@@ -47,8 +68,8 @@
     box.querySelector("#lh2-status").textContent = "Asking Hammond…";
     const r = await askHammond(["reminders_list", "calendar_today"]);
     if (!document.getElementById("lh2-box")) return;
-    box.querySelector("#lh2-rem").innerHTML = listHtml(r.reminders_list, "No open reminders");
-    box.querySelector("#lh2-cal").innerHTML = listHtml(r.calendar_today, "Nothing today or tomorrow");
+    box.querySelector("#lh2-rem").innerHTML = listHtml(r.reminders_list, "No open reminders", r._error);
+    box.querySelector("#lh2-cal").innerHTML = listHtml(r.calendar_today, "Nothing today or tomorrow", r._error);
     box.querySelector("#lh2-status").textContent = r._error
       ? r._error
       : "Updated " + new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });

@@ -16,6 +16,7 @@ import re
 import sqlite3
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
@@ -25,12 +26,15 @@ LIB = Path.home() / "AgentDrop-Workspace" / "reels"
 
 
 def transcribe(mp4: Path) -> str:
-    wav = Path("/tmp") / (mp4.stem + ".wav")
-    sh(["ffmpeg", "-y", "-loglevel", "error", "-i", str(mp4), "-ar", "16000", "-ac", "1", str(wav)])
-    if not wav.exists():
-        return ""
-    w = sh(["whisper-cli", "-m", str(MODEL), "-f", str(wav), "-np", "-nt"])
-    wav.unlink(missing_ok=True)
+    # A predictable /tmp/<stem>.wav path let another user (or a pre-planted
+    # symlink) collide with or clobber this file via -y; a private per-file
+    # temp dir removes both the collision and the symlink-clobber risk.
+    with tempfile.TemporaryDirectory(prefix="sync_library_") as tmpdir:
+        wav = Path(tmpdir) / (mp4.stem + ".wav")
+        sh(["ffmpeg", "-y", "-loglevel", "error", "-i", str(mp4), "-ar", "16000", "-ac", "1", str(wav)])
+        if not wav.exists():
+            return ""
+        w = sh(["whisper-cli", "-m", str(MODEL), "-f", str(wav), "-np", "-nt"])
     return w.stdout.strip()
 
 

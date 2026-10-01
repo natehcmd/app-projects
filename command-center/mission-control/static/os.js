@@ -1454,12 +1454,26 @@ document.addEventListener("keydown", e => {
 });
 
 /* ---------- router ---------- */
+let _renderGen = 0;
 async function render() {
-  $("#view").innerHTML = await views[state.view]();
-  if (state.view === "term" && state.job) { state.tailOff = 0; tailLoop(); }
-  if (state.view === "pipeline") pipelineLoop();
-  if (state.view === "reels") renderReelsOnly();
-  if (state.view === "chat") { const l = $("#handslog"); if (l) l.scrollTop = l.scrollHeight; }
+  const view = state.view;
+  const gen = ++_renderGen;
+  // Some views (Projects, FileGraph, …) await several API calls before
+  // returning their HTML — without this, switching to one of them left the
+  // previous tab's content on screen (looking frozen/wrong) until it finally
+  // resolved. Show a quick loading placeholder immediately, and only commit
+  // the result if the user hasn't switched tabs again meanwhile.
+  const loadTimer = setTimeout(() => {
+    if (gen === _renderGen) $("#view").innerHTML = '<div class="empty" style="padding:60px 0;text-align:center">Loading…</div>';
+  }, 200);
+  const html = await views[view]();
+  clearTimeout(loadTimer);
+  if (gen !== _renderGen) return; // a newer render() superseded this one
+  $("#view").innerHTML = html;
+  if (view === "term" && state.job) { state.tailOff = 0; tailLoop(); }
+  if (view === "pipeline") pipelineLoop();
+  if (view === "reels") renderReelsOnly();
+  if (view === "chat") { const l = $("#handslog"); if (l) l.scrollTop = l.scrollHeight; }
 }
 document.querySelectorAll(".dock button").forEach(b => b.onclick = () => {
   document.querySelectorAll(".dock button").forEach(x=>x.classList.remove("active"));
