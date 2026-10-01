@@ -56,7 +56,15 @@ const STATE_FILE = path.join(ROOT, 'deck-state.json');
 
 /* ---------- static files ---------- */
 const server = http.createServer((req, res) => {
-  let urlPath = decodeURIComponent(req.url.split('?')[0]);
+  let urlPath;
+  try {
+    urlPath = decodeURIComponent(req.url.split('?')[0]);
+  } catch {
+    // Malformed percent-encoding (GET /%FF) threw a URIError that crashed the
+    // whole server — one request took it down (pipeline review, 2026-10-01).
+    res.writeHead(400, { 'Content-Type': 'text/plain' });
+    return res.end('bad request');
+  }
   if (urlPath === '/') urlPath = '/index.html';
 
   if (urlPath === '/state') {
