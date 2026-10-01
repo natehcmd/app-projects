@@ -11,7 +11,7 @@ final class OllamaClient: ObservableObject {
     @Published var baseURL: URL = OllamaClient.defaultBaseURL
     @Published var isReachable: Bool = false
     @Published var availableModels: [Model] = []
-    @AppStorage("ollama.model") var selectedModel: String = "devstral:latest"
+    @AppStorage("ollama.model") var selectedModel: String = "llama3.1:8b"
     @AppStorage("ollama.userSelectedModel") var userExplicitlySelectedModel: Bool = false
     @Published var lastError: String? = nil
 
@@ -105,7 +105,10 @@ final class OllamaClient: ObservableObject {
             let bannedPrefixes = ["custom-", "private-"]
             let currentBanned = bannedPrefixes.contains { selectedModel.lowercased().hasPrefix($0) }
             let currentMissing = !availableModels.contains(where: { $0.name == selectedModel })
-            let prefs = ["devstral", "qwen3", "qwen3.6", "qwen2.5-coder", "hermes", "llama3.1", "llama3.2"]
+            // Small first: an everyday assistant doesn't need a 30B model, and the
+            // big ones kept the Mac running hot. Nate can still pick a bigger
+            // model in the chat window (that sets userExplicitlySelectedModel).
+            let prefs = ["llama3.1", "llama3.2", "hermes", "qwen3", "qwen3.6", "qwen2.5-coder", "devstral"]
             let currentRank = prefs.firstIndex(where: { selectedModel.contains($0) }) ?? Int.max
             let best = pickBestModel()
             let bestRank = best != nil ? (prefs.firstIndex(where: { best!.contains($0) }) ?? Int.max) : Int.max
@@ -128,9 +131,9 @@ final class OllamaClient: ObservableObject {
         let usable = availableModels.filter { m in
             !banned.contains(where: { m.name.lowercased().hasPrefix($0) })
         }
-        // Order matters: devstral & qwen3.6 emit native tool_calls; qwen2.5-coder
-        // often stuffs them into content; llama3.2 is worst. Prefer natively-good ones.
-        let prefs = ["devstral", "qwen3", "qwen3.6", "qwen2.5-coder", "hermes", "llama3.1", "llama3.2"]
+        // Small first (Nate: smaller models unless needed). llama3.1 emits native
+        // tool_calls; bigger coders stay available from the picker.
+        let prefs = ["llama3.1", "llama3.2", "hermes", "qwen3", "qwen3.6", "qwen2.5-coder", "devstral"]
         for p in prefs {
             if let m = usable.first(where: { $0.name.contains(p) }) { return m.name }
         }

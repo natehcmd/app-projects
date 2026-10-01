@@ -38,7 +38,7 @@ def classify(caption, transcript):
               f'Reply as JSON: {{"topic": "...", "note": "..."}}')
     try:
         req = urllib.request.Request("http://localhost:11434/api/generate", method="POST",
-            data=json.dumps({"model": "qwen3-coder:30b", "prompt": prompt, "stream": False,
+            data=json.dumps({"model": "llama3.1:8b", "prompt": prompt, "stream": False,
                              "format": "json"}).encode(),
             headers={"Content-Type": "application/json"})
         with urllib.request.urlopen(req, timeout=120) as r:

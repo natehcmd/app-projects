@@ -5,7 +5,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
 HOME = Path.home()
-MODEL = "qwen3-coder:30b"  # actually installed on this Mac (llama3.2 never was)
+MODEL = "llama3.1:8b"  # small local model: a short bullet brief doesn't need the 30B
 
 def read(p, limit=3000):
     try:

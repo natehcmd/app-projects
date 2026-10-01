@@ -14,7 +14,13 @@ load_dotenv(ROOT / ".env")  # PLAID_*/GUSTO_* — see .env.example; never commit
 DB = ROOT / "data" / "mission.db"
 OLLAMA = "http://localhost:11434"
 ARENA_URL = "http://127.0.0.1:8470"  # code-review-pipeline's Arena, a separate always-on service
-BRIEF_MODEL = "qwen3-coder:30b"  # actually installed on this Mac (qwen2.5-coder:32b never was)
+# Local models: the 8B handles everyday text jobs; the 30B is only for planning
+# and code, and is told to unload after 2 minutes. (Two ~19 GB models loaded
+# at once kept the Mac running hot.)
+LOCAL_SMALL = os.environ.get("CC_LOCAL_SMALL", "llama3.1:8b")
+LOCAL_BIG = os.environ.get("CC_LOCAL_BIG", "qwen3-coder:30b")
+BIG_KEEP_ALIVE = "2m"
+BRIEF_MODEL = LOCAL_BIG  # planners (Team / Steps) still use the big model
 
 app = FastAPI(title="Mission Control")
 SESSION_SECRET = secrets.token_hex(32)
@@ -289,7 +295,8 @@ init_db(); seed_reels()
 # ---------- helpers ----------
 def ollama_gen(prompt, model=BRIEF_MODEL, timeout=300):
     req = urllib.request.Request(f"{OLLAMA}/api/generate", method="POST",
-        data=json.dumps({"model": model, "prompt": prompt, "stream": False}).encode(),
+        data=json.dumps({"model": model, "prompt": prompt, "stream": False,
+                         **({"keep_alive": BIG_KEEP_ALIVE} if model == LOCAL_BIG else {})}).encode(),
         headers={"Content-Type": "application/json"})
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return json.loads(r.read())["response"]
@@ -1126,7 +1133,7 @@ def brief_short(name: str = "", request: Request = None):
               "each starting with '- '.\n\n" + src.read_text()[:12000])
     try:
         req = urllib.request.Request(f"{OLLAMA}/api/generate", method="POST",
-            data=json.dumps({"model": "qwen3-coder:30b", "prompt": prompt, "stream": False,
+            data=json.dumps({"model": LOCAL_SMALL, "prompt": prompt, "stream": False,
                              "options": {"num_predict": 400, "temperature": 0.2}}).encode(),
             headers={"Content-Type": "application/json"})
         with urllib.request.urlopen(req, timeout=180) as r:
@@ -1420,7 +1427,7 @@ TEAM_DEFAULT = [
                 "exists, say 'not sure' — never invent a link, a name, a number or a quote. You are answering "
                 "from memory (no live web right now), so say how old your knowledge might be."},
     {"id": "thomas", "name": "Doubting Thomas", "emoji": "🤨", "role": "Doubts the research",
-     "model": "local_xl",
+     "model": "local_small",
      "persona": "You are Doubting Thomas. You don't believe Scroll's research until it's proven. Go through Scroll's "
                 "claims one by one: which could be made up, outdated, or hype? What would prove or disprove each? "
                 "Be specific and a bit suspicious, never rude."},
@@ -1430,7 +1437,7 @@ TEAM_DEFAULT = [
                 "exact steps, what to measure, what result means yes/no. If it's code, give a tiny runnable script. "
                 "Include the one test that would kill the idea fastest."},
     {"id": "frank", "name": "Frank", "emoji": "😤", "role": "Keeps it super real",
-     "model": "local_xl",
+     "model": "local_small",
      "persona": "You are Frank. You're Nate's blunt friend who keeps it super real. Read the idea and what Scroll, "
                 "Thomas and Tess said. If Nate is wrong, get mad about it (PG, no slurs) and say exactly why. If he's "
                 "right, get genuinely hyped. End with one line: VERDICT: do it / fix it first / drop it."},
@@ -1891,7 +1898,7 @@ Give 4-6 topics and exactly 5 quiz questions, multiple choice with 4 options eac
 Keep everything factually accurate and concise. No preamble, no markdown, JSON only."""
 
     try:
-        raw = ollama_gen(prompt, model=BRIEF_MODEL, timeout=180)
+        raw = ollama_gen(prompt, model=LOCAL_SMALL, timeout=180)
         start, end = raw.find("{"), raw.rfind("}")
         plan = json.loads(raw[start:end + 1])
     except Exception as e:
@@ -1930,7 +1937,7 @@ def learn_card(kind: str = "term", request: Request = None):
               'Reply with ONLY a JSON object: {"title": "...", "body": "...", "code": "... or empty", "lang": "python|javascript|bash|"}')
     try:
         req = urllib.request.Request(f"{OLLAMA}/api/generate", method="POST",
-            data=json.dumps({"model": "qwen3-coder:30b", "prompt": prompt, "stream": False, "format": "json",
+            data=json.dumps({"model": LOCAL_SMALL, "prompt": prompt, "stream": False, "format": "json",
                              "options": {"num_predict": 500, "temperature": 0.9}}).encode(),
             headers={"Content-Type": "application/json"})
         with urllib.request.urlopen(req, timeout=120) as r:
@@ -2276,7 +2283,7 @@ def _swarm_plan(goal):
               f'GOAL: {goal}\nReply JSON: {{"subtasks":[{{"title":"...","prompt":"...","complexity":"simple|medium|complex"}}]}}')
     try:
         req = urllib.request.Request(f"{OLLAMA}/api/generate", method="POST",
-            data=json.dumps({"model": BRIEF_MODEL, "prompt": prompt, "stream": False,
+            data=json.dumps({"model": BRIEF_MODEL, "prompt": prompt, "stream": False, "keep_alive": BIG_KEEP_ALIVE,
                              "format": "json"}).encode(),
             headers={"Content-Type": "application/json"})
         with urllib.request.urlopen(req, timeout=120) as r:
@@ -2433,7 +2440,7 @@ def _plan_flow_steps(goal):
               'Reply JSON: {"steps":[{"name":"...","engine":"claude|local|codex","prompt":"..."}]}')
     try:
         req = urllib.request.Request(f"{OLLAMA}/api/generate", method="POST",
-            data=json.dumps({"model": BRIEF_MODEL, "prompt": prompt, "stream": False, "format": "json"}).encode(),
+            data=json.dumps({"model": BRIEF_MODEL, "prompt": prompt, "stream": False, "keep_alive": BIG_KEEP_ALIVE, "format": "json"}).encode(),
             headers={"Content-Type": "application/json"})
         with urllib.request.urlopen(req, timeout=120) as r:
             steps = json.loads(json.loads(r.read())["response"]).get("steps", [])
