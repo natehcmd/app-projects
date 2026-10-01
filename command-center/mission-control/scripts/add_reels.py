@@ -26,9 +26,20 @@ def classify(caption, transcript):
             headers={"Content-Type": "application/json"})
         with urllib.request.urlopen(req, timeout=120) as r:
             out = json.loads(json.loads(r.read())["response"])
-            return out.get("topic", "uncategorized"), out.get("note", "")
     except Exception:
         return "uncategorized", ""
+    topic, note = out.get("topic", "uncategorized"), out.get("note", "")
+    if topic not in TOPICS.split():  # deterministic check: exactly one of the fixed topics
+        topic = "uncategorized"
+    if note:
+        from pipeline_check import verify_or_fix
+        fixed, how = verify_or_fix(
+            "one sentence on whether this reel names a real installable tool or is a comment-bait funnel",
+            note, f"CAPTION: {caption[:500]}\nTRANSCRIPT: {transcript[:1500]}",
+            "Write ONE sentence: does this reel name a real installable tool, or is it a comment-bait "
+            f"funnel?\nCAPTION: {caption[:500]}\nTRANSCRIPT: {transcript[:1000]}")
+        note = f"{fixed.strip()} ({how.split(':')[0].split('(')[0].strip()})"
+    return topic, note
 
 def ingest(url):
     m = re.search(r"instagram\.com/(?:reel|p)/([A-Za-z0-9_-]+)", url)
