@@ -118,8 +118,9 @@ final class RemoteAgentClient: ObservableObject {
             if let s = event.state { state = s }
         case .error:
             connectionStatus = .failed(event.text ?? "Server error")
-        case .user, .history, .toolResult:
-            break  // Mac-side extras (transcript echo, history snapshot, direct tool answers) — the phone ignores them
+        case .user, .history, .toolResult, .permission:
+            break  // Mac-side extras (transcript echo, history snapshot, direct tool answers,
+                   // pending permission-denial cards) — the phone ignores them for now
         }
     }
 }

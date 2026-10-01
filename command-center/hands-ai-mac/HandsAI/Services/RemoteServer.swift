@@ -142,6 +142,11 @@ private struct AgentWSHandler: WSMessageHandler {
                     }
                 }.store(in: &cancellables)
 
+                agent.$pendingDenials.dropFirst().sink { denials in
+                    guard authed else { return }
+                    emit(RemoteEvent(type: .permission, denials: denials))
+                }.store(in: &cancellables)
+
                 for await message in client {
                     guard case .text(let json) = message,
                           let data = json.data(using: .utf8),
@@ -167,6 +172,18 @@ private struct AgentWSHandler: WSMessageHandler {
                         if !history.isEmpty {
                             emit(RemoteEvent(type: .history, history: history))
                         }
+                        if !agent.pendingDenials.isEmpty {
+                            emit(RemoteEvent(type: .permission, denials: agent.pendingDenials))
+                        }
+                    }
+                    if req.type == "permission" {
+                        guard let id = req.id, let decisionRaw = req.decision,
+                              let decision = ClaudeCLIClient.PermissionDecision(rawValue: decisionRaw) else {
+                            emit(RemoteEvent(type: .error, text: "Malformed permission decision."))
+                            continue
+                        }
+                        agent.decidePermission(id: id, decision: decision)
+                        continue
                     }
                     if let tool = req.tool {
                         // Read-only tools only: a remote client can look, never act.

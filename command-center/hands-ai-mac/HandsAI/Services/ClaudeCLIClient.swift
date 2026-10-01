@@ -55,6 +55,16 @@ final class ClaudeCLIClient: ObservableObject {
 
     @Published var resolvedPath: String?
     @Published var resolveError: String?
+    /// Tool calls the CLI's last run silently refused (not on `allowedTools`),
+    /// parsed from that run's `result` event — see `runProcess`'s "result"
+    /// case. Cleared (one entry at a time) by `resolveDenial`.
+    @Published var pendingDenials: [PermissionDenial] = []
+
+    /// What an operator (locally, or over the Remote socket) can decide about
+    /// one pending denial.
+    enum PermissionDecision: String, Codable {
+        case once, always, deny
+    }
 
     var isConfigured: Bool { resolvedPath != nil }
 
@@ -154,18 +164,72 @@ final class ClaudeCLIClient: ObservableObject {
         if !systemPrompt.isEmpty {
             args += ["--append-system-prompt", systemPrompt]
         }
-        if skipPermissions {
-            args.append("--dangerously-skip-permissions")
-        } else {
-            let tools = allowedTools.split(separator: ",").map {
-                $0.trimmingCharacters(in: .whitespaces)
-            }.filter { !$0.isEmpty }
-            if !tools.isEmpty { args += ["--allowedTools"] + tools }
-        }
+        args += permissionArgs()
         let resumeID = sessionID
         if !resumeID.isEmpty {
             args += ["--resume", resumeID]
         }
+
+        return try await runProcess(path: claudePath, args: args,
+                                    onDelta: onDelta, onToolEvent: onToolEvent)
+    }
+
+    /// The `--dangerously-skip-permissions`/`--allowedTools` portion shared
+    /// between a normal turn and a post-grant retry. `extraAllowedTool`, when
+    /// given, is appended for this call only (never persisted) — how "Allow
+    /// once" works; "Always allow" instead appends the same rule to
+    /// `allowedTools` itself first (see `resolveDenial`), so by the time this
+    /// runs it's already in the base list and `extraAllowedTool` is a no-op
+    /// dedupe rather than a second grant.
+    private func permissionArgs(extraAllowedTool: String? = nil) -> [String] {
+        if skipPermissions { return ["--dangerously-skip-permissions"] }
+        var tools = allowedTools.split(separator: ",").map {
+            $0.trimmingCharacters(in: .whitespaces)
+        }.filter { !$0.isEmpty }
+        if let extraAllowedTool, !tools.contains(extraAllowedTool) {
+            tools.append(extraAllowedTool)
+        }
+        return tools.isEmpty ? [] : ["--allowedTools"] + tools
+    }
+
+    /// Resolves one pending denial. `.deny` just clears it. `.once`/`.always`
+    /// retry the same Claude Code session (`--resume`) with a short message
+    /// telling it to try the blocked step again, granting the exact rule
+    /// either for this one retry only (`.once`) or permanently by appending
+    /// it to `allowedTools` first (`.always`). Returns `nil` for a denial
+    /// (nothing to show), or the retry's reply.
+    func resolveDenial(id: String, decision: PermissionDecision,
+                       onDelta: @escaping (String) -> Void,
+                       onToolEvent: @escaping (ToolCall) -> Void) async throws -> OllamaClient.ChatMessage? {
+        guard let idx = pendingDenials.firstIndex(where: { $0.id == id }) else { return nil }
+        let denial = pendingDenials.remove(at: idx)
+        guard decision != .deny else { return nil }
+
+        if decision == .always {
+            var rules = allowedTools.split(separator: ",").map {
+                $0.trimmingCharacters(in: .whitespaces)
+            }.filter { !$0.isEmpty }
+            if !rules.contains(denial.rule) {
+                rules.append(denial.rule)
+                allowedTools = rules.joined(separator: ",")
+            }
+        }
+
+        await ensureResolved()
+        guard let claudePath = resolvedPath else {
+            throw NSError(domain: "ClaudeCLI", code: -1,
+                          userInfo: [NSLocalizedDescriptionKey: resolveError ?? "claude CLI not found."])
+        }
+        var args = [
+            "-p", "Permission granted — please retry the step that was blocked.",
+            "--output-format", "stream-json",
+            "--verbose",
+            "--safe-mode",
+        ]
+        if !selectedModel.isEmpty { args += ["--model", selectedModel] }
+        args += permissionArgs(extraAllowedTool: denial.rule)
+        let resumeID = sessionID
+        if !resumeID.isEmpty { args += ["--resume", resumeID] }
 
         return try await runProcess(path: claudePath, args: args,
                                     onDelta: onDelta, onToolEvent: onToolEvent)
@@ -256,6 +320,22 @@ final class ClaudeCLIClient: ObservableObject {
                             if let result = obj["result"] as? String, finalText.isEmpty {
                                 finalText = result
                             }
+                            if let denials = obj["permission_denials"] as? [[String: Any]], !denials.isEmpty {
+                                let parsed: [PermissionDenial] = denials.compactMap { d in
+                                    guard let name = d["tool_name"] as? String,
+                                          let useID = d["tool_use_id"] as? String else { return nil }
+                                    let input = d["tool_input"] as? [String: Any] ?? [:]
+                                    return Self.describeDenial(toolName: name, toolUseID: useID, input: input)
+                                }
+                                if !parsed.isEmpty {
+                                    Task { @MainActor [weak self] in
+                                        guard let self else { return }
+                                        for d in parsed where !self.pendingDenials.contains(where: { $0.id == d.id }) {
+                                            self.pendingDenials.append(d)
+                                        }
+                                    }
+                                }
+                            }
                         default:
                             break
                         }
@@ -310,5 +390,52 @@ final class ClaudeCLIClient: ObservableObject {
             if let v = input[key] as? String { return v }
         }
         return ""
+    }
+
+    /// Builds the card contents for one `permission_denials` entry — the
+    /// human summary and the EXACT allow-rule string "Always allow" appends.
+    /// Rules are deliberately never wildcarded here: Bash gets the exact
+    /// command text, WebFetch gets the exact host, everything else is just
+    /// the bare tool name (e.g. "Write") so "always" grants only ever cover
+    /// the one thing that was actually asked for.
+    private static func describeDenial(toolName: String, toolUseID: String,
+                                       input: [String: Any]) -> PermissionDenial {
+        if toolName == "Bash" {
+            let command = (input["command"] as? String) ?? ""
+            return PermissionDenial(id: toolUseID, tool: toolName, summary: command,
+                                    rule: "Bash(\(command))", risky: isRiskyCommand(command))
+        }
+        if toolName == "WebFetch", let url = input["url"] as? String, let host = URL(string: url)?.host {
+            return PermissionDenial(id: toolUseID, tool: toolName, summary: url,
+                                    rule: "WebFetch(domain:\(host))", risky: false)
+        }
+        let path = (input["file_path"] as? String) ?? (input["path"] as? String)
+        let fallback = describeInput(input)
+        let summary = path ?? (fallback.isEmpty ? toolName : fallback)
+        return PermissionDenial(id: toolUseID, tool: toolName, summary: summary, rule: toolName, risky: false)
+    }
+
+    /// Heuristic warning flag only — never gates the decision itself, just
+    /// whether the UI makes "always allow" require a second click. Matches:
+    /// rm, mv, chmod, sudo, curl|sh (piping a download into a shell), git
+    /// push/reset, output redirection (>), dd, kill, defaults write,
+    /// osascript.
+    private static func isRiskyCommand(_ command: String) -> Bool {
+        let c = command.lowercased()
+        if c.contains("sudo") || c.contains("chmod") || c.contains("defaults write") || c.contains("osascript") {
+            return true
+        }
+        if c.hasPrefix("rm") || c.contains(" rm ") { return true }
+        if c.hasPrefix("mv ") || c.contains(" mv ") { return true }
+        if c.contains("git push") || c.contains("git reset") { return true }
+        if c.contains(">") { return true }
+        if c.hasPrefix("dd ") || c.contains(" dd ") { return true }
+        if c.hasPrefix("kill") || c.contains(" kill ") || c.contains("killall") { return true }
+        if (c.contains("curl") || c.contains("wget")) &&
+            (c.contains("| sh") || c.contains("|sh") || c.contains("| bash") || c.contains("|bash") ||
+             c.contains("| zsh") || c.contains("|zsh")) {
+            return true
+        }
+        return false
     }
 }

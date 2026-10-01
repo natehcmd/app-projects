@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import Combine
 
 /// Mac-only — references OllamaClient/ClaudeClient/ClaudeCLIClient/Tools, none
 /// of which exist (or make sense) on iOS. The portable `AgentState` enum and
@@ -18,6 +19,11 @@ final class AgentStore: ObservableObject {
     @Published var input: String = ""
     /// Assistant text streaming in right now; empty when no reply is in flight.
     @Published var liveReply: String = ""
+    /// Mirrors `ClaudeCLIClient.pendingDenials` — tool calls the CLI silently
+    /// refused, surfaced here so the chat window and Remote clients (Command
+    /// Center, HandsAIMobile) can show an Allow/Always/Deny card. Only ever
+    /// populated when `claude-cli` is the active backend.
+    @Published var pendingDenials: [PermissionDenial] = []
 
     private weak var ollama: OllamaClient?
     private weak var claude: ClaudeClient?
@@ -27,6 +33,7 @@ final class AgentStore: ObservableObject {
     private weak var voice: VoiceService?
     private weak var memory: MemoryStore?
     private weak var history: HistoryStore?
+    private var cancellables = Set<AnyCancellable>()
 
     /// "ollama" (local), "claude" (Anthropic API), or "claude-cli" (real
     /// Claude Code, shelled out to). "claude" with no API key set falls back
@@ -153,6 +160,50 @@ final class AgentStore: ObservableObject {
         self.history = history
         Tools.skills = skills
         Tools.memory = memory
+
+        claudeCLI.$pendingDenials
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] denials in self?.pendingDenials = denials }
+            .store(in: &cancellables)
+    }
+
+    /// Acts on a card the chat window or a Remote client (Command Center's
+    /// Chat tab, HandsAIMobile) showed for one `pendingDenials` entry.
+    /// "Deny" just drops it; "once"/"always" re-run the blocked step via
+    /// `ClaudeCLIClient.resolveDenial` and append whatever comes back the
+    /// same way `runAgentLoop`'s final-answer tail does.
+    func decidePermission(id: String, decision: ClaudeCLIClient.PermissionDecision) {
+        guard let claudeCLI else { return }
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                self.state = .thinking
+                self.liveReply = ""
+                guard let reply = try await claudeCLI.resolveDenial(
+                    id: id, decision: decision,
+                    onDelta: { [weak self] accumulated in self?.liveReply = accumulated },
+                    onToolEvent: { [weak self] call in self?.upsertToolCall(call) }
+                ) else {
+                    self.state = .idle
+                    return
+                }
+                self.liveReply = ""
+                if !reply.content.isEmpty {
+                    self.transcript.append(Message(role: .assistant, text: reply.content))
+                    self.history?.record(
+                        user: self.transcript.last(where: { $0.role == .user })?.text ?? "",
+                        assistant: reply.content,
+                        provider: "claude-cli"
+                    )
+                    self.state = .speaking
+                    try? await Task.sleep(nanoseconds: 800_000_000)
+                }
+                self.state = .idle
+            } catch {
+                self.liveReply = ""
+                self.state = .error(message: error.localizedDescription)
+            }
+        }
     }
 
     /// `engineOverride`/`modelOverride` let a caller (Command Center's Chat

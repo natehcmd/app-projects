@@ -41,6 +41,8 @@ async chat() {
   // one chat experience instead of two divergent ones.
   if (!state.handsMsgs) state.handsMsgs = [];
   if (!state.handsToolCalls) state.handsToolCalls = [];
+  if (!state.handsPendingDenials) state.handsPendingDenials = [];
+  if (!state.handsConfirmAlways) state.handsConfirmAlways = {};
   if (state.handsStatus === undefined) state.handsStatus = "disconnected";
   if (state.handsToken === undefined) state.handsToken = localStorage.getItem("hands_token") || "";
   if (!state.handsEngine) state.handsEngine = "ollama";
@@ -92,6 +94,7 @@ async chat() {
       <span class="sub">picks the model for your <i>next</i> message only — doesn't change the Mac app's own default</span>
     </div>
     <div class="chat-log" id="handslog">${renderHandsLog()}</div>
+    <div id="handspermissions">${renderHandsPermissions()}</div>
     <div id="handstools" style="margin:8px 0"></div>
     <div class="row" style="margin-top:12px">
       <textarea id="handsinput" rows="1" placeholder="ask Hammond…"
@@ -1245,6 +1248,60 @@ function renderHandsLog() {
   return msgs + live || '<div class="empty">no conversation yet</div>';
 }
 
+/// One card per tool call Hammond's Claude Code engine silently refused
+/// (not on its allowlist, and non-interactive mode has no terminal to
+/// prompt from) — "Claude Code wanted to run: <command>" + three buttons.
+/// Every value is escaped with esc(); nothing is interpolated into an
+/// inline onclick — the buttons carry data-perm-* attributes instead, read
+/// by a single delegated click listener registered once below.
+function renderHandsPermissions() {
+  const denials = state.handsPendingDenials || [];
+  if (!denials.length) return "";
+  return denials.map(d => {
+    const risky = !!d.risky;
+    const confirming = !!(state.handsConfirmAlways && state.handsConfirmAlways[d.id]);
+    const borderColor = risky ? "var(--rose,#ff4d6d)" : "rgba(255,255,255,.08)";
+    return `
+    <div class="card glass" style="margin:8px 0;border:1px solid ${borderColor}">
+      <div class="sub" style="font-weight:600">Claude Code wanted to run:</div>
+      <pre style="white-space:pre-wrap;word-break:break-all;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+        background:rgba(255,255,255,.04);padding:8px;border-radius:8px;margin:6px 0">${esc(d.summary || d.tool)}</pre>
+      ${risky ? `<div class="sub" style="color:var(--rose,#ff4d6d)">This looks destructive — review before allowing it, especially "Always allow".</div>` : ""}
+      <div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap">
+        <button class="act ghost" data-perm-action="once" data-perm-id="${esc(d.id)}">Allow once</button>
+        <button class="act ${confirming ? "" : "ghost"}" data-perm-action="always" data-perm-id="${esc(d.id)}" data-perm-risky="${risky ? "1" : "0"}">${confirming ? "Confirm always allow?" : "Always allow"}</button>
+        <button class="act ghost" data-perm-action="deny" data-perm-id="${esc(d.id)}">Deny</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+/// Delegated listener for the permission-card buttons above — registered
+/// once at script load, so it keeps working across every re-render instead
+/// of needing per-button inline handlers. A risky command's "Always allow"
+/// needs a second click (tracked per-id in state.handsConfirmAlways) before
+/// it actually sends the decision.
+document.addEventListener("click", e => {
+  const btn = e.target.closest("[data-perm-action]");
+  if (!btn) return;
+  const id = btn.getAttribute("data-perm-id");
+  const action = btn.getAttribute("data-perm-action");
+  const risky = btn.getAttribute("data-perm-risky") === "1";
+  if (!id || !action) return;
+  state.handsConfirmAlways = state.handsConfirmAlways || {};
+  if (action === "always" && risky && !state.handsConfirmAlways[id]) {
+    state.handsConfirmAlways[id] = true;
+    const box = $("#handspermissions"); if (box) box.innerHTML = renderHandsPermissions();
+    return;
+  }
+  delete state.handsConfirmAlways[id];
+  if (!handsSocket || handsSocket.readyState !== WebSocket.OPEN) {
+    setHandsStatus("error", "not connected — click Connect first");
+    return;
+  }
+  handsSocket.send(JSON.stringify({type: "permission", id, decision: action, token: state.handsToken}));
+});
+
 function renderHandsTools() {
   const box = $("#handstools");
   if (!box) return;
@@ -1313,6 +1370,9 @@ window.connectHands = () => {
         state.handsMsgs = msg.history.map(h => ({role: h.role, content: h.text}));
         const log = $("#handslog"); if (log) { log.innerHTML = renderHandsLog(); log.scrollTop = log.scrollHeight; }
       }
+    } else if (msg.type === "permission") {
+      state.handsPendingDenials = msg.denials || [];
+      const box = $("#handspermissions"); if (box) box.innerHTML = renderHandsPermissions();
     } else if (msg.type === "error") {
       setHandsStatus("error", msg.text || "server error");
     }
