@@ -5,18 +5,19 @@ import sys
 def scan_directory(path):
     print(f"Starting security scan on {path}...")
     issues_found = 0
-    
+    skipped_files = []
+
     # Simple regex for finding potential hardcoded passwords or secrets
     secret_patterns = [
         re.compile(r'(?i)password\s*=\s*[\'"][^\'"]+[\'"]'),
         re.compile(r'(?i)api[_-]?key\s*=\s*[\'"][^\'"]+[\'"]'),
         re.compile(r'(?i)secret\s*=\s*[\'"][^\'"]+[\'"]')
     ]
-    
+
     for root, dirs, files in os.walk(path):
         # Skip hidden directories like .git
         dirs[:] = [d for d in dirs if not d.startswith('.')]
-        
+
         for file in files:
             if file.endswith(('.py', '.js', '.ts', '.html', '.md')):
                 filepath = os.path.join(root, file)
@@ -29,9 +30,16 @@ def scan_directory(path):
                                     print(f"[WARNING] Potential hardcoded secret found in {filepath} at line {i+1}")
                                     issues_found += 1
                 except Exception as e:
-                    pass
-                    
+                    skipped_files.append((filepath, str(e)))
+
+    if skipped_files:
+        print(f"\n[NOTICE] Skipped {len(skipped_files)} unreadable file(s) — NOT scanned for secrets:")
+        for filepath, err in skipped_files:
+            print(f"  - {filepath} ({err})")
+
     print(f"\nScan complete. Found {issues_found} potential security issues.")
+    if skipped_files:
+        print(f"WARNING: {len(skipped_files)} file(s) were skipped and may hide additional issues — see above.")
     if issues_found > 0:
         print("Recommendation: Move sensitive data to environment variables and implement rate limiting on endpoints.")
 

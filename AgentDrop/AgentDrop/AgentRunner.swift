@@ -18,11 +18,34 @@ final class AgentRunner: ObservableObject {
 
     private func findClaude() -> String? {
         let candidates = [
+            NSHomeDirectory() + "/.local/bin/claude",
             NSHomeDirectory() + "/.npm-global/bin/claude",
             "/opt/homebrew/bin/claude",
             "/usr/local/bin/claude",
         ]
-        return candidates.first { FileManager.default.isExecutableFile(atPath: $0) }
+        if let found = candidates.first(where: { FileManager.default.isExecutableFile(atPath: $0) }) {
+            return found
+        }
+        // Fall back to resolving via the user's shell PATH (covers installs
+        // in locations we don't know about, e.g. other native installers).
+        let which = Process()
+        which.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+        which.arguments = ["bash", "-lc", "command -v claude"]
+        let pipe = Pipe()
+        which.standardOutput = pipe
+        which.standardError = Pipe()
+        do {
+            try which.run()
+            which.waitUntilExit()
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            if let path = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
+               !path.isEmpty, FileManager.default.isExecutableFile(atPath: path) {
+                return path
+            }
+        } catch {
+            return nil
+        }
+        return nil
     }
 
     func run(instruction: String, files: [URL]) {
@@ -53,6 +76,7 @@ final class AgentRunner: ObservableObject {
 
         var env = ProcessInfo.processInfo.environment
         let extraPaths = [
+            NSHomeDirectory() + "/.local/bin",
             NSHomeDirectory() + "/.npm-global/bin",
             "/opt/homebrew/bin",
             "/usr/local/bin",

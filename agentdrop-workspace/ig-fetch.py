@@ -38,6 +38,9 @@ def get_sessionid():
 
 
 def main():
+    if len(sys.argv) < 2:
+        print("Usage: ig-fetch.py <instagram-url>", file=sys.stderr)
+        sys.exit(2)
     url = sys.argv[1]
     os.makedirs(REELS_DIR, exist_ok=True)
 
