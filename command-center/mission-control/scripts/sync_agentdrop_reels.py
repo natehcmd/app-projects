@@ -80,9 +80,10 @@ def ingest_local(mp4, rid):
     print(f"OK {rid} [{topic}] {note[:80]}")
 
 def main():
-    limit = None
-    if "--limit" in sys.argv:
-        limit = int(sys.argv[sys.argv.index("--limit") + 1])
+    import argparse
+    ap = argparse.ArgumentParser(description="Ingest synced AgentDrop reels into the Reels vault.")
+    ap.add_argument("--limit", type=int, default=None, help="ingest at most N new reels")
+    limit = ap.parse_args().limit  # bad/missing value -> usage message, not a traceback
     if not SRC_DIR.exists():
         print("no synced folder yet — run sync-instagram-saved.sh first"); return
     known = known_ids()
