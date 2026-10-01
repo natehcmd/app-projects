@@ -1632,6 +1632,7 @@ function renderLearnPlan(plan) {
     <div class="card glass">
       <h2><span class="dot t-sky"></span>${esc(plan.subject)}</h2>
       <div class="sub" style="margin-bottom:10px">${esc(plan.overview)} ${plan.from_cache ? '<em>(cached)</em>' : ''}</div>
+      <div class="meta" style="margin:-4px 0 10px;opacity:.65">${!plan.check ? "Not checked" : plan.check.corrected_by ? "Corrected by Gemini after a check flagged: " + esc(plan.check.issue || "") : plan.check.ok === true ? "Plan and quiz answers checked by Gemini ✓" : plan.check.ok === false ? "⚠️ Gemini flagged this plan: " + esc(plan.check.issue || "") : "Not checked (" + esc(plan.check.issue || "checker unavailable") + ")"}</div>
     </div>
     <div class="grid2">
       <div class="card glass"><h2><span class="dot t-mint"></span>Curriculum</h2>${topics}</div>

@@ -1125,6 +1125,8 @@ TEXT TO CHECK:
 
 Reject it if it states anything false or unsupported{src_rule}, has broken code,
 or doesn't do the task. Don't reject for style.
+Do NOT use any tools, run code, or browse — judge from your own knowledge and
+reply immediately.
 Reply with ONLY: {{"ok": true|false, "issue": "<what is wrong, empty if ok>"}}"""
 
 
@@ -1145,7 +1147,9 @@ def pipeline_verify(task: str, text: str, source: str = "", label: str = "check"
                                   source=("SOURCE IT MUST BE FAITHFUL TO:\n" + source[:8000]) if source else "",
                                   src_rule=" by the source" if source else "")
     try:
-        raw = _tracked_call(d, "agy_flash", "verify", prompt, label, timeout=45)
+        # ~14 s for a short card; a whole plan + quiz needs longer. Scale, capped.
+        limit = int(min(120, 45 + len(text) / 60 + len(source) / 200))
+        raw = _tracked_call(d, "agy_flash", "verify", prompt, label, timeout=limit)
     except Exception as e:
         return {"ok": None, "issue": f"checker unavailable: {str(e)[:120]}", "checker": None}
     m = re.search(r"\{[^{}]*\"ok\"[^{}]*\}", raw or "", re.S)
@@ -1840,6 +1844,7 @@ Judge ONLY whether the reply is correct and honest given the evidence below.
 Reject it if it claims something the tool results don't show (e.g. "I checked your
 email" when no email tool ran or it failed), misreports a tool result, ignores an
 error, or doesn't answer what was asked. Don't reject for style.
+Do NOT use any tools, run code, or browse — judge from the evidence below and reply immediately.
 Reply with ONLY a JSON object: {{"ok": true|false, "issue": "<what is wrong, empty if ok>"}}
 
 USER ASKED:
@@ -2001,6 +2006,31 @@ def _curated_resources_for(subject):
             matches.append(r)
     return matches[:6]
 
+def _recheck_plan_later(cache_file, prompt, subject):
+    time.sleep(5)
+    try:
+        plan = json.loads(cache_file.read_text())
+    except (OSError, ValueError):
+        return
+    task = (f"a study plan + 5-question quiz on '{subject}'; every quiz answer_index "
+            "must point at the correct option and every fact must be true")
+    check = pipeline_verify(task, json.dumps({k: plan.get(k) for k in ("overview", "topics", "quiz")})[:6000],
+                            label="Learn plan (background)")
+    if check["ok"] is False:
+        try:
+            redo = pipeline_rewrite(prompt, check["issue"], label="Learn plan")
+            new_plan = json.loads(redo[redo.find("{"):redo.rfind("}") + 1], strict=False)
+            if new_plan.get("topics") and new_plan.get("quiz"):
+                plan.update({k: new_plan[k] for k in ("overview", "topics", "quiz") if k in new_plan})
+                check = {"ok": True, "issue": check["issue"], "checker": "agy_flash", "corrected_by": "agy_pro"}
+        except Exception as e:
+            check["issue"] += f" (rewrite failed: {str(e)[:80]})"
+    plan["check"] = check
+    cache_file.write_text(json.dumps(plan, indent=2))
+    log_activity("learn", f"study plan for '{subject}': " + (
+        "corrected by Gemini" if check.get("corrected_by") else "checked ✓" if check["ok"] else
+        "flagged: " + check["issue"][:80] if check["ok"] is False else "check couldn't run"))
+
 @app.post("/api/learn/plan")
 def learn_plan(payload: dict = Body(...), request: Request = None):
     if not _verify_token(request, payload):
@@ -2033,6 +2063,26 @@ Keep everything factually accurate and concise. No preamble, no markdown, JSON o
     except Exception as e:
         return JSONResponse({"error": f"local model generation failed: {e}"}, status_code=502)
 
+    check = pipeline_verify(f"a study plan + 5-question quiz on '{subject}'; every quiz answer_index "
+                            "must point at the correct option and every fact must be true",
+                            json.dumps(plan)[:6000], label="Learn plan")
+    if check["ok"] is False:
+        try:
+            redo = pipeline_rewrite(prompt, check["issue"], label="Learn plan")
+            new_plan = json.loads(redo[redo.find("{"):redo.rfind("}") + 1], strict=False)
+            if new_plan.get("topics") and new_plan.get("quiz"):
+                plan = new_plan
+                check = {"ok": True, "issue": check["issue"], "checker": "agy_flash", "corrected_by": "agy_pro"}
+        except Exception as e:
+            check["issue"] += f" (rewrite failed: {str(e)[:80]})"
+    if check["ok"] is None:
+        # Gemini's speed varies (14 s to 90 s+). Plans are cached, so finish the
+        # check in the background and update the saved plan; the page shows
+        # "not checked" until then, never a pass it didn't get.
+        threading.Thread(target=_recheck_plan_later, args=(cache_file, prompt, subject),
+                         daemon=True).start()
+        check["issue"] += " — still checking in the background"
+    plan["check"] = check
     plan["subject"] = subject
     plan["curated_resources"] = _curated_resources_for(subject)
     plan["search_links"] = {
@@ -2081,7 +2131,7 @@ def learn_card(kind: str = "term", request: Request = None):
         try:
             redo = pipeline_rewrite(prompt, check["issue"], label="Learn card")
             m = re.search(r"\{.*\}", redo, re.S)
-            new = json.loads(m.group(0)) if m else {}
+            new = json.loads(m.group(0), strict=False) if m else {}
             if new.get("title") and new.get("body"):
                 card = new
                 check = {"ok": True, "issue": check["issue"], "checker": "agy_flash", "corrected_by": "agy_pro"}
