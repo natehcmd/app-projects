@@ -33,7 +33,7 @@ struct PhoneRootView: View {
                         Text("Nothing saved yet.").foregroundStyle(.secondary)
                     }
                     ForEach(items) { item in
-                        ItemRow(item: item)
+                        NavigationLink { ReelDetailView(item: item) } label: { ItemRow(item: item) }
                     }
                     .onDelete { idx in
                         for i in idx { queue.delete(items[i].id) }

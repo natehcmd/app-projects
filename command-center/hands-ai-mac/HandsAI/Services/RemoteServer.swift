@@ -77,6 +77,10 @@ final class RemoteServer: ObservableObject {
                 let saver = SaveEndpoint(expectedToken: handler.expectedToken)
                 await server.appendRoute("GET /ping") { _ in saver.ping() }
                 await server.appendRoute("POST /save") { req in await saver.handle(req) }
+                // Phone detail screen: authenticated proxies to Command Center, nothing else.
+                await server.appendRoute("GET /reel") { req in await saver.reelDetail(req) }
+                await server.appendRoute("POST /reel/chat") { req in await saver.reelChat(req) }
+                await server.appendRoute("GET /reels") { req in await saver.reelList(req) }
                 self.isRunning = true
                 try await server.run()
             } catch {
@@ -249,6 +253,68 @@ private struct SaveEndpoint: Sendable {
               u.scheme?.lowercased() == "https",
               let host = u.host?.lowercased(), allowedHosts.contains(host) else { return nil }
         return u
+    }
+
+    static let ccBase = "http://127.0.0.1:8450"
+    static let idPattern = try! NSRegularExpression(pattern: "^[A-Za-z0-9_-]{5,64}$")
+
+    private func authorized(_ req: HTTPRequest) -> Bool {
+        let auth = req.headers[.authorization] ?? ""
+        let bearer = auth.lowercased().hasPrefix("bearer ") ? String(auth.dropFirst(7)).trimmingCharacters(in: .whitespaces) : ""
+        return Self.tokensMatch(bearer, expectedToken)
+    }
+
+    static func validID(_ s: String) -> Bool {
+        idPattern.firstMatch(in: s, range: NSRange(s.startIndex..., in: s)) != nil
+    }
+
+    /// Forward to Command Center with the remote token; pass its status + JSON body back.
+    private func forward(_ path: String, method: String, body: Data?, timeout: TimeInterval) async -> HTTPResponse {
+        guard let url = URL(string: Self.ccBase + path) else { return json(.badRequest, ["ok": false]) }
+        var fwd = URLRequest(url: url, timeoutInterval: timeout)
+        fwd.httpMethod = method
+        fwd.setValue("Bearer \(expectedToken)", forHTTPHeaderField: "Authorization")
+        if let body { fwd.httpBody = body; fwd.setValue("application/json", forHTTPHeaderField: "Content-Type") }
+        do {
+            let (data, resp) = try await URLSession.shared.data(for: fwd)
+            let code = (resp as? HTTPURLResponse)?.statusCode ?? 502
+            // Only relay statuses the phone should understand; anything else is a gateway error.
+            let status: HTTPStatusCode = code == 200 ? .ok : code == 404 ? .notFound : code == 400 ? .badRequest : .badGateway
+            return HTTPResponse(statusCode: status, headers: [.contentType: "application/json"], body: data)
+        } catch {
+            return json(.badGateway, ["ok": false, "error": "Command Center unreachable"])
+        }
+    }
+
+    func reelDetail(_ req: HTTPRequest) async -> HTTPResponse {
+        guard authorized(req) else { return json(.unauthorized, ["ok": false, "error": "unauthorized"]) }
+        guard let id = req.query.first(where: { $0.name == "id" })?.value, Self.validID(id) else {
+            return json(.badRequest, ["ok": false, "error": "bad id"])
+        }
+        return await forward("/api/reels/detail?id=\(id)", method: "GET", body: nil, timeout: 20)
+    }
+
+    func reelList(_ req: HTTPRequest) async -> HTTPResponse {
+        guard authorized(req) else { return json(.unauthorized, ["ok": false, "error": "unauthorized"]) }
+        let n = req.query.first(where: { $0.name == "limit" }).flatMap { Int($0.value) } ?? 50
+        return await forward("/api/reels/recent?limit=\(max(1, min(n, 200)))", method: "GET", body: nil, timeout: 20)
+    }
+
+    func reelChat(_ req: HTTPRequest) async -> HTTPResponse {
+        guard authorized(req) else { return json(.unauthorized, ["ok": false, "error": "unauthorized"]) }
+        if let len = req.headers[.contentLength].flatMap({ Int($0) }), len > 32 * 1024 {
+            return json(.payloadTooLarge, ["ok": false, "error": "body too large"])
+        }
+        guard let body = try? await req.bodyData, body.count <= 32 * 1024,
+              let obj = try? JSONSerialization.jsonObject(with: body) as? [String: Any],
+              let id = obj["id"] as? String, Self.validID(id),
+              let msg = obj["message"] as? String, !msg.isEmpty else {
+            return json(.badRequest, ["ok": false, "error": "need id and message"])
+        }
+        // Rebuild the payload so only the expected fields reach Command Center.
+        let clean: [String: Any] = ["id": id, "message": msg, "history": obj["history"] as? [[String: Any]] ?? []]
+        guard let data = try? JSONSerialization.data(withJSONObject: clean) else { return json(.badRequest, ["ok": false]) }
+        return await forward("/api/reels/chat", method: "POST", body: data, timeout: 180)
     }
 
     func handle(_ req: HTTPRequest) async -> HTTPResponse {

@@ -9,8 +9,10 @@
 /* Begin PBXBuildFile section */
 		0B6C1C23CD483BB2B2C7F6E2 /* LinkExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06098F15142094C710330E6C /* LinkExtractor.swift */; };
 		17CB7EE350AF77B5D4111D4D /* SaveQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F3FD497B489FBF48A9F0849 /* SaveQueue.swift */; };
+		1DABE7C11122E4FDBE3828A1 /* ReelAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12EDF27168882D4ABE08A7E5 /* ReelAPI.swift */; };
 		2484E02B0B9C331B883C7C1E /* Sender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49DACB03DB2928A4ED45237C /* Sender.swift */; };
 		41CF7B31C7F0E54CB89E6403 /* SaveQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F3FD497B489FBF48A9F0849 /* SaveQueue.swift */; };
+		4D3D7D07C42540537B94A0C0 /* ReelAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12EDF27168882D4ABE08A7E5 /* ReelAPI.swift */; };
 		4E486A216B6355D2B6E52E47 /* AgentRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD6BC637BF58F5F42015FDFB /* AgentRunner.swift */; };
 		56BC3CC044A9CDB37E1A947C /* Sender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49DACB03DB2928A4ED45237C /* Sender.swift */; };
 		63E112DE9C405091B60EE145 /* Connection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F33658F0C58D1A5662FCC02 /* Connection.swift */; };
@@ -20,6 +22,8 @@
 		900E0BAEDAE96F72F32C3BBB /* LinkExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06098F15142094C710330E6C /* LinkExtractor.swift */; };
 		962129E4AA6FCAD47E64F30B /* PhoneRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F945C8DCF981455AC89FA32A /* PhoneRootView.swift */; };
 		A32A006A05FCE7F04C9A8854 /* AgentDropPhoneTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86F4D3BE4036D1E820FB20B0 /* AgentDropPhoneTests.swift */; };
+		A37634C9A7581E6F70C5C7F6 /* ReelDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE52F1283B03949C8B536A53 /* ReelDetailView.swift */; };
+		B0605BD5089DE2BC99AC3769 /* ReelAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12EDF27168882D4ABE08A7E5 /* ReelAPI.swift */; };
 		B3ED4D6E7634B6536248A9EF /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B09CFF638BB1D73D7FDBAB78 /* ContentView.swift */; };
 		B4065B9F1C855D02BA4BD9F1 /* Connection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F33658F0C58D1A5662FCC02 /* Connection.swift */; };
 		C4D0E2E59C15F93FF41BF28B /* Sender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49DACB03DB2928A4ED45237C /* Sender.swift */; };
@@ -55,6 +59,7 @@
 
 /* Begin PBXFileReference section */
 		06098F15142094C710330E6C /* LinkExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkExtractor.swift; sourceTree = "<group>"; };
+		12EDF27168882D4ABE08A7E5 /* ReelAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReelAPI.swift; sourceTree = "<group>"; };
 		13941A132672494482A71570 /* AgentDropPhoneTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = AgentDropPhoneTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		2004D5C6D2798B5B84DA3DB2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		49DACB03DB2928A4ED45237C /* Sender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sender.swift; sourceTree = "<group>"; };
@@ -73,6 +78,7 @@
 		EC8F93300BB28810D380ACF7 /* AgentDropApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentDropApp.swift; sourceTree = "<group>"; };
 		F2A151B09526CB33D4B34C05 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		F945C8DCF981455AC89FA32A /* PhoneRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneRootView.swift; sourceTree = "<group>"; };
+		FE52F1283B03949C8B536A53 /* ReelDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReelDetailView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -81,6 +87,7 @@
 			children = (
 				4F33658F0C58D1A5662FCC02 /* Connection.swift */,
 				06098F15142094C710330E6C /* LinkExtractor.swift */,
+				12EDF27168882D4ABE08A7E5 /* ReelAPI.swift */,
 				6F3FD497B489FBF48A9F0849 /* SaveQueue.swift */,
 				49DACB03DB2928A4ED45237C /* Sender.swift */,
 			);
@@ -135,6 +142,7 @@
 				D503277FF2327B73E7E9874A /* AgentDropPhoneApp.swift */,
 				2004D5C6D2798B5B84DA3DB2 /* Info.plist */,
 				F945C8DCF981455AC89FA32A /* PhoneRootView.swift */,
+				FE52F1283B03949C8B536A53 /* ReelDetailView.swift */,
 			);
 			path = Phone;
 			sourceTree = "<group>";
@@ -286,6 +294,8 @@
 				C761F828F15C0F719381924F /* Connection.swift in Sources */,
 				0B6C1C23CD483BB2B2C7F6E2 /* LinkExtractor.swift in Sources */,
 				962129E4AA6FCAD47E64F30B /* PhoneRootView.swift in Sources */,
+				1DABE7C11122E4FDBE3828A1 /* ReelAPI.swift in Sources */,
+				A37634C9A7581E6F70C5C7F6 /* ReelDetailView.swift in Sources */,
 				E93120711C1CC25394DA25E6 /* SaveQueue.swift in Sources */,
 				C4D0E2E59C15F93FF41BF28B /* Sender.swift in Sources */,
 			);
@@ -298,6 +308,7 @@
 				A32A006A05FCE7F04C9A8854 /* AgentDropPhoneTests.swift in Sources */,
 				63E112DE9C405091B60EE145 /* Connection.swift in Sources */,
 				F792B018E6C67D9F2978C089 /* LinkExtractor.swift in Sources */,
+				B0605BD5089DE2BC99AC3769 /* ReelAPI.swift in Sources */,
 				41CF7B31C7F0E54CB89E6403 /* SaveQueue.swift in Sources */,
 				2484E02B0B9C331B883C7C1E /* Sender.swift in Sources */,
 			);
@@ -309,6 +320,7 @@
 			files = (
 				B4065B9F1C855D02BA4BD9F1 /* Connection.swift in Sources */,
 				900E0BAEDAE96F72F32C3BBB /* LinkExtractor.swift in Sources */,
+				4D3D7D07C42540537B94A0C0 /* ReelAPI.swift in Sources */,
 				17CB7EE350AF77B5D4111D4D /* SaveQueue.swift in Sources */,
 				56BC3CC044A9CDB37E1A947C /* Sender.swift in Sources */,
 				7E00A2DABC5E13FECC1630CF /* ShareViewController.swift in Sources */,

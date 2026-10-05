@@ -190,6 +190,8 @@ def init_db():
     c.executescript("""
     CREATE TABLE IF NOT EXISTS reels(id TEXT PRIMARY KEY, uploader TEXT, caption TEXT,
       transcript TEXT, url TEXT, added TEXT, topic TEXT, verdict TEXT, notes TEXT);
+    CREATE TABLE IF NOT EXISTS reel_extras(id TEXT PRIMARY KEY, description TEXT, links TEXT,
+      checked TEXT, status TEXT, updated TEXT);
     CREATE TABLE IF NOT EXISTS goals(id INTEGER PRIMARY KEY AUTOINCREMENT, text TEXT,
       done INTEGER DEFAULT 0, urgent INTEGER DEFAULT 0, created TEXT, completed TEXT);
     CREATE TABLE IF NOT EXISTS checkins(date TEXT PRIMARY KEY, energy INTEGER, focus INTEGER,
@@ -615,11 +617,235 @@ def reels_add(payload: dict = Body(...), request: Request = None):
     if not _verify_token(request, payload):
         return JSONResponse({"error": "unauthorized: valid bearer token required"}, status_code=401)
     urls = [u for u in payload.get("urls", []) if isinstance(u, str) and u.startswith("http")]
+    ids = [m.group(1) for u in urls if (m := re.search(r"instagram\.com/(?:reel|p)/([A-Za-z0-9_-]+)", u))]
+    with _reel_lock:
+        _REEL_INGESTING.update(ids)
     def run():
-        subprocess.run([str(ROOT / ".venv/bin/python"), str(ROOT / "scripts/add_reels.py"), *urls])
+        try:
+            subprocess.run([str(ROOT / ".venv/bin/python"), str(ROOT / "scripts/add_reels.py"), *urls])
+        finally:
+            with _reel_lock:
+                _REEL_INGESTING.difference_update(ids)
+        for rid in ids:  # only reels that actually landed in the library
+            try:
+                enrich_reel(rid)
+            except Exception as e:
+                print(f"enrich {rid} failed: {e}")
     threading.Thread(target=run, daemon=True).start()
     log_activity("reel", f"queued {len(urls)} reel(s) for ingest")
     return {"queued": len(urls)}
+
+# ---------- reel details: description + links + chat (phone app) ----------
+_reel_lock = threading.Lock()
+_REEL_INGESTING = set()   # ids whose download/transcribe is still running
+_REEL_ENRICHING = set()   # ids being enriched right now
+_URL_RE = re.compile(r"https?://[^\s<>\"'\)\]]+")
+
+def _reel_row(rid):
+    c = db()
+    try:
+        r = c.execute("SELECT * FROM reels WHERE id=?", (rid,)).fetchone()
+        return dict(r) if r else None
+    finally:
+        c.close()
+
+def _reel_title(row):
+    cap = (row.get("caption") or "").strip().splitlines()
+    first = cap[0].strip() if cap else ""
+    return (first[:90] if first else f"Reel from @{row.get('uploader') or '?'}")
+
+def _bullets(text, n=3):
+    out = [re.sub(r"^[\-•*\d.\s]+", "", l).strip() for l in (text or "").splitlines()
+           if l.strip().startswith(("-", "•", "*")) or re.match(r"^\d\.", l.strip())]
+    return [b for b in out if b][:n]
+
+def _set_extras(rid, **kw):
+    c = db()
+    c.execute("INSERT OR IGNORE INTO reel_extras(id) VALUES(?)", (rid,))
+    kw["updated"] = datetime.datetime.now().isoformat(timespec="seconds")
+    c.execute("UPDATE reel_extras SET " + ",".join(f"{k}=?" for k in kw) + " WHERE id=?", (*kw.values(), rid))
+    c.commit(); c.close()
+
+def _reel_source(row, links=None):
+    src = f"CAPTION: {(row.get('caption') or '')[:1500]}\nTRANSCRIPT: {(row.get('transcript') or '')[:4000]}"
+    if links:
+        src += "\nLINKS: " + "; ".join(f"{l.get('title') or l['url']} {l['url']}" for l in links)
+    return src
+
+def enrich_reel(rid: str):
+    """Description (3 bullets, local 8B -> Gemini check -> Pro rewrite) + links (URLs in text
+    + Unbait resolve). Blocks; run it in a thread."""
+    if not REEL_ID_RE.match(rid or ""):
+        return
+    with _reel_lock:
+        if rid in _REEL_ENRICHING:
+            return
+        _REEL_ENRICHING.add(rid)
+    try:
+        row = _reel_row(rid)
+        if not row:
+            return
+        _set_extras(rid, status="processing")
+        caption, transcript = row.get("caption") or "", row.get("transcript") or ""
+        src = _reel_source(row)
+        prompt = ("Write exactly 3 short bullet points in plain English saying what this video says. "
+                  "Each under 20 words. Use only facts in the caption/transcript below; do not guess. "
+                  "Output only the 3 lines, each starting with '- '.\n\n" + src)
+        desc = []
+        try:
+            desc = _bullets(ollama_gen(prompt, model=LOCAL_SMALL, timeout=180))
+        except Exception:
+            pass
+        checked = "not checked"
+        if desc:
+            v = pipeline_verify("3 plain-English bullets saying what a short video says", "\n".join(desc),
+                                source=src, label="Reel description")
+            if v["ok"] is True:
+                checked = "verified"
+            elif v["ok"] is False:
+                try:
+                    redo = _bullets(pipeline_rewrite(prompt, v["issue"], label="Reel description"))
+                    if redo:
+                        desc, checked = redo, "corrected"
+                except Exception:
+                    pass
+        if not desc:
+            _set_extras(rid, status="error", checked="local model gave no description")
+            return
+        links, seen = [], set()
+        for u in _URL_RE.findall(caption + "\n" + transcript):
+            u = u.rstrip(".,;:!?")
+            if u not in seen:
+                seen.add(u)
+                links.append({"url": u, "title": urlparse(u).netloc, "summary": [], "checked": "verified", "kind": "in the reel"})
+        try:
+            if str(Path.home() / "Projects/unbait") not in sys.path:
+                sys.path.insert(0, str(Path.home() / "Projects/unbait"))
+            from unbait.engine import resolve
+            res = resolve(caption, transcript)
+            if res.get("url") and res["url"] not in seen:
+                ck = res.get("checked") or ""
+                links.append({"url": res["url"], "title": res.get("name") or urlparse(res["url"]).netloc,
+                              "summary": res.get("summary") or [],
+                              "checked": "verified" if "verified" in ck and not ck.startswith("not") else "unsure",
+                              "kind": "found for you", "note": ck[:200]})
+        except Exception as e:
+            print(f"unbait resolve {rid}: {e}")
+        _set_extras(rid, description=json.dumps(desc), links=json.dumps(links), checked=checked, status="ready")
+    except Exception as e:
+        _set_extras(rid, status="error", checked=f"failed: {str(e)[:120]}")
+    finally:
+        with _reel_lock:
+            _REEL_ENRICHING.discard(rid)
+
+def _enrich_async(rid):
+    threading.Thread(target=enrich_reel, args=(rid,), daemon=True).start()
+
+def _bad_reel_id(rid):
+    return JSONResponse({"error": "bad id"}, status_code=400) if not REEL_ID_RE.match(rid or "") else None
+
+@app.get("/api/reels/detail")
+def reels_detail(id: str = "", request: Request = None):
+    if not _verify_token(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    if (bad := _bad_reel_id(id)):
+        return bad
+    row = _reel_row(id)
+    if not row:
+        with _reel_lock:
+            ingesting = id in _REEL_INGESTING
+        if ingesting:
+            return {"id": id, "url": "", "title": "", "description": [], "links": [], "checked": "",
+                    "status": "processing", "topic": "", "transcript": ""}
+        return JSONResponse({"id": id, "status": "not_found"}, status_code=404)
+    c = db(); ex = c.execute("SELECT * FROM reel_extras WHERE id=?", (id,)).fetchone(); c.close()
+    ex = dict(ex) if ex else {}
+    with _reel_lock:
+        busy = id in _REEL_ENRICHING or id in _REEL_INGESTING
+    status = ex.get("status") or ""
+    if status in ("", "processing") and not busy:
+        _enrich_async(id)          # never enriched (or interrupted by a restart): start now
+        status = "processing"
+    elif busy:
+        status = "processing"
+    try:
+        desc, links = json.loads(ex.get("description") or "[]"), json.loads(ex.get("links") or "[]")
+    except ValueError:
+        desc, links = [], []
+    return {"id": id, "url": row.get("url") or "", "title": _reel_title(row), "description": desc,
+            "links": links, "checked": ex.get("checked") or "", "status": status,
+            "topic": row.get("topic") or "", "transcript": (row.get("transcript") or "")[:4000]}
+
+@app.post("/api/reels/enrich")
+def reels_enrich(payload: dict = Body(...), request: Request = None):
+    if not _verify_token(request, payload):
+        return JSONResponse({"error": "unauthorized: valid bearer token required"}, status_code=401)
+    rid = str(payload.get("id") or "")
+    if (bad := _bad_reel_id(rid)):
+        return bad
+    if not _reel_row(rid):
+        return JSONResponse({"id": rid, "status": "not_found"}, status_code=404)
+    _enrich_async(rid)
+    return {"id": rid, "status": "processing"}
+
+@app.get("/api/reels/recent")
+def reels_recent(limit: int = 50, request: Request = None):
+    if not _verify_token(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    limit = max(1, min(int(limit), 200))
+    c = db()
+    rows = c.execute("""SELECT r.id, r.url, r.caption, r.uploader, r.topic, e.status AS st FROM reels r
+        LEFT JOIN reel_extras e ON e.id=r.id ORDER BY r.added DESC, r.rowid DESC LIMIT ?""", (limit,)).fetchall()
+    c.close()
+    return [{"id": r["id"], "url": r["url"], "title": _reel_title(dict(r)),
+             "status": r["st"] or "new", "topic": r["topic"] or ""} for r in rows]
+
+@app.post("/api/reels/chat")
+def reels_chat(payload: dict = Body(...), request: Request = None):
+    if not _verify_token(request, payload):
+        return JSONResponse({"error": "unauthorized: valid bearer token required"}, status_code=401)
+    rid = str(payload.get("id") or "")
+    if (bad := _bad_reel_id(rid)):
+        return bad
+    msg = str(payload.get("message") or "").strip()[:1000]
+    if not msg:
+        return JSONResponse({"error": "empty message"}, status_code=400)
+    row = _reel_row(rid)
+    if not row:
+        return JSONResponse({"id": rid, "status": "not_found"}, status_code=404)
+    c = db(); ex = c.execute("SELECT links FROM reel_extras WHERE id=?", (rid,)).fetchone(); c.close()
+    try:
+        links = json.loads((ex["links"] if ex else None) or "[]")
+    except ValueError:
+        links = []
+    hist = []
+    for h in (payload.get("history") or [])[-10:]:
+        if isinstance(h, dict) and h.get("role") in ("user", "assistant"):
+            hist.append(("Nate" if h["role"] == "user" else "You") + ": " + str(h.get("text") or "")[:800])
+    src = _reel_source(row, links)
+    prompt = ("You answer questions about ONE saved video. Use ONLY the caption, transcript and links below. "
+              "If they don't cover the question, say plainly: \"This reel doesn't say.\" Do not guess or add "
+              "outside facts. Plain English, under 80 words.\n\n" + src +
+              ("\n\nCONVERSATION SO FAR:\n" + "\n".join(hist) if hist else "") + f"\n\nNate asks: {msg}\nAnswer:")
+    try:
+        answer = ollama_gen(prompt, model=LOCAL_SMALL, timeout=120).strip()
+    except Exception as e:
+        return JSONResponse({"error": f"local model unavailable: {str(e)[:100]}"}, status_code=503)
+    if not answer:
+        return JSONResponse({"error": "local model gave no answer"}, status_code=502)
+    v = pipeline_verify("an answer to a question about a video, using only the video's caption/transcript/links",
+                        f"QUESTION: {msg}\nANSWER: {answer}", source=src, label="Reel chat")
+    checked = "not checked"
+    if v["ok"] is True:
+        checked = "verified"
+    elif v["ok"] is False:
+        try:
+            redo = pipeline_rewrite(prompt, v["issue"], label="Reel chat").strip()
+            if redo:
+                answer, checked = redo, "corrected"
+        except Exception:
+            pass
+    return {"answer": answer, "checked": checked}
 
 @app.post("/api/reels/update")
 def reels_update(payload: dict = Body(...), request: Request = None):

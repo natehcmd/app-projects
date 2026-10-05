@@ -68,7 +68,7 @@ def main():
         sess = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar))
         sess.open(base + "/", timeout=10).read()
         src = open(os.path.join(tmp, "server.py")).read()
-        gets = sorted(set(re.findall(r'@app\.get\("(/api/[^"{]+)"\)', src)) - {"/api/artifacts/content", "/api/apps/icon", "/api/reels/thumb", "/api/reels/video",
+        gets = sorted(set(re.findall(r'@app\.get\("(/api/[^"{]+)"\)', src)) - {"/api/artifacts/content", "/api/apps/icon", "/api/reels/thumb", "/api/reels/video", "/api/reels/detail",
                                                                                  "/api/briefs/short", "/api/learn/card",
                                                                                  "/api/compare/duel", "/api/filegraph/file", "/api/team/run"})
 
@@ -146,6 +146,30 @@ def main():
         except urllib.error.HTTPError as e:
             code = e.code
         check(code in (401, 403), "build refuses anonymous cross-site (%s)" % code)
+
+        print("Reel details / chat:")
+        def code_of(req, opener=sess):
+            try:
+                return opener.open(req, timeout=15).status
+            except urllib.error.HTTPError as e:
+                return e.code
+        def post(path, body):
+            req = urllib.request.Request(base + path, data=json.dumps(body).encode(),
+                                         headers={"Content-Type": "application/json"})
+            return code_of(req)
+        xs = {"Sec-Fetch-Site": "cross-site"}
+        check(code_of(urllib.request.Request(base + "/api/reels/detail?id=abcdef", headers=xs), urllib.request.build_opener()) == 401, "reels/detail refuses anonymous cross-site")
+        check(code_of(urllib.request.Request(base + "/api/reels/recent", headers=xs), urllib.request.build_opener()) == 401, "reels/recent refuses anonymous cross-site")
+        for pth in ("/api/reels/enrich", "/api/reels/chat"):
+            check(code_of(urllib.request.Request(base + pth, data=b'{"id":"abcdef","message":"x"}',
+                  headers={"Content-Type": "application/json", **xs}), urllib.request.build_opener()) in (401, 403), pth + " refuses anonymous cross-site")
+        check(code_of(base + "/api/reels/detail?id=../../x") == 400, "detail bad id -> 400")
+        check(code_of(base + "/api/reels/detail?id=zzzzzzzz") == 404, "detail unknown id -> 404")
+        check(post("/api/reels/chat", {"id": "a/b", "message": "hi"}) == 400, "chat bad id -> 400")
+        check(post("/api/reels/enrich", {"id": "x"}) == 400, "enrich bad id -> 400")
+        check(post("/api/reels/chat", {"id": "abcdef", "message": ""}) == 400, "chat empty message -> 400")
+        recent = json.loads(sess.open(base + "/api/reels/recent?limit=3", timeout=15).read())
+        check(isinstance(recent, list) and len(recent) <= 3 and all({"id", "url", "title", "status", "topic"} <= set(r) for r in recent), "reels/recent compact list")
 
         print("Briefs / Learn inputs:")
         for path, want in (("/api/briefs/short?name=../../server", 404), ("/api/briefs/short?name=", 404),

@@ -70,3 +70,53 @@ final class SenderTests: XCTestCase {
         XCTAssertNil(Sender.baseURL("  "))
     }
 }
+
+final class ReelIDTests: XCTestCase {
+    func testInstagramShortcodes() {
+        XCTAssertEqual(ReelID.from(url: "https://www.instagram.com/reel/DW4Gc3PDibh/"), "DW4Gc3PDibh")
+        XCTAssertEqual(ReelID.from(url: "https://instagram.com/p/ABC123/"), "ABC123")
+        XCTAssertEqual(ReelID.from(url: "https://www.instagram.com/reel/DWwLhCEAtV_/?igsh=x"), "DWwLhCEAtV_")
+    }
+    func testNonInstagramAndBadShapesGiveNil() {
+        XCTAssertNil(ReelID.from(url: "https://youtu.be/dQw4w9WgXcQ"))
+        XCTAssertNil(ReelID.from(url: "https://www.tiktok.com/@u/video/123"))
+        XCTAssertNil(ReelID.from(url: "https://www.instagram.com/someuser/"))
+        XCTAssertNil(ReelID.from(url: "https://www.instagram.com/reel/ab/"))      // too short
+        XCTAssertNil(ReelID.from(url: "https://evilinstagram.com/reel/DW4Gc3PDibh/"))
+        XCTAssertNil(ReelID.from(url: "not a url"))
+    }
+}
+
+final class ChatStoreTests: XCTestCase {
+    private func dir() -> URL { FileManager.default.temporaryDirectory.appendingPathComponent("chat-\(UUID().uuidString)") }
+
+    func testPersistsPerReelAndRoundTrips() {
+        let d = dir(); defer { try? FileManager.default.removeItem(at: d) }
+        let s = ChatStore(directory: d)
+        s.append("AAAAA1", ChatMessage(role: "user", text: "hi"))
+        s.append("AAAAA1", ChatMessage(role: "assistant", text: "hello", checked: "verified"))
+        s.append("BBBBB2", ChatMessage(role: "user", text: "other"))
+        let s2 = ChatStore(directory: d)   // fresh instance reads disk
+        XCTAssertEqual(s2.load("AAAAA1").map(\.text), ["hi", "hello"])
+        XCTAssertEqual(s2.load("AAAAA1").last?.checked, "verified")
+        XCTAssertEqual(s2.load("BBBBB2").map(\.text), ["other"])
+        XCTAssertEqual(s2.load("CCCCC3"), [])
+    }
+    func testHistoryIsLastTenInEndpointShape() {
+        let d = dir(); defer { try? FileManager.default.removeItem(at: d) }
+        let s = ChatStore(directory: d)
+        for i in 0..<15 { s.append("AAAAA1", ChatMessage(role: i % 2 == 0 ? "user" : "assistant", text: "m\(i)")) }
+        let h = s.history("AAAAA1")
+        XCTAssertEqual(h.count, 10)
+        XCTAssertEqual(h.first, ["role": "assistant", "text": "m5"])
+        XCTAssertEqual(h.last, ["role": "user", "text": "m14"])
+    }
+    func testRejectsPathyIdsAndClear() {
+        let d = dir(); defer { try? FileManager.default.removeItem(at: d) }
+        let s = ChatStore(directory: d)
+        s.append("../escape", ChatMessage(role: "user", text: "x"))
+        XCTAssertEqual(s.load("../escape"), [])
+        s.append("AAAAA1", ChatMessage(role: "user", text: "x")); s.clear("AAAAA1")
+        XCTAssertEqual(s.load("AAAAA1"), [])
+    }
+}
