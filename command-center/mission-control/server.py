@@ -729,6 +729,14 @@ def enrich_reel(rid: str):
                               "summary": res.get("summary") or [],
                               "checked": "verified" if "verified" in ck and not ck.startswith("not") else "unsure",
                               "kind": "found for you", "note": ck[:200]})
+            # List reels: every item the video names, each with its own link.
+            ck = res.get("checked") or ""
+            for item in res.get("items") or []:
+                if item.get("url") and item["url"] not in seen:
+                    seen.add(item["url"])
+                    links.append({"url": item["url"], "title": item.get("name") or urlparse(item["url"]).netloc,
+                                  "summary": [], "kind": "named in the video", "note": ck[:200],
+                                  "checked": "verified" if ck.startswith("verified") else "unsure"})
         except Exception as e:
             print(f"unbait resolve {rid}: {e}")
         _set_extras(rid, description=json.dumps(desc), links=json.dumps(links), checked=checked, status="ready")
