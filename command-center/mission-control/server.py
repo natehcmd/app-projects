@@ -2428,13 +2428,17 @@ def _browser_tabs_for(app_name):
 set output to ""
 set sep to ASCII character 9
 try
-  tell application "{app_name}"
-    repeat with w in windows
-      repeat with t in tabs of w
-        set output to output & "{app_name}" & sep & title of t & sep & URL of t & linefeed
+  -- Only ask a browser that's already open: "tell application" on a closed app
+  -- tries to launch it and blocked this call for the full 10 s timeout (Arc).
+  if application "{app_name}" is running then
+    tell application "{app_name}"
+      repeat with w in windows
+        repeat with t in tabs of w
+          set output to output & "{app_name}" & sep & title of t & sep & URL of t & linefeed
+        end repeat
       end repeat
-    end repeat
-  end tell
+    end tell
+  end if
 end try
 return output
 '''
@@ -2451,6 +2455,11 @@ return output
 def _browser_tabs():
     tabs = []
     for app_name in ("Arc", "Google Chrome"):
+        # Check the process first: AppleScript resolves a "tell application"
+        # target before running anything, and for an app that isn't installed
+        # (Arc) that lookup blocked for the full 10 s timeout on every refresh.
+        if subprocess.run(["pgrep", "-x", app_name], capture_output=True).returncode != 0:
+            continue
         tabs.extend(_browser_tabs_for(app_name))
     return tabs
 
