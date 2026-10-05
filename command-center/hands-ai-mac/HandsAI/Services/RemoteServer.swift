@@ -74,6 +74,9 @@ final class RemoteServer: ObservableObject {
         serverTask = Task {
             do {
                 await server.appendRoute("GET /agent", to: .webSocket(handler))
+                let saver = SaveEndpoint(expectedToken: handler.expectedToken)
+                await server.appendRoute("GET /ping") { _ in saver.ping() }
+                await server.appendRoute("POST /save") { req in await saver.handle(req) }
                 self.isRunning = true
                 try await server.run()
             } catch {
@@ -205,6 +208,80 @@ private struct AgentWSHandler: WSMessageHandler {
                 continuation.finish()
             }
             continuation.onTermination = { _ in task.cancel() }
+        }
+    }
+}
+
+/// `POST /save` — the AgentDrop iPhone share extension's way in. Validates a
+/// reel/video URL and hands it to Command Center's ingest (download +
+/// transcribe + tag). Bearer-token authenticated with the same remote token as
+/// the WebSocket; an empty configured token rejects everything. `GET /ping`
+/// is unauthenticated and reveals nothing but the app name.
+private struct SaveEndpoint: Sendable {
+    let expectedToken: String
+
+    static let allowedHosts: Set<String> = [
+        "instagram.com", "www.instagram.com",
+        "tiktok.com", "www.tiktok.com", "vm.tiktok.com",
+        "youtube.com", "youtu.be",
+    ]
+    static let maxBody = 8 * 1024
+    static let ingest = URL(string: "http://127.0.0.1:8450/api/reels/add")!
+
+    private func json(_ status: HTTPStatusCode, _ obj: [String: Any]) -> HTTPResponse {
+        let data = (try? JSONSerialization.data(withJSONObject: obj)) ?? Data("{}".utf8)
+        return HTTPResponse(statusCode: status, headers: [.contentType: "application/json"], body: data)
+    }
+
+    func ping() -> HTTPResponse { json(.ok, ["ok": true, "app": "Hammond"]) }
+
+    /// Constant-time compare; empty expected token never matches.
+    static func tokensMatch(_ given: String, _ expected: String) -> Bool {
+        guard !expected.isEmpty else { return false }
+        let a = Array(given.utf8), b = Array(expected.utf8)
+        var diff = a.count ^ b.count
+        for i in 0..<b.count { diff |= Int((i < a.count ? a[i] : 0) ^ b[i]) }
+        return diff == 0
+    }
+
+    static func validate(_ raw: String) -> URL? {
+        guard let u = URL(string: raw.trimmingCharacters(in: .whitespacesAndNewlines)),
+              u.scheme?.lowercased() == "https",
+              let host = u.host?.lowercased(), allowedHosts.contains(host) else { return nil }
+        return u
+    }
+
+    func handle(_ req: HTTPRequest) async -> HTTPResponse {
+        let auth = req.headers[.authorization] ?? ""
+        let bearer = auth.lowercased().hasPrefix("bearer ") ? String(auth.dropFirst(7)).trimmingCharacters(in: .whitespaces) : ""
+        guard Self.tokensMatch(bearer, expectedToken) else {
+            return json(.unauthorized, ["ok": false, "error": "unauthorized"])
+        }
+        if let len = req.headers[.contentLength].flatMap({ Int($0) }), len > Self.maxBody {
+            return json(.payloadTooLarge, ["ok": false, "error": "body too large"])
+        }
+        guard let body = try? await req.bodyData, body.count <= Self.maxBody else {
+            return json(.payloadTooLarge, ["ok": false, "error": "body too large"])
+        }
+        guard let obj = try? JSONSerialization.jsonObject(with: body) as? [String: Any],
+              let raw = obj["url"] as? String, let url = Self.validate(raw) else {
+            return json(.badRequest, ["ok": false, "error": "need an https Instagram, TikTok or YouTube url"])
+        }
+        var fwd = URLRequest(url: Self.ingest, timeoutInterval: 15)
+        fwd.httpMethod = "POST"
+        fwd.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        fwd.setValue("Bearer \(expectedToken)", forHTTPHeaderField: "Authorization")
+        fwd.httpBody = try? JSONSerialization.data(withJSONObject: ["urls": [url.absoluteString]])
+        do {
+            let (data, resp) = try await URLSession.shared.data(for: fwd)
+            let code = (resp as? HTTPURLResponse)?.statusCode ?? 0
+            guard code == 200 else {
+                return json(.badGateway, ["ok": false, "error": "Command Center returned \(code)"])
+            }
+            let queued = ((try? JSONSerialization.jsonObject(with: data)) as? [String: Any])?["queued"] as? Int ?? 1
+            return json(.ok, ["ok": true, "queued": queued])
+        } catch {
+            return json(.badGateway, ["ok": false, "error": "Command Center unreachable"])
         }
     }
 }

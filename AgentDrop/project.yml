@@ -3,6 +3,7 @@ options:
   bundleIdPrefix: com.natehoward
   deploymentTarget:
     macOS: "14.0"
+    iOS: "17.0"
 targets:
   AgentDrop:
     type: application
@@ -20,3 +21,87 @@ targets:
         CODE_SIGN_IDENTITY: "-"
         CODE_SIGNING_REQUIRED: NO
         SWIFT_VERSION: "5.9"
+
+  AgentDropPhone:
+    type: application
+    platform: iOS
+    sources: [Phone, Shared]
+    entitlements:
+      path: Phone/AgentDropPhone.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.natehoward.agentdrop]
+    dependencies:
+      - target: AgentDropShare
+        embed: true
+    info:
+      path: Phone/Info.plist
+      properties:
+        CFBundleDisplayName: AgentDrop
+        UILaunchScreen: {}
+        NSLocalNetworkUsageDescription: AgentDrop sends saved reels to your Mac on your network.
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.natehoward.AgentDropPhone
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "5.9"
+        TARGETED_DEVICE_FAMILY: "1"
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: 674B879258
+        GENERATE_INFOPLIST_FILE: NO
+
+  AgentDropShare:
+    type: app-extension
+    platform: iOS
+    sources: [Share, Shared]
+    entitlements:
+      path: Share/AgentDropShare.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.natehoward.agentdrop]
+    info:
+      path: Share/Info.plist
+      properties:
+        CFBundleDisplayName: AgentDrop
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
+          NSExtensionAttributes:
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsWebURLWithMaxCount: 1
+              NSExtensionActivationSupportsText: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.natehoward.AgentDropPhone.share
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "5.9"
+        TARGETED_DEVICE_FAMILY: "1"
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: 674B879258
+        GENERATE_INFOPLIST_FILE: NO
+        SKIP_INSTALL: YES
+
+  AgentDropPhoneTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [PhoneTests, Shared]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.natehoward.AgentDropPhone.tests
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_VERSION: "5.9"
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: 674B879258
+
+schemes:
+  AgentDropPhone:
+    build:
+      targets:
+        AgentDropPhone: all
+    test:
+      targets: [AgentDropPhoneTests]
